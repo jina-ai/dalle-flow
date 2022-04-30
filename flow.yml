@@ -25,4 +25,4 @@ executors:
     py_modules:
       - executors/store/executor.py
     uses_with:
-      store_path: dalle.protobuf.gz
+      store_path: dalle.db
