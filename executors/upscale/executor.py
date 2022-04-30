@@ -1,4 +1,5 @@
 import os
+import stat
 import subprocess
 import tempfile
 from io import BytesIO
@@ -41,6 +42,9 @@ class Upscaler(Executor):
         zipfile.extractall(bin_path)
         print('complete')
         self.waifu_path = os.path.realpath(f'{bin_path}/waifu2x-ncnn-vulkan-20220419-ubuntu/waifu2x-ncnn-vulkan')
+
+        st = os.stat(self.waifu_path)
+        os.chmod(self.waifu_path, st.st_mode | stat.S_IEXEC)
         print(self.waifu_path)
 
     @requests
