@@ -20,9 +20,9 @@ class MyStore(Executor):
         print(f'total: {len(self.storage)}')
 
     @requests(on='/showall')
-    def store(self, docs: DocumentArray, **kwargs):
+    def showall(self, docs: DocumentArray, **kwargs):
         return self.storage
 
     @requests(on='/upload')
-    def store(self, docs: DocumentArray, **kwargs):
+    def upload(self, docs: DocumentArray, **kwargs):
         self.storage.push('dalle')
