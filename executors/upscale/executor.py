@@ -40,7 +40,7 @@ class Upscaler(Executor):
         bin_path = './waifu-bin'
         zipfile.extractall(bin_path)
         print('complete')
-        self.waifu_path = os.path.realpath(f'{bin_path}/waifu2x-ncnn-vulkan')
+        self.waifu_path = os.path.realpath(f'{bin_path}/waifu2x-ncnn-vulkan-20220419-ubuntu/waifu2x-ncnn-vulkan')
         print(self.waifu_path)
 
     @requests
