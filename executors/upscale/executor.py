@@ -15,14 +15,14 @@ def _upscale(waifu_path: str, d: Document):
     ) as f_in, tempfile.NamedTemporaryFile(
         suffix='.png',
     ) as f_out:
-        d.save_blob_to_file(f_in)
+        d.save_blob_to_file(f_in.name)
         print(
             subprocess.getoutput(
                 f'{waifu_path} -i {f_in.name} -o {f_out.name} -s 4 -n 0 -g -1'
             )
         )
-        print(f'{f_in} done')
-        d.uri = f_out
+        print(f'{f_in.name} done')
+        d.uri = f_out.name
         d.convert_uri_to_datauri()
         d.blob = None
     return d
