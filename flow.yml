@@ -6,5 +6,15 @@ with:
 executors:
   - name: dalle_mini
     uses: executors/dalle/config.yml
+  - name: rerank
+    uses: ReRank
+    with:
+      clip_server: grpc://0.0.0.0:51000
+    py_modules:
+      - rerank/executor.py
   - name: upscaler
-    uses: executors/upscale/executor.py
+    uses: Upscaler
+    py_modules:
+      - rerank/executor.py
+    with:
+      waifu_url: https://github.com/nihui/waifu2x-ncnn-vulkan/releases/download/20220419/waifu2x-ncnn-vulkan-20220419-ubuntu.zip

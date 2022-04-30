@@ -11,11 +11,11 @@ from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key
 from vqgan_jax.modeling_flax_vqgan import VQModel
 
-DALLE_MODEL = "dalle-mini/dalle-mini/mega-1:latest"
+DALLE_MODEL = 'dalle-mini/dalle-mini/mega-1:latest'
 DALLE_COMMIT_ID = None
 
-VQGAN_REPO = "dalle-mini/vqgan_imagenet_f16_16384"
-VQGAN_COMMIT_ID = "e93a26e7707683d349bf5d5c41c5b0ef69b677a9"
+VQGAN_REPO = 'dalle-mini/vqgan_imagenet_f16_16384'
+VQGAN_COMMIT_ID = 'e93a26e7707683d349bf5d5c41c5b0ef69b677a9'
 
 # We can customize top_k/top_p used for generating samples
 gen_top_k = None
@@ -23,7 +23,7 @@ gen_top_p = 0.9
 temperature = 0.85
 cond_scale = 3.0
 
-wandb.init(anonymous="must")
+wandb.init(anonymous='must')
 dtype = jnp.float32
 # Load models & tokenizer
 model = DalleBart.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID)
@@ -36,9 +36,9 @@ print('device', jax.device_count())
 
 
 # model inference
-@partial(jax.pmap, axis_name="batch", static_broadcasted_argnums=(3, 4, 5, 6))
+@partial(jax.pmap, axis_name='batch', static_broadcasted_argnums=(3, 4, 5, 6))
 def p_generate(
-        tokenized_prompt, key, params, top_k, top_p, temperature, condition_scale
+    tokenized_prompt, key, params, top_k, top_p, temperature, condition_scale
 ):
     return model.generate(
         **tokenized_prompt,
@@ -52,7 +52,7 @@ def p_generate(
 
 
 # decode images
-@partial(jax.pmap, axis_name="batch")
+@partial(jax.pmap, axis_name='batch')
 def p_decode(indices, params):
     return vqgan.decode_code(indices, params=params)
 
@@ -69,7 +69,7 @@ def generate_images(prompt: str, num_predictions: int):
     tokenized_prompt = tokenize_prompt(prompt)
 
     # create a random key
-    seed = random.randint(0, 2 ** 32 - 1)
+    seed = random.randint(0, 2**32 - 1)
     key = jax.random.PRNGKey(seed)
 
     # generate images

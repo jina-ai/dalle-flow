@@ -32,7 +32,7 @@ def _upscale(waifu_path: str, d: Document):
 class Upscaler(Executor):
 
     def __init__(self,
-                 waifu_url: str = 'https://github.com/nihui/waifu2x-ncnn-vulkan/releases/download/20220419/waifu2x-ncnn-vulkan-20220419-ubuntu.zip',
+                 waifu_url: str,
                  **kwargs):
         super().__init__(**kwargs)
         print('downloading...')

@@ -1,0 +1,5 @@
+flax
+clip_client
+git+https://github.com/huggingface/transformers.git
+git+https://github.com/patil-suraj/vqgan-jax.git
+git+https://github.com/borisdayma/dalle-mini.git
