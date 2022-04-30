@@ -10,11 +10,13 @@ executors:
     uses: ReRank
     with:
       clip_server: grpc://0.0.0.0:51000
-    py_modules:
-      - executors/rerank/executor.py
+    metas:
+      py_modules:
+        - executors/rerank/executor.py
   - name: upscaler
     uses: Upscaler
-    py_modules:
-      - executors/upscale/executor.py
+    metas:
+      py_modules:
+        - executors/upscale/executor.py
     with:
       waifu_url: https://github.com/nihui/waifu2x-ncnn-vulkan/releases/download/20220419/waifu2x-ncnn-vulkan-20220419-ubuntu.zip
