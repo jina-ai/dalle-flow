@@ -21,7 +21,7 @@ def _upscale(waifu_path: str, d: Document):
     d.save_blob_to_file(f_in)
     print(f_in)
     print(subprocess.getoutput(
-        f'{waifu_path} -i {f_in} -o {f_out} -s 4 -n 0'))
+        f'{waifu_path} -i {f_in} -o {f_out} -s 4 -n 0 -g -1'))
     d.uri = f_out
     d.convert_uri_to_datauri()
     d.blob = None
