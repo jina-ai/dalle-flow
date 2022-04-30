@@ -1,6 +1,7 @@
 jtype: Flow
 with:
-  protocol: http
+  protocol: grpc
+  port: 51005
   env:
     JINA_LOG_LEVEL: debug
     JINA_EARLY_STOP: 1
