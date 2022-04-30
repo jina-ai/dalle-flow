@@ -20,3 +20,9 @@ executors:
       - executors/upscale/executor.py
     uses_with:
       waifu_url: https://github.com/nihui/waifu2x-ncnn-vulkan/releases/download/20220419/waifu2x-ncnn-vulkan-20220419-ubuntu.zip
+  - name: store
+    uses: MyStore
+    py_modules:
+      - executors/store/executor.py
+    uses_with:
+      store_path: dalle.protobuf.gz
