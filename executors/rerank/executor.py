@@ -9,5 +9,5 @@ class ReRank(Executor):
         self._client = Client(server=clip_server)
 
     @requests
-    def rerank(self, docs: DocumentArray, **kwargs):
-        return self._client.rerank(docs)
+    async def rerank(self, docs: DocumentArray, **kwargs):
+        return await self._client.arank(docs)
