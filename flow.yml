@@ -8,12 +8,12 @@ with:
 executors:
   - name: dalle_mini
     uses: executors/dalle/config.yml
-  - name: rerank
-    uses: ReRank
-    uses_with:
-      clip_server: grpc://0.0.0.0:51000
-    py_modules:
-      - executors/rerank/executor.py
+#  - name: rerank
+#    uses: ReRank
+#    uses_with:
+#      clip_server: grpc://0.0.0.0:51000
+#    py_modules:
+#      - executors/rerank/executor.py
   - name: upscaler
     uses: Upscaler
     py_modules:

@@ -46,4 +46,5 @@ class Upscaler(Executor):
 
     @requests
     async def upscale(self, docs: DocumentArray, **kwargs):
-        docs.apply(lambda d: _upscale(self.waifu_path, d))
+        for d in docs:
+            d.matches.apply(lambda x: _upscale(self.waifu_path, x))
