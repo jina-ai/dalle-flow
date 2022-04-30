@@ -15,6 +15,6 @@ executors:
   - name: upscaler
     uses: Upscaler
     py_modules:
-      - executors/rerank/executor.py
+      - executors/upscale/executor.py
     with:
       waifu_url: https://github.com/nihui/waifu2x-ncnn-vulkan/releases/download/20220419/waifu2x-ncnn-vulkan-20220419-ubuntu.zip
