@@ -1,0 +1,10 @@
+jtype: Flow
+with:
+  protocol: http
+  env:
+    JINA_LOG_LEVEL: debug
+executors:
+  - name: dalle_mini
+    uses: executors/dalle/config.yml
+  - name: upscaler
+    uses: executors/upscale/executor.py
