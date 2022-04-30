@@ -25,7 +25,6 @@ def _upscale(waifu_path: str, d: Document):
         f'{waifu_path} -i {f_in} -o {f_out} -s 4 -n 0'))
     d.uri = f_out
     d.convert_uri_to_datauri()
-    d.save_uri_to_file(f'dalle/{d.id}.png')
     return d
 
 
