@@ -43,8 +43,7 @@ class GLID3Diffusion(Executor):
                 d.matches.append(_d)
             print('done!')
 
-    @requests
+    @requests(on='/diffuse')
     async def diffusion(self, docs: DocumentArray, **kwargs):
         for d in docs:
-            for m in d.matches[: self.top_k]:
-                self.run_glid3(m, d.text)
+            self.run_glid3(d, d.text)

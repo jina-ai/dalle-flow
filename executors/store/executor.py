@@ -7,7 +7,7 @@ class MyStore(Executor):
         super().__init__(**kwargs)
         self.storage = DocumentArray(storage='sqlite', config={'connection': store_path, 'table_name': 'dallemega'})
 
-    @requests
+    @requests(on='/')
     def store(self, docs: DocumentArray, **kwargs):
         docs[...].blobs = None  # remove all blobs from anywhere to save space
         self.storage.extend(docs)

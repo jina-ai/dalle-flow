@@ -8,6 +8,6 @@ class ReRank(Executor):
         super().__init__(**kwargs)
         self._client = Client(server=clip_server)
 
-    @requests
+    @requests(on='/')
     async def rerank(self, docs: DocumentArray, **kwargs):
         return await self._client.arank(docs)
