@@ -33,7 +33,7 @@ class Upscaler(Executor):
         ) as f_in, tempfile.NamedTemporaryFile(
             suffix='.png',
         ) as f_out:
-            d.save_blob_to_file(f_in.name)
+            d.save_uri_to_file(f_in.name)
             print(
                 subprocess.getoutput(
                     f'{self.waifu_path} -i {f_in.name} -o {f_out.name} -s 4 -n 0 -g -1'
