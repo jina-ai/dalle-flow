@@ -22,12 +22,18 @@ executors:
       - executors/glid3/executor.py
     env:
       CUDA_VISIBLE_DEVICES: 2
+#  - name: upscaler
+#    uses: WaifuUpscaler
+#    py_modules:
+#      - executors/waifu/executor.py
+#    uses_with:
+#      waifu_url: https://github.com/nihui/waifu2x-ncnn-vulkan/releases/download/20220419/waifu2x-ncnn-vulkan-20220419-ubuntu.zip
   - name: upscaler
-    uses: Upscaler
+    uses: SwinIRUpscaler
     py_modules:
-      - executors/upscale/executor.py
+      - executors/swinir/executor.py
     uses_with:
-      waifu_url: https://github.com/nihui/waifu2x-ncnn-vulkan/releases/download/20220419/waifu2x-ncnn-vulkan-20220419-ubuntu.zip
+      swinir_path: /home/jupyter-han/SwinIR
   - name: store
     uses: MyStore
     py_modules:

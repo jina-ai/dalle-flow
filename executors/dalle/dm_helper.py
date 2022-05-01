@@ -17,10 +17,9 @@ DALLE_COMMIT_ID = None
 VQGAN_REPO = 'dalle-mini/vqgan_imagenet_f16_16384'
 VQGAN_COMMIT_ID = 'e93a26e7707683d349bf5d5c41c5b0ef69b677a9'
 
-# We can customize top_k/top_p used for generating samples
 gen_top_k = None
 gen_top_p = 0.9
-temperature = 0.85
+temperature = None
 cond_scale = 3.0
 
 wandb.init(anonymous='must')

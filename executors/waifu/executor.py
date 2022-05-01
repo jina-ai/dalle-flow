@@ -9,7 +9,7 @@ from zipfile import ZipFile
 from jina import Executor, requests, DocumentArray, Document
 
 
-class Upscaler(Executor):
+class WaifuUpscaler(Executor):
     def __init__(self, waifu_url: str, top_k: int = 3, **kwargs):
         super().__init__(**kwargs)
         print('downloading...')
