@@ -3,7 +3,6 @@ import stat
 import subprocess
 import tempfile
 from io import BytesIO
-from typing import Dict
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -30,7 +29,7 @@ class Upscaler(Executor):
 
     def _upscale(self, d: Document):
         with tempfile.NamedTemporaryFile(
-            suffix='.png',
+                suffix='.png',
         ) as f_in, tempfile.NamedTemporaryFile(
             suffix='.png',
         ) as f_out:
@@ -50,5 +49,5 @@ class Upscaler(Executor):
     async def upscale(self, docs: DocumentArray, **kwargs):
         for d in docs:
             for m in d.matches[: self.top_k]:
-                self._upscale(m)  # original
-                self._upscale(m.matches[: self.top_k])  # diffusion top-k
+                self._upscale(m)  # upscale the original
+                m.matches[: self.top_k].apply(self.upscale)  # upscale the diffused top-k

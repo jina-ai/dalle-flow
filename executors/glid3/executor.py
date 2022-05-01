@@ -9,7 +9,7 @@ from jina import Executor, DocumentArray, Document, requests
 
 class GLID3Diffusion(Executor):
     diffusion_steps = 80
-    skip_rate = 0.7
+    skip_rate = 0.5
     glid3_path = '/home/jupyter-han/glid-3-xl'
     top_k = 3
 
