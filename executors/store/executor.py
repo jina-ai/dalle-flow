@@ -9,6 +9,7 @@ class MyStore(Executor):
 
     @requests
     def store(self, docs: DocumentArray, **kwargs):
+        docs[...].blobs = None  # remove all blobs from anywhere to save space
         self.storage.extend(docs)
         print(f'total: {len(self.storage)}')
 
