@@ -10,27 +10,8 @@ from zipfile import ZipFile
 from jina import Executor, requests, DocumentArray, Document
 
 
-def _upscale(waifu_path: str, d: Document):
-    with tempfile.NamedTemporaryFile(
-        suffix='.png',
-    ) as f_in, tempfile.NamedTemporaryFile(
-        suffix='.png',
-    ) as f_out:
-        d.save_blob_to_file(f_in.name)
-        print(
-            subprocess.getoutput(
-                f'{waifu_path} -i {f_in.name} -o {f_out.name} -s 4 -n 0 -g -1'
-            )
-        )
-        print(f'{f_in.name} done')
-        d.uri = f_out.name
-        d.convert_uri_to_datauri()
-        d.blob = None
-    return d
-
-
 class Upscaler(Executor):
-    def __init__(self, waifu_url: str, **kwargs):
+    def __init__(self, waifu_url: str, top_k: int = 3, **kwargs):
         super().__init__(**kwargs)
         print('downloading...')
         resp = urlopen(waifu_url)
@@ -41,15 +22,33 @@ class Upscaler(Executor):
         self.waifu_path = os.path.realpath(
             f'{bin_path}/waifu2x-ncnn-vulkan-20220419-ubuntu/waifu2x-ncnn-vulkan'
         )
+        self.top_k = top_k
 
         st = os.stat(self.waifu_path)
         os.chmod(self.waifu_path, st.st_mode | stat.S_IEXEC)
         print(self.waifu_path)
 
+    def _upscale(self, d: Document):
+        with tempfile.NamedTemporaryFile(
+                suffix='.png',
+        ) as f_in, tempfile.NamedTemporaryFile(
+            suffix='.png',
+        ) as f_out:
+            d.save_blob_to_file(f_in.name)
+            print(
+                subprocess.getoutput(
+                    f'{self.waifu_path} -i {f_in.name} -o {f_out.name} -s 4 -n 0 -g -1'
+                )
+            )
+            print(f'{f_in.name} done')
+            d.uri = f_out.name
+            d.convert_uri_to_datauri()
+            d.blob = None
+        return d
+
     @requests
     async def upscale(self, docs: DocumentArray, parameters: Dict, **kwargs):
-        num_img = int(parameters.get('num_img', 1))
         for d in docs:
-            for m in d.matches[: num_img]:
-                _upscale(self.waifu_path, m)
-                _upscale(self.waifu_path, m.matches[0])
+            for m in d.matches[: self.top_k]:
+                self._upscale(m)
+                self._upscale(m.matches[0])

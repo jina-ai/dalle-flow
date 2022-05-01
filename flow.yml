@@ -14,6 +14,10 @@ executors:
       clip_server: grpc://0.0.0.0:51000
     py_modules:
       - executors/rerank/executor.py
+  - name: diffusion
+    uses: GLID3Diffusion
+    py_modules:
+      - executors/glid3/executor.py
   - name: upscaler
     uses: Upscaler
     py_modules:
