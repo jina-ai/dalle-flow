@@ -3,17 +3,17 @@ import os
 import shutil
 import subprocess
 import tempfile
+from typing import Dict
 
 from jina import Executor, DocumentArray, Document, requests
 
 
 class GLID3Diffusion(Executor):
     diffusion_steps = 80
-    skip_rate = 0.5
     glid3_path = '/home/jupyter-han/glid-3-xl'
     top_k = 3
 
-    def run_glid3(self, d: Document, text: str):
+    def run_glid3(self, d: Document, text: str, skip_rate: float):
         os.chdir(self.glid3_path)
         with tempfile.NamedTemporaryFile(
             suffix='.png',
@@ -25,7 +25,7 @@ class GLID3Diffusion(Executor):
 
             kw = {
                 'init_image': f_in.name,
-                'skip_timesteps': int(self.diffusion_steps * self.skip_rate),
+                'skip_timesteps': int(self.diffusion_steps * skip_rate),
                 'steps': self.diffusion_steps,
                 'model_path': 'finetune.pt',
                 'batch_size': 6,
@@ -44,6 +44,7 @@ class GLID3Diffusion(Executor):
             print('done!')
 
     @requests(on='/diffuse')
-    async def diffusion(self, docs: DocumentArray, **kwargs):
+    async def diffusion(self, docs: DocumentArray, parameters: Dict, **kwargs):
+        skip_rate = float(parameters.get('skip_rate', 0.5))
         for d in docs:
-            self.run_glid3(d, d.text)
+            self.run_glid3(d, d.text, skip_rate=skip_rate)
