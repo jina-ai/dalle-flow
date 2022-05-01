@@ -21,7 +21,7 @@ executors:
     py_modules:
       - executors/glid3/executor.py
     env:
-      CUDA_VISIBLE_DEVICES: 1
+      CUDA_VISIBLE_DEVICES: 2
   - name: upscaler
     uses: Upscaler
     py_modules:
