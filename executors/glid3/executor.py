@@ -20,6 +20,8 @@ class GLID3Diffusion(Executor):
         ) as f_in:
             print(f'preparing {f_in.name}')
             d.save_blob_to_file(f_in.name)
+            d.convert_blob_to_datauri()
+            d.blob = None
             shutil.rmtree(f'{self.glid3_path}/output')
             os.mkdir(f'{self.glid3_path}/output')
 
@@ -39,7 +41,7 @@ class GLID3Diffusion(Executor):
                 f'{self.glid3_path}/output/*.png'
             ):
                 kw['ctime'] = os.path.getctime(f)
-                _d = Document(uri=f, tags=kw).load_uri_to_blob()
+                _d = Document(uri=f, tags=kw).convert_uri_to_datauri()
                 d.matches.append(_d)
             print('done!')
 
