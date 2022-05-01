@@ -50,5 +50,5 @@ class Upscaler(Executor):
     async def upscale(self, docs: DocumentArray, **kwargs):
         for d in docs:
             for m in d.matches[: self.top_k]:
-                self._upscale(m)
-                self._upscale(m.matches[0])
+                self._upscale(m)  # original
+                self._upscale(m.matches[: self.top_k])  # diffusion top-k

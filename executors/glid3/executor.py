@@ -1,5 +1,6 @@
 import glob
 import os
+import shutil
 import subprocess
 import tempfile
 
@@ -8,6 +9,7 @@ from jina import Executor, DocumentArray, Document, requests
 
 class GLID3Diffusion(Executor):
     diffusion_steps = 80
+    skip_rate = 0.7
     glid3_path = '/home/jupyter-han/glid-3-xl'
     top_k = 3
 
@@ -16,11 +18,14 @@ class GLID3Diffusion(Executor):
         with tempfile.NamedTemporaryFile(
             suffix='.png',
         ) as f_in:
+            print(f'preparing {f_in.name}')
             d.save_blob_to_file(f_in.name)
+            shutil.rmtree(f'{self.glid3_path}/output')
+            os.mkdir(f'{self.glid3_path}/output')
 
             kw = {
                 'init_image': f_in.name,
-                'skip_timesteps': 10,
+                'skip_timesteps': int(self.diffusion_steps * self.skip_rate),
                 'steps': self.diffusion_steps,
                 'model_path': 'finetune.pt',
                 'batch_size': 6,
@@ -28,15 +33,15 @@ class GLID3Diffusion(Executor):
                 'text': f'"{text}"',
             }
             kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
-
-            print(subprocess.getoutput(f'python sample.py {kw_str}'))
-            list_of_files = glob.glob(
+            print('diffusion...')
+            subprocess.getoutput(f'python sample.py {kw_str}')
+            for f in glob.glob(
                 f'{self.glid3_path}/output/*.png'
-            )  # * means all if need specific format then *.csv
-            latest_file = max(list_of_files, key=os.path.getctime)
-            diffu_c = Document(uri=latest_file, tags=kw)
-            diffu_c.load_uri_to_blob()
-            d.matches.append(diffu_c)
+            ):
+                kw['ctime'] = os.path.getctime(f)
+                _d = Document(uri=f, tags=kw).load_uri_to_blob()
+                d.matches.append(_d)
+            print('done!')
 
     @requests
     async def diffusion(self, docs: DocumentArray, **kwargs):
