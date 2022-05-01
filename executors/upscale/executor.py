@@ -46,9 +46,6 @@ class Upscaler(Executor):
             d.tags['upscaled'] = 'true'
         return d
 
-    @requests
+    @requests(on='/upscale')
     async def upscale(self, docs: DocumentArray, **kwargs):
-        for d in docs:
-            for m in d.matches[: self.top_k]:
-                self._upscale(m)  # upscale the original
-                m.matches[: self.top_k].apply(self.upscale)  # upscale the diffused top-k
+        docs.apply(self._upscale)
