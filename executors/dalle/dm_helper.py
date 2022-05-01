@@ -62,7 +62,7 @@ processor = DalleBartProcessor.from_pretrained(DALLE_MODEL, revision=DALLE_COMMI
 
 def tokenize_prompt(prompt: str):
     tokenized_prompt = processor([prompt])
-    return replicate(tokenized_prompt)
+    return replicate(tokenized_prompt, devices=devices)
 
 
 def generate_images(prompt: str, num_predictions: int):
