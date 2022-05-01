@@ -8,6 +8,8 @@ with:
 executors:
   - name: dalle
     uses: executors/dalle/config.yml
+    env:
+      CUDA_VISIBLE_DEVICES: 0
   - name: rerank
     uses: ReRank
     uses_with:
@@ -18,6 +20,8 @@ executors:
     uses: GLID3Diffusion
     py_modules:
       - executors/glid3/executor.py
+    env:
+      CUDA_VISIBLE_DEVICES: 1
   - name: upscaler
     uses: Upscaler
     py_modules:
