@@ -3,6 +3,7 @@ import stat
 import subprocess
 import tempfile
 from io import BytesIO
+from typing import Dict
 from urllib.request import urlopen
 from zipfile import ZipFile
 
@@ -46,6 +47,9 @@ class Upscaler(Executor):
         print(self.waifu_path)
 
     @requests
-    async def upscale(self, docs: DocumentArray, **kwargs):
+    async def upscale(self, docs: DocumentArray, parameters: Dict, **kwargs):
+        num_img = int(parameters.get('num_img', 1))
         for d in docs:
-            d.matches.apply(lambda x: _upscale(self.waifu_path, x))
+            for m in d.matches[: num_img]:
+                _upscale(self.waifu_path, m)
+                _upscale(self.waifu_path, m.matches[0])

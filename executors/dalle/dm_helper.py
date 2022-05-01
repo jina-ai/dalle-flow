@@ -29,10 +29,10 @@ dtype = jnp.float32
 model = DalleBart.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID)
 vqgan = VQModel.from_pretrained(VQGAN_REPO, revision=VQGAN_COMMIT_ID)
 
-model._params = replicate(model.params)
-vqgan._params = replicate(vqgan.params)
-
 print('device', jax.device_count())
+devices = jax.local_devices()[1:]
+model._params = replicate(model.params, devices=devices)
+vqgan._params = replicate(vqgan.params, devices=devices)
 
 
 # model inference
