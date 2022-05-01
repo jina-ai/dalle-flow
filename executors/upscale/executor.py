@@ -43,6 +43,7 @@ class Upscaler(Executor):
             d.uri = f_out.name
             d.convert_uri_to_datauri()
             d.blob = None
+            d.tags['upscaled'] = 'true'
         return d
 
     @requests
