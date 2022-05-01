@@ -30,7 +30,7 @@ class Upscaler(Executor):
 
     def _upscale(self, d: Document):
         with tempfile.NamedTemporaryFile(
-                suffix='.png',
+            suffix='.png',
         ) as f_in, tempfile.NamedTemporaryFile(
             suffix='.png',
         ) as f_out:
@@ -47,7 +47,7 @@ class Upscaler(Executor):
         return d
 
     @requests
-    async def upscale(self, docs: DocumentArray, parameters: Dict, **kwargs):
+    async def upscale(self, docs: DocumentArray, **kwargs):
         for d in docs:
             for m in d.matches[: self.top_k]:
                 self._upscale(m)
