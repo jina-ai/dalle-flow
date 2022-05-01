@@ -19,6 +19,9 @@ class DalleGenerator(Executor):
             for img in generated_imgs:
                 buffered = BytesIO()
                 img.save(buffered, format='PNG')
-                d.matches.append(Document(blob=buffered.getvalue(), mime_type='image/png', tags={'text': d.text}))
+                _d = Document(blob=buffered.getvalue(), mime_type='image/png',
+                         tags={'text': d.text}).convert_blob_to_datauri()
+                _d.blob = None
+                d.matches.append(_d)
 
             print(f'{d.text} done!')

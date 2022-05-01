@@ -19,9 +19,7 @@ class GLID3Diffusion(Executor):
             suffix='.png',
         ) as f_in:
             print(f'preparing {f_in.name}')
-            d.save_blob_to_file(f_in.name)
-            d.convert_blob_to_datauri()
-            d.blob = None
+            d.save_uri_to_file(f_in.name)
             shutil.rmtree(f'{self.glid3_path}/output')
             os.mkdir(f'{self.glid3_path}/output')
 
