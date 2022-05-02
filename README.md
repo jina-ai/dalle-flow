@@ -12,6 +12,9 @@ DALL·E Flow is built with [Jina]() in a client-server architecture. This enable
 
 > Image filename (dash is whitespace) is the corresponding text prompt.
 
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/image (13).png?raw=true" width="33%"> <img src="https://github.com/hanxiao/dalle/blob/main/.github/image (14).png?raw=true" width="33%"> <img src="https://github.com/hanxiao/dalle/blob/main/.github/image (15).png?raw=true" width="33%">
+
+
 ## Client
 
 <a href="https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb"><img src="https://img.shields.io/badge/Open-in%20Colab-orange?logo=google-colab&style=flat-square" alt="Open in Google Colab"/></a>
