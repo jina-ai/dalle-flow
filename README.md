@@ -30,6 +30,9 @@ We have provided a demo server for you to play:
 server_url = 'grpc://dalle-flow.jina.ai:51005'
 ```
 
+
+### Step 1: DALL·E Mega
+
 Now let's define the prompt:
 
 ```python
@@ -53,10 +56,12 @@ Here we generate 16 candidates as defined in `num_images`, which takes about ~2 
 <img src="https://github.com/hanxiao/dalle/blob/main/.github/client-dalle.png?raw=true" width="60%">
 </p>
 
+### Step 2: Select and refinement via GLID3 XL
+
 Of course, you may think differently. So select the one you like the most and zoom in to get better view:
 
 ```python
-fav_id = 14
+fav_id = 3
 fav = da[fav_id]
 fav.display()
 ```
@@ -79,6 +84,7 @@ This will give 36 images based on the given image. You may allow the model to im
 <img src="https://github.com/hanxiao/dalle/blob/main/.github/client-glid.png?raw=true" width="60%">
 </p>
 
+### Step 2: Select and upscale via SwanIR
 
 Select the image you like the most, and give it a closer look:
 
@@ -103,7 +109,7 @@ fav.display()
 That's it! It is _the one_. If not satisfied, please repeat the procedure.
 
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-select2.png?raw=true" width="50%">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-select3.png?raw=true" width="50%">
 </p>
 
 Btw, DocArray is a powerful and easy-to-use data structure for unstructured data. It is super productive for data scientists who work in cross-/multi-modal domain. To learn more about DocArray, [please check out the docs](https://docs.jina.ai).
