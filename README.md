@@ -48,6 +48,11 @@ da.plot_image_sprites(fig_size=(10,10), show_index=True)
 
 Here we generate 16 candidates as defined in `num_images`, which takes about ~2 minutes. You can use a smaller value if it is too long for you. The results are sorted by [CLIP-as-service](https://github.com/jina-ai/clip-as-service), with index-`0` as the best candidate judged by CLIP. 
 
+
+<p align="center">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-dalle.png?raw=true" width="60%">
+</p>
+
 Of course, you may think differently. So select the one you like the most and zoom in to get better view:
 
 ```python
@@ -55,6 +60,10 @@ fav_id = 14
 fav = da[fav_id]
 fav.display()
 ```
+
+<p align="center">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-select1.png?raw=true" width="30%">
+</p>
 
 Now let's submit the selected candidates to the server for diffusion.
 
@@ -66,7 +75,25 @@ diffused.plot_image_sprites(fig_size=(10,10), show_index=True)
 
 This will give 36 images based on the given image. You may allow the model to improvise more by giving `skip_rate` a near-zero value, or a near-one value to force its closeness to the given image. The whole procedure takes about ~2 minutes.
 
-Select the image you like the most, and then submit to the server for the final step: upscaling to 1024 x 1024px.
+<p align="center">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-glid.png?raw=true" width="60%">
+</p>
+
+
+Select the image you like the most, and give it a closer look:
+
+```python
+dfav_id = 34
+fav = diffused[dfav_id]
+fav.display()
+```
+
+<p align="center">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-select2.png?raw=true" width="30%">
+</p>
+
+
+Finally, submit to the server for the last step: upscaling to 1024 x 1024px.
 
 ```python
 fav = fav.post(f'{server_url}/upscale')
@@ -74,6 +101,10 @@ fav.display()
 ```
 
 That's it! It is _the one_. If not satisfied, please repeat the procedure.
+
+<p align="center">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-select2.png?raw=true" width="50%">
+</p>
 
 Btw, DocArray is a powerful and easy-to-use data structure for unstructured data. It is super productive for data scientists who work in cross-/multi-modal domain. To learn more about DocArray, [please check out the docs](https://docs.jina.ai).
 
