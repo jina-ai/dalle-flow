@@ -35,7 +35,7 @@ class GLID3Diffusion(Executor):
             }
             kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
             print('diffusion...')
-            subprocess.getoutput(f'python sample.py {kw_str}')
+            print(subprocess.getoutput(f'python sample.py {kw_str}'))
             for f in glob.glob(f'{self.glid3_path}/output/*.png'):
                 kw['ctime'] = os.path.getctime(f)
                 _d = Document(uri=f, tags=kw).convert_uri_to_datauri()
