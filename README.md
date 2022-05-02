@@ -1,19 +1,60 @@
-# DALL·E Pipeline
+# DALL·E Flow
 
 ## Server
 
+### Requirements
+
+It is highly recommended to run DALL·E Flow on a GPU machine.
+
+
 ### Install
 
-It is highly recommended to run DALL·E Pipeline on a GPU machine.
+#### Clone repos
 
 ```bash
-pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_releases.html  # Note: wheels only available on linux.
-git clone https://github.com/hanxiao/dalle-pipeline.git
-cd dalle-pipeline
+mkdir dalle && cd dalle
+git clone https://github.com/hanxiao/dalle-flow.git
+git clone https://github.com/JingyunLiang/SwinIR.git
+git clone https://github.com/CompVis/latent-diffusion.git
+git clone https://github.com/Jack000/glid-3-xl.git
+```
+
+You should have the following folder structure:
+
+```text
+dalle/
+ |
+ |-- dalle-flow/
+ |-- SwinIR/
+ |-- glid-3-xl/
+ |-- latent-diffusion/
+```
+
+#### Install auxiliary repos
+
+```bash
+cd latent-diffusion && pip install -e . && cd -
+cd glid-3-xl && pip install -e . && cd -
+```
+
+There are couple models we need to download first for GLID-3-XL:
+
+```bash
+wget https://dall-3.com/models/glid-3-xl/bert.pt
+wget https://dall-3.com/models/glid-3-xl/kl-f8.pt
+wget https://dall-3.com/models/glid-3-xl/finetune.pt
+```
+
+#### Install flow
+
+```bash
+cd dalle-flow
 pip install -r requirements.txt
 ```
 
-Now we can run the pipeline. In Jina's idiom a pipeline is a `Flow`:
+### Start the server
+
+Now we can run the flow. 
 
 ```bash
 jina flow --uses flow.yml

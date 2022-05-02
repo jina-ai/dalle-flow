@@ -18,6 +18,9 @@ executors:
       - executors/rerank/executor.py
   - name: diffusion
     uses: GLID3Diffusion
+    uses_with:
+      steps: 80
+      glid3_path: ../glid-3-xl
     py_modules:
       - executors/glid3/executor.py
     env:
@@ -33,7 +36,7 @@ executors:
     py_modules:
       - executors/swinir/executor.py
     uses_with:
-      swinir_path: /home/jupyter-han/SwinIR
+      swinir_path: ../SwinIR
   - name: store
     uses: MyStore
     py_modules:

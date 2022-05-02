@@ -10,3 +10,4 @@ git+https://github.com/borisdayma/dalle-mini.git
 # SwinIR
 opencv-python
 timm
+Cython

@@ -9,9 +9,10 @@ from jina import Executor, DocumentArray, Document, requests
 
 
 class GLID3Diffusion(Executor):
-    diffusion_steps = 80
-    glid3_path = '/home/jupyter-han/glid-3-xl'
-    top_k = 3
+    def __init__(self, glid3_path: str, steps: int, **kwargs):
+        super().__init__(**kwargs)
+        self.glid3_path = glid3_path
+        self.diffusion_steps = steps
 
     def run_glid3(self, d: Document, text: str, skip_rate: float):
         os.chdir(self.glid3_path)
@@ -35,9 +36,7 @@ class GLID3Diffusion(Executor):
             kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
             print('diffusion...')
             subprocess.getoutput(f'python sample.py {kw_str}')
-            for f in glob.glob(
-                f'{self.glid3_path}/output/*.png'
-            ):
+            for f in glob.glob(f'{self.glid3_path}/output/*.png'):
                 kw['ctime'] = os.path.getctime(f)
                 _d = Document(uri=f, tags=kw).convert_uri_to_datauri()
                 d.matches.append(_d)
