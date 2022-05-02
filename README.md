@@ -8,6 +8,8 @@ DALL·E Flow is a workflow for generating images from text prompt. It first leve
 
 DALL·E Flow is built with [Jina]() in a client-server architecture. This enables DALL·E Flow with high scalability,  non-blocking streaming, and a modern Pythonic API. Client can interact the server via gRPC/Websocket/HTTP with TLS.
 
+**Why Human-in-the-Loop?** Generative art is a creative process. While recent advances of DALL·E unleash people's creativity, having a single-prompt-single-output UX/UI locks the imagination _one_ possibility, which is bad no matter how fine this single result is. DALL·E Flow is an alternative to the one-liner, by formalizing the generative art as an iterative procedure.
+
 ## Gallery
 
 > Image filename (dash is whitespace) is the corresponding text prompt.
