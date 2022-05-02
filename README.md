@@ -82,15 +82,23 @@ jina flow --uses flow.yml
 
 You should see this screen immediately:
 
-![](.github/server-onstart.png)
+<p align="center">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/server-onstart.png?raw=true" width="50%">
+</p>
 
 On the first start it will take ~8 minutes for downloading the DALL·E mega model and other necessary models.
 
-![](.github/server-wait.png)
+<p align="center">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/server-wait.png?raw=true" width="50%">
+</p>
+
 
 When everything is ready, you will see:
 
-![](.github/server-success.png)
+<p align="center">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/server-success.png?raw=true" width="50%">
+</p>
+
 
 Congrats, now you should be able to [run the client](./client.ipynb).
 
