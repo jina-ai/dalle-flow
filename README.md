@@ -31,10 +31,10 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 Using client is super easy. The following steps are best run in [Jupyter notebook](./client.ipynb) or [Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).  
 
-The only dependency you will need is [DocArray](https://github.com/jina-ai/docarray).
+You will need to install [DocArray](https://github.com/jina-ai/docarray) and [Jina](https://github.com/jina-ai/jina) first:
 
 ```bash
-pip install "docarray[common]>=0.13.5"
+pip install "docarray[common]>=0.13.5" jina
 ```
 
 We have provided a demo server for you to play:
