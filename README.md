@@ -38,6 +38,7 @@ pip install "docarray[common]>=0.13.5" jina
 ```
 
 We have provided a demo server for you to play:
+> ⚠️ **Due to the massive requests now, the server is super busy.** You can deploy your own server by [following the instruction here](#server).
 
 ```python
 server_url = 'grpc://dalle-flow.jina.ai:51005'
