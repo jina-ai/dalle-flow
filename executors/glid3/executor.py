@@ -21,7 +21,7 @@ class GLID3Diffusion(Executor):
         ) as f_in:
             print(f'preparing {f_in.name}')
             d.save_uri_to_file(f_in.name)
-            shutil.rmtree(f'{self.glid3_path}/output')
+            shutil.rmtree(f'{self.glid3_path}/output', ignore_errors=True)
             os.mkdir(f'{self.glid3_path}/output')
 
             kw = {

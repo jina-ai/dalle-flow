@@ -4,7 +4,7 @@
 
 ### Requirements
 
-It is highly recommended to run DALL·E Flow on a GPU machine.
+It is highly recommended to run DALL·E Flow on a GPU machine. In fact, one GPU is probably not enough. Besides DALL·E Mega, other 
 
 
 ### Install
@@ -60,7 +60,7 @@ Now we can run the flow.
 jina flow --uses flow.yml
 ```
 
-You should see this screen immedidately:
+You should see this screen immediately:
 
 ![](.github/server-onstart.png)
 
@@ -73,3 +73,5 @@ When everything is ready, you will see:
 ![](.github/server-success.png)
 
 Congrats, now you should be able to [run the client](./client.ipynb).
+
+The second run should only take ~1 minute to reach the address panel.
