@@ -13,7 +13,7 @@
 
 DALL·E Flow is an interactive workflow for generating high-definition images from text prompt. It first leverages [DALL·E-Mega](https://github.com/borisdayma/dalle-mini) to generate image candidates, and then calls [CLIP-as-service](https://github.com/jina-ai/clip-as-service) to rank the candidates w.r.t. the prompt. The preferred candidate is fed to [GLID-3 XL](https://github.com/Jack000/glid-3-xl) for diffusion, which often enriches the texture and background. Finally, the candidate is upscaled to 1024x1024 with [SwinIR](https://github.com/JingyunLiang/SwinIR).
 
-DALL·E Flow is built with [Jina]() in a client-server architecture, which gives it high scalability, non-blocking streaming, and a modern Pythonic interface. Client can interact the server via gRPC/Websocket/HTTP with TLS.
+DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-server architecture, which gives it high scalability, non-blocking streaming, and a modern Pythonic interface. Client can interact the server via gRPC/Websocket/HTTP with TLS.
 
 **Why Human-in-the-Loop?** Generative art is a creative process. While recent advances of DALL·E unleash people's creativity, having a single-prompt-single-output UX/UI locks the imagination to _single_ possibility, which is bad no matter how fine this single result is. DALL·E Flow is an alternative to the one-liner, by formalizing the generative art as an iterative procedure.
 
@@ -29,7 +29,7 @@ DALL·E Flow is built with [Jina]() in a client-server architecture, which gives
 
 <a href="https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb"><img src="https://img.shields.io/badge/Open-in%20Colab-orange?logo=google-colab&style=flat-square" alt="Open in Google Colab"/></a>
 
-Using client is super easy. The following steps are best run in Jupyter notebook or [Google Colab]().  
+Using client is super easy. The following steps are best run in [Jupyter notebook](./client.ipynb) or [Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).  
 
 The only dependency you will need is [DocArray](https://github.com/jina-ai/docarray).
 
@@ -44,7 +44,7 @@ server_url = 'grpc://dalle-flow.jina.ai:51005'
 ```
 
 
-### Step 1: DALL·E Mega
+### Step 1: Generate via DALL·E Mega
 
 Now let's define the prompt:
 
