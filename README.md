@@ -75,7 +75,7 @@ fav.display()
 
 That's it! It is _the one_. If not satisfied, please repeat the procedure.
 
-To learn more about DocArray API, [please follow the docs](https://docs.jina.ai).
+Btw, DocArray is a powerful and easy-to-use data structure for unstructured data. It is super productive for data scientists who work in cross-/multi-modal domain. To learn more about DocArray, [please check out the docs](https://docs.jina.ai).
 
 ## Server
 
