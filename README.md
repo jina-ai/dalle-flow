@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-Loop workflow for creating HD images from text" width="50%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-Loop workflow for creating HD images from text" width="50%">
 <br>
 <b>A Human-in-the-Loop workflow for creating HD images from text</b>
 </p>
@@ -22,7 +22,7 @@ DALL·E Flow is built with [Jina]() in a client-server architecture, which gives
 > Image filename is the corresponding text prompt.
 
 
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/A%20raccoon%20astronaut%20with%20the%20cosmos%20reflecting%20on%20the%20glass%20of%20his%20helmet%20dreaming%20of%20the%20stars%2C%20digital%20art.png?raw=true" width="32%" alt="A raccoon astronaut with the cosmos reflecting on the glass of his helmet dreaming of the stars, digital art" title="A raccoon astronaut with the cosmos reflecting on the glass of his helmet dreaming of the stars, digital art"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/oil%20painting%20of%20a%20hamster%20drinking%20tea%20outside.png?raw=true" width="32%" alt="oil painting of a hamster drinking tea outside" title="oil painting of a hamster drinking tea outside"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/An%20oil%20pastel%20painting%20of%20an%20annoyed%20cat%20in%20a%20spaceship.png?raw=true" width="32%" alt="An oil pastel painting of an annoyed cat in a spaceship" title="An oil pastel painting of an annoyed cat in a spaceship"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/a%20rainy%20night%20with%20a%20superhero%20perched%20above%20a%20city%2C%20in%20the%20style%20of%20a%20comic%20book.png?raw=true" width="32%" alt="a rainy night with a superhero perched above a city, in the style of a comic book" title="a rainy night with a superhero perched above a city, in the style of a comic book"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/A%20synthwave%20style%20sunset%20above%20the%20reflecting%20water%20of%20the%20sea%2C%20digital%20art.png?raw=true" width="32%" alt="A synthwave style sunset above the reflecting water of the sea, digital art" title="A synthwave style sunset above the reflecting water of the sea, digital art"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/a%203D%20render%20of%20a%20rainbow%20colored%20hot%20air%20balloon%20flying%20above%20a%20reflective%20lake.png?raw=true" width="32%" alt="a 3D render of a rainbow colored hot air balloon flying above a reflective lake" title="a 3D render of a rainbow colored hot air balloon flying above a reflective lake"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/a%20teddy%20bear%20on%20a%20skateboard%20in%20Times%20Square%20.png?raw=true" width="32%" alt="a teddy bear on a skateboard in Times Square " title="a teddy bear on a skateboard in Times Square "><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/A%20stained%20glass%20window%20of%20toucans%20in%20outer%20space.png?raw=true" width="32%" alt="A stained glass window of toucans in outer space" title="A stained glass window of toucans in outer space"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/a%20campfire%20in%20the%20woods%20at%20night%20with%20the%20milky-way%20galaxy%20in%20the%20sky.png?raw=true" width="32%" alt="a campfire in the woods at night with the milky-way galaxy in the sky" title="a campfire in the woods at night with the milky-way galaxy in the sky"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/The%20Hanging%20Gardens%20of%20Babylon%20in%20the%20middle%20of%20a%20city%2C%20in%20the%20style%20of%20Dal%C3%AD.png?raw=true" width="32%" alt="The Hanging Gardens of Babylon in the middle of a city, in the style of Dalí" title="The Hanging Gardens of Babylon in the middle of a city, in the style of Dalí"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/An%20oil%20painting%20of%20a%20family%20reunited%20inside%20of%20an%20airport%2C%20digital%20art.png?raw=true" width="32%" alt="An oil painting of a family reunited inside of an airport, digital art" title="An oil painting of a family reunited inside of an airport, digital art"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/an%20oil%20painting%20of%20a%20humanoid%20robot%20playing%20chess%20in%20the%20style%20of%20Matisse.png?raw=true" width="32%" alt="an oil painting of a humanoid robot playing chess in the style of Matisse" title="an oil painting of a humanoid robot playing chess in the style of Matisse"><img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/golden%20gucci%20airpods%20realistic%20photo.png?raw=true" width="32%" alt="golden gucci airpods realistic photo" title="golden gucci airpods realistic photo">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/A%20raccoon%20astronaut%20with%20the%20cosmos%20reflecting%20on%20the%20glass%20of%20his%20helmet%20dreaming%20of%20the%20stars%2C%20digital%20art.png?raw=true" width="32%" alt="A raccoon astronaut with the cosmos reflecting on the glass of his helmet dreaming of the stars, digital art" title="A raccoon astronaut with the cosmos reflecting on the glass of his helmet dreaming of the stars, digital art"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/oil%20painting%20of%20a%20hamster%20drinking%20tea%20outside.png?raw=true" width="32%" alt="oil painting of a hamster drinking tea outside" title="oil painting of a hamster drinking tea outside"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/An%20oil%20pastel%20painting%20of%20an%20annoyed%20cat%20in%20a%20spaceship.png?raw=true" width="32%" alt="An oil pastel painting of an annoyed cat in a spaceship" title="An oil pastel painting of an annoyed cat in a spaceship"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/a%20rainy%20night%20with%20a%20superhero%20perched%20above%20a%20city%2C%20in%20the%20style%20of%20a%20comic%20book.png?raw=true" width="32%" alt="a rainy night with a superhero perched above a city, in the style of a comic book" title="a rainy night with a superhero perched above a city, in the style of a comic book"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/A%20synthwave%20style%20sunset%20above%20the%20reflecting%20water%20of%20the%20sea%2C%20digital%20art.png?raw=true" width="32%" alt="A synthwave style sunset above the reflecting water of the sea, digital art" title="A synthwave style sunset above the reflecting water of the sea, digital art"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/a%203D%20render%20of%20a%20rainbow%20colored%20hot%20air%20balloon%20flying%20above%20a%20reflective%20lake.png?raw=true" width="32%" alt="a 3D render of a rainbow colored hot air balloon flying above a reflective lake" title="a 3D render of a rainbow colored hot air balloon flying above a reflective lake"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/a%20teddy%20bear%20on%20a%20skateboard%20in%20Times%20Square%20.png?raw=true" width="32%" alt="a teddy bear on a skateboard in Times Square " title="a teddy bear on a skateboard in Times Square "><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/A%20stained%20glass%20window%20of%20toucans%20in%20outer%20space.png?raw=true" width="32%" alt="A stained glass window of toucans in outer space" title="A stained glass window of toucans in outer space"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/a%20campfire%20in%20the%20woods%20at%20night%20with%20the%20milky-way%20galaxy%20in%20the%20sky.png?raw=true" width="32%" alt="a campfire in the woods at night with the milky-way galaxy in the sky" title="a campfire in the woods at night with the milky-way galaxy in the sky"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/The%20Hanging%20Gardens%20of%20Babylon%20in%20the%20middle%20of%20a%20city%2C%20in%20the%20style%20of%20Dal%C3%AD.png?raw=true" width="32%" alt="The Hanging Gardens of Babylon in the middle of a city, in the style of Dalí" title="The Hanging Gardens of Babylon in the middle of a city, in the style of Dalí"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/An%20oil%20painting%20of%20a%20family%20reunited%20inside%20of%20an%20airport%2C%20digital%20art.png?raw=true" width="32%" alt="An oil painting of a family reunited inside of an airport, digital art" title="An oil painting of a family reunited inside of an airport, digital art"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/an%20oil%20painting%20of%20a%20humanoid%20robot%20playing%20chess%20in%20the%20style%20of%20Matisse.png?raw=true" width="32%" alt="an oil painting of a humanoid robot playing chess in the style of Matisse" title="an oil painting of a humanoid robot playing chess in the style of Matisse"><img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/gallery/golden%20gucci%20airpods%20realistic%20photo.png?raw=true" width="32%" alt="golden gucci airpods realistic photo" title="golden gucci airpods realistic photo">
 
 
 ## Client
@@ -66,7 +66,7 @@ Here we generate 16 candidates as defined in `num_images`, which takes about ~2 
 
 
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-dalle.png?raw=true" width="60%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/client-dalle.png?raw=true" width="60%">
 </p>
 
 ### Step 2: Select and refinement via GLID3 XL
@@ -80,7 +80,7 @@ fav.display()
 ```
 
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-select1.png?raw=true" width="30%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/client-select1.png?raw=true" width="30%">
 </p>
 
 Now let's submit the selected candidates to the server for diffusion.
@@ -94,7 +94,7 @@ diffused.plot_image_sprites(fig_size=(10,10), show_index=True)
 This will give 36 images based on the given image. You may allow the model to improvise more by giving `skip_rate` a near-zero value, or a near-one value to force its closeness to the given image. The whole procedure takes about ~2 minutes.
 
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-glid.png?raw=true" width="60%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/client-glid.png?raw=true" width="60%">
 </p>
 
 ### Step 2: Select and upscale via SwanIR
@@ -108,7 +108,7 @@ fav.display()
 ```
 
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-select2.png?raw=true" width="30%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/client-select2.png?raw=true" width="30%">
 </p>
 
 
@@ -122,7 +122,7 @@ fav.display()
 That's it! It is _the one_. If not satisfied, please repeat the procedure.
 
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/client-select3.png?raw=true" width="50%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/client-select3.png?raw=true" width="50%">
 </p>
 
 Btw, DocArray is a powerful and easy-to-use data structure for unstructured data. It is super productive for data scientists who work in cross-/multi-modal domain. To learn more about DocArray, [please check out the docs](https://docs.jina.ai).
@@ -146,7 +146,7 @@ CPU-only environment is not tested and likely won't work. Google Colab is likely
 
 ```bash
 mkdir dalle && cd dalle
-git clone https://github.com/hanxiao/dalle-flow.git
+git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/JingyunLiang/SwinIR.git
 git clone https://github.com/CompVis/latent-diffusion.git
 git clone https://github.com/Jack000/glid-3-xl.git
@@ -196,20 +196,20 @@ jina flow --uses flow.yml
 You should see this screen immediately:
 
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/server-onstart.png?raw=true" width="50%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/server-onstart.png?raw=true" width="50%">
 </p>
 
 On the first start it will take ~8 minutes for downloading the DALL·E mega model and other necessary models. The proceeding runs should only take ~1 minute to reach the success message.
 
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/server-wait.png?raw=true" width="50%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/server-wait.png?raw=true" width="50%">
 </p>
 
 
 When everything is ready, you will see:
 
 <p align="center">
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/server-success.png?raw=true" width="50%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/server-success.png?raw=true" width="50%">
 </p>
 
 
