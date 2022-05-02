@@ -5,6 +5,7 @@ docarray>=0.13.5
 # dalle-mini
 jax[cuda] -f https://storage.googleapis.com/jax-releases/jax_releases.html
 flax
+git+https://github.com/openai/CLIP.git
 git+https://github.com/huggingface/transformers.git
 git+https://github.com/patil-suraj/vqgan-jax.git
 git+https://github.com/borisdayma/dalle-mini.git
