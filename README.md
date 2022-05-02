@@ -1,7 +1,7 @@
 <p align="center">
 <img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-Loop workflow for creating HD images from text" width="50%">
 <br>
-<b>A Human-in-the-Loop workflow for creating HD images from text</b>
+<b>A Human-in-the-Loop<sup><a href="https://en.wikipedia.org/wiki/Human-in-the-loop">?</a></sup> workflow for creating HD images from text</b>
 </p>
 
 <p align=center>
