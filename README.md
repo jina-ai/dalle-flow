@@ -1,6 +1,8 @@
-# DALL·E Flow <a href="https://slack.jina.ai"><img src="https://img.shields.io/badge/Slack-2.8k-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
+# DALL·E Flow 
 
 **Creating HD images from text via DALL·E in a Human-in-the-Loop workflow**
+
+<a href="https://slack.jina.ai"><img src="https://img.shields.io/badge/Slack-2.8k-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
 
 
 
