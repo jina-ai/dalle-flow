@@ -11,7 +11,7 @@ class DalleGenerator(Executor):
     @requests(on='/')
     def generate(self, docs: DocumentArray, parameters: Dict, **kwargs):
 
-        num_images = min(32, int(parameters.get('num_images', 1)))
+        num_images = max(1, min(32, int(parameters.get('num_images', 1))))  # can be of course > 32 but to save time
         for d in docs:
             print(f'Created {num_images} images from text prompt [{d.text}]')
             generated_imgs = dm_helper.generate_images(d.text, num_images)
