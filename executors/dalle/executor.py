@@ -13,7 +13,7 @@ class DalleGenerator(Executor):
 
         num_images = max(1, min(32, int(parameters.get('num_images', 1))))  # can be of course > 32 but to save time
         for d in docs:
-            print(f'Created {num_images} images from text prompt [{d.text}]')
+            print(f'creating {num_images} images from text prompt [{d.text}]')
             generated_imgs = dm_helper.generate_images(d.text, num_images)
 
             for img in generated_imgs:
@@ -24,4 +24,4 @@ class DalleGenerator(Executor):
                 _d.text = d.text
                 d.matches.append(_d)
 
-            print(f'{d.text} done!')
+            print(f'done with [{d.text}]')

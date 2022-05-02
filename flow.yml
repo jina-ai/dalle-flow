@@ -37,6 +37,8 @@ executors:
       - executors/swinir/executor.py
     uses_with:
       swinir_path: ../SwinIR
+    env:
+      CUDA_VISIBLE_DEVICES: 2
   - name: store
     uses: MyStore
     py_modules:

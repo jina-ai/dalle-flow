@@ -1,15 +1,26 @@
 # DALL·E Flow
 
-DALL·E Flow is a workflow for generating images from text prompt. It first leverages DALL·E Mega to generate image candidates, then uses CLIP-as-service to rank those candidates w.r.t. the prompt. The preferred candidate is fed to [GLID-3 XL] for diffusion, which often  
-GLID-3,
+Creating HD images from text via DALL·E in a Human-in-the-Loop workflow
+
+DALL·E Flow is a workflow for generating images from text prompt. It first leverages [DALL·E-Mega](https://github.com/borisdayma/dalle-mini) to generate image candidates, and then calls [CLIP-as-service](https://github.com/jina-ai/clip-as-service) to rank the candidates w.r.t. the prompt. The preferred candidate is fed to [GLID-3 XL](https://github.com/Jack000/glid-3-xl) for diffusion, which often enriches the texture and background. Finally, the candidate is upscaled to 1024x1024 with [SwinIR](https://github.com/JingyunLiang/SwinIR).
+
+DALL·E Flow is built with [Jina]() in a client-server architecture. This gives DALL·E Flow the high scalability, the non-blocking streaming, and a modern Pythonic API. It also allows user to interact the server via gRPC/Websocket/HTTP with TLS.
+
+## Gallery
 
 ## Client
 
 ## Server
 
-### Requirements
+You can host your own server by following the instruction below.
 
-It is highly recommended to run DALL·E Flow on a GPU machine. In fact, one GPU is probably not enough. Besides DALL·E Mega, D 
+### Hardware requirements
+
+It is highly recommended to run DALL·E Flow on a GPU machine. In fact, one GPU is probably not enough. DALL·E Mega needs one with 22GB memory. SwinIR and GLID-3 also need one; as they can be spawned on-demandly in seconds, they can share one GPU.
+
+It requires at least 40GB free space on the hard drive, mostly for downloading pretrained models.
+
+CPU-only environment is not tested and likely won't work.
 
 
 ### Install
