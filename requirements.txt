@@ -1,5 +1,11 @@
-flax
+# jina-related
+jina
 clip_client
+# dalle-mini
+flax
 git+https://github.com/huggingface/transformers.git
 git+https://github.com/patil-suraj/vqgan-jax.git
 git+https://github.com/borisdayma/dalle-mini.git
+# SwinIR
+opencv-python
+timm
