@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-Loop workflow for creating HD images from text" width="50%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-Loop workflow for creating HD images from text" width="60%">
 <br>
 <b>A Human-in-the-Loop<sup><a href="https://en.wikipedia.org/wiki/Human-in-the-loop">?</a></sup> workflow for creating HD images from text</b>
 </p>
@@ -97,7 +97,7 @@ This will give 36 images based on the given image. You may allow the model to im
 <img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/client-glid.png?raw=true" width="60%">
 </p>
 
-### Step 2: Select and upscale via SwanIR
+### Step 3: Select and upscale via SwanIR
 
 Select the image you like the most, and give it a closer look:
 
