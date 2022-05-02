@@ -12,7 +12,70 @@ DALL·E Flow is built with [Jina]() in a client-server architecture. This enable
 
 ## Gallery
 
+> Image filename (dash is whitespace) is the corresponding text prompt.
+
 ## Client
+
+Using client is super easy. The following steps are best run in Jupyter notebook or [Google Colab]().  
+
+The only dependency you will need is [DocArray](https://github.com/jina-ai/docarray).
+
+```bash
+pip install "docarray[common]>=0.13.5"
+```
+
+We have provided a demo server for you to play:
+
+```python
+server_url = 'grpc://dalle-flow.jina.ai:51005'
+```
+
+Now let's define the prompt:
+
+```python
+prompt = ''
+```
+
+Let's submit it to the server and visualize the results:
+
+```python
+from docarray import Document
+
+da = Document(text=prompt).post(server_url, parameters={'num_images': 16}).matches
+
+da.plot_image_sprites(fig_size=(10,10), show_index=True)
+```
+
+Here we generate 16 candidates as defined in `num_images`, which takes about ~2 minutes. You can use a smaller value if it is too long for you. The results are sorted by [CLIP-as-service](https://github.com/jina-ai/clip-as-service), with index-`0` as the best candidate judged by CLIP. 
+
+Of course, you may think differently. So select the one you like the most and zoom in to get better view:
+
+```python
+fav_id = 14
+fav = da[fav_id]
+fav.display()
+```
+
+Now let's submit the selected candidates to the server for diffusion.
+
+```python
+diffused = fav.post(f'{server_url}/diffuse', parameters={'skip_rate': 0.5}).matches
+
+diffused.plot_image_sprites(fig_size=(10,10), show_index=True)
+```
+
+This will give 36 images based on the given image. You may allow the model to improvise more by giving `skip_rate` a near-zero value, or a near-one value to force its closeness to the given image. The whole procedure takes about ~2 minutes.
+
+Select the image you like the most, and then submit to the server for the final step: upscaling to 1024 x 1024px.
+
+```python
+fav = fav.post(f'{server_url}/upscale')
+fav.display()
+```
+
+That's it! It is _the one_. If not satisfied, please repeat the procedure.
+
+To learn more about DocArray API, [please follow the docs](https://docs.jina.ai).
 
 ## Server
 
