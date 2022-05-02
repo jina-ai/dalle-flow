@@ -1,6 +1,7 @@
 # jina-related
-jina
-clip_client
+jina>=3.3.22
+clip_client>=0.4.0
+docarray>=0.13.5
 # dalle-mini
 jax[cuda] -f https://storage.googleapis.com/jax-releases/jax_releases.html
 flax
