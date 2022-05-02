@@ -2,6 +2,7 @@
 jina
 clip_client
 # dalle-mini
+jax[cuda] -f https://storage.googleapis.com/jax-releases/jax_releases.html
 flax
 git+https://github.com/huggingface/transformers.git
 git+https://github.com/patil-suraj/vqgan-jax.git
