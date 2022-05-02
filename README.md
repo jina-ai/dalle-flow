@@ -12,7 +12,7 @@ DALL·E Flow is built with [Jina]() in a client-server architecture. This enable
 
 > Image filename (dash is whitespace) is the corresponding text prompt.
 
-<img src="https://github.com/hanxiao/dalle/blob/main/.github/image (13).png?raw=true" width="33%"> <img src="https://github.com/hanxiao/dalle/blob/main/.github/image (14).png?raw=true" width="33%"> <img src="https://github.com/hanxiao/dalle/blob/main/.github/image (15).png?raw=true" width="33%">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/image (13).png?raw=true" width="33%"> <img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/image (14).png?raw=true" width="33%"> <img src="https://github.com/hanxiao/dalle/blob/main/.github/gallery/image (15).png?raw=true" width="33%">
 
 
 ## Client
