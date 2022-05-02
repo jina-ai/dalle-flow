@@ -2,9 +2,7 @@
 
 **Creating HD images from text via DALL·E in a Human-in-the-Loop workflow**
 
-<a href="https://slack.jina.ai"><img src="https://img.shields.io/badge/Slack-2.8k-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
-
-
+<a href="https://slack.jina.ai"><img src="https://img.shields.io/badge/Slack-2.8k-blueviolet?logo=slack&amp;logoColor=white&style=flat-square" alt="Open in Google Colab"></a> <a href="https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb"><img src="https://img.shields.io/badge/Open-in%20Colab-orange?logo=google-colab&style=flat-square" alt="Open in Google Colab"/></a>
 
 DALL·E Flow is a workflow for generating images from text prompt. It first leverages [DALL·E-Mega](https://github.com/borisdayma/dalle-mini) to generate image candidates, and then calls [CLIP-as-service](https://github.com/jina-ai/clip-as-service) to rank the candidates w.r.t. the prompt. The preferred candidate is fed to [GLID-3 XL](https://github.com/Jack000/glid-3-xl) for diffusion, which often enriches the texture and background. Finally, the candidate is upscaled to 1024x1024 with [SwinIR](https://github.com/JingyunLiang/SwinIR).
 
@@ -15,6 +13,8 @@ DALL·E Flow is built with [Jina]() in a client-server architecture. This enable
 > Image filename (dash is whitespace) is the corresponding text prompt.
 
 ## Client
+
+<a href="https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb"><img src="https://img.shields.io/badge/Open-in%20Colab-orange?logo=google-colab&style=flat-square" alt="Open in Google Colab"/></a>
 
 Using client is super easy. The following steps are best run in Jupyter notebook or [Google Colab]().  
 
@@ -36,7 +36,7 @@ server_url = 'grpc://dalle-flow.jina.ai:51005'
 Now let's define the prompt:
 
 ```python
-prompt = ''
+prompt = 'an oil painting of a humanoid robot playing chess in the style of Matisse'
 ```
 
 Let's submit it to the server and visualize the results:
@@ -58,7 +58,7 @@ Here we generate 16 candidates as defined in `num_images`, which takes about ~2 
 
 ### Step 2: Select and refinement via GLID3 XL
 
-Of course, you may think differently. So select the one you like the most and zoom in to get better view:
+Of course, you may think differently. Notice the number in the top-left corner? Select the one you like the most and get a better view:
 
 ```python
 fav_id = 3
@@ -124,7 +124,7 @@ It is highly recommended to run DALL·E Flow on a GPU machine. In fact, one GPU 
 
 It requires at least 40GB free space on the hard drive, mostly for downloading pretrained models.
 
-CPU-only environment is not tested and likely won't work.
+CPU-only environment is not tested and likely won't work. Google Colab is likely throwing OOM hence also won't work.
 
 
 ### Install
