@@ -22,7 +22,9 @@ class GLID3Diffusion(Executor):
             print(f'preparing {f_in.name}')
             d.save_uri_to_file(f_in.name)
             shutil.rmtree(f'{self.glid3_path}/output', ignore_errors=True)
+            shutil.rmtree(f'{self.glid3_path}/output_npy', ignore_errors=True)
             os.mkdir(f'{self.glid3_path}/output')
+            os.mkdir(f'{self.glid3_path}/output_npy')
 
             kw = {
                 'init_image': f_in.name,

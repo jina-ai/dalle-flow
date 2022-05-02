@@ -1,10 +1,15 @@
 # DALL·E Flow
 
+DALL·E Flow is a workflow for generating images from text prompt. It first leverages DALL·E Mega to generate image candidates, then uses CLIP-as-service to rank those candidates w.r.t. the prompt. The preferred candidate is fed to [GLID-3 XL] for diffusion, which often  
+GLID-3,
+
+## Client
+
 ## Server
 
 ### Requirements
 
-It is highly recommended to run DALL·E Flow on a GPU machine. In fact, one GPU is probably not enough. Besides DALL·E Mega, other 
+It is highly recommended to run DALL·E Flow on a GPU machine. In fact, one GPU is probably not enough. Besides DALL·E Mega, D 
 
 
 ### Install
@@ -54,7 +59,7 @@ pip install -r requirements.txt
 
 ### Start the server
 
-Now we can run the flow. 
+Now you are under `dalle-flow/`, run the following command: 
 
 ```bash
 jina flow --uses flow.yml
