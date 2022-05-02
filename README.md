@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/jina-ai/docarray/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-Loop workflow for creating HD images from text" width="50%">
+<img src="https://github.com/hanxiao/dalle/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-Loop workflow for creating HD images from text" width="50%">
 <br>
 <b>A Human-in-the-Loop workflow for creating HD images from text</b>
 </p>
