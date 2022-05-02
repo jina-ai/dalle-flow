@@ -189,7 +189,7 @@ You should see this screen immediately:
 <img src="https://github.com/hanxiao/dalle/blob/main/.github/server-onstart.png?raw=true" width="50%">
 </p>
 
-On the first start it will take ~8 minutes for downloading the DALL·E mega model and other necessary models.
+On the first start it will take ~8 minutes for downloading the DALL·E mega model and other necessary models. The proceeding runs should only take ~1 minute to reach the success message.
 
 <p align="center">
 <img src="https://github.com/hanxiao/dalle/blob/main/.github/server-wait.png?raw=true" width="50%">
@@ -203,13 +203,15 @@ When everything is ready, you will see:
 </p>
 
 
-Congrats, now you should be able to [run the client](./client.ipynb).
+Congrats! Now you should be able to [run the client](#client).
 
-The second run should only take ~1 minute to reach the address panel.
+You can modify and extend the server flow as you like, e.g. changing the model, adding persistence, or even auto-posting to Instagram/OpenSea. With Jina and DocArray, you can easily make DALL·E Flow [cloud-native and ready for production](https://github.com/jina-ai/jina). 
+
 
 <!-- start support-pitch -->
 ## Support
 
+- To extend DALL·E Flow you will need to get familiar with  [Jina](https://github.com/jina-ai/jina) and [DocArray](https://github.com/jina-ai/docarray).
 - Join our [Slack community](https://slack.jina.ai) and chat with other community members about ideas.
 - Join our [Engineering All Hands](https://youtube.com/playlist?list=PL3UBBWOUVhFYRUa_gpYYKBqEAkO4sxmne) meet-up to discuss your use case and learn Jina's new features.
     - **When?** The second Tuesday of every month
