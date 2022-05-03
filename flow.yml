@@ -40,7 +40,7 @@ executors:
       swinir_path: ../SwinIR
     env:
       CUDA_VISIBLE_DEVICES: 1
-    replicas: 3
+    replicas: 2
   - name: store
     uses: MyStore
     py_modules:
