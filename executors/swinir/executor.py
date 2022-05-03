@@ -1,5 +1,6 @@
 import glob
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -19,15 +20,17 @@ class SwinIRUpscaler(Executor):
 
         os.chdir(self.swinir_path)
 
-        Path(self.input_path).mkdir(parents=True, exist_ok=True)
+        input_path = os.path.join(self.input_path, f'{d.id}/')
+
+        Path(input_path).mkdir(parents=True, exist_ok=True)
         Path(self.output_path).mkdir(parents=True, exist_ok=True)
 
-        d.save_uri_to_file(os.path.join(self.input_path, f'{d.id}.png'))
+        d.save_uri_to_file(os.path.join(input_path, f'{d.id}.png'))
         kw = {
             'task': 'real_sr',
             'scale': 4,
             'model_path': 'model_zoo/swinir/003_realSR_BSRGAN_DFOWMFC_s64w8_SwinIR-L_x4_GAN.pth',
-            'folder_lq': self.input_path,
+            'folder_lq': input_path,
         }
         kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
 
@@ -37,9 +40,7 @@ class SwinIRUpscaler(Executor):
 
         print('cleaning...')
         # remove input
-        input_p = os.path.join(self.input_path, f'{d.id}.png')
-        if os.path.isfile(input_p):
-            os.remove(input_p)
+        shutil.rmtree(input_path, ignore_errors=True)
 
         # remove all outputs
         for f in glob.glob(f'{self.output_path}/{d.id}*.png'):
