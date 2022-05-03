@@ -1,5 +1,5 @@
+import glob
 import os
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -16,12 +16,11 @@ class SwinIRUpscaler(Executor):
 
     def _upscale(self, d: Document):
         os.chdir(self.swinir_path)
-        shutil.rmtree(f'{self.input_path}', ignore_errors=True)
-        shutil.rmtree(f'{self.output_path}', ignore_errors=True)
+
         Path(self.input_path).mkdir(parents=True, exist_ok=True)
         Path(self.output_path).mkdir(parents=True, exist_ok=True)
 
-        print(f'preparing {d.id}')
+        print(f'preparing {d.id} for upscale...')
         d.save_uri_to_file(os.path.join(self.input_path, f'{d.id}.png'))
         kw = {
             'task': 'real_sr',
@@ -34,6 +33,18 @@ class SwinIRUpscaler(Executor):
         subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}')
         d.uri = os.path.join(self.output_path, f'{d.id}_SwinIR.png')
         d.convert_uri_to_datauri()
+
+        print('cleaning...')
+        # remove input
+        input_p = os.path.join(self.input_path, f'{d.id}.png')
+        if os.path.isfile(input_p):
+            os.remove(input_p)
+
+        # remove all outputs
+        for f in glob.glob(f'{self.output_path}/{d.id}*.png'):
+            if os.path.isfile(f):
+                os.remove(f)
+
         print('done!')
 
     @requests(on='/upscale')

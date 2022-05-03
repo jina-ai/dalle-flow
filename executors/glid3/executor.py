@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from pathlib import Path
 from typing import Dict
 
 from jina import Executor, DocumentArray, Document, requests
@@ -19,21 +20,22 @@ class GLID3Diffusion(Executor):
         with tempfile.NamedTemporaryFile(
             suffix='.png',
         ) as f_in:
-            print(f'preparing {f_in.name}')
+            print(f'preparing {f_in.name} for diffusion...')
             d.save_uri_to_file(f_in.name)
-            shutil.rmtree(f'{self.glid3_path}/output', ignore_errors=True)
             shutil.rmtree(f'{self.glid3_path}/output_npy', ignore_errors=True)
-            os.mkdir(f'{self.glid3_path}/output')
-            os.mkdir(f'{self.glid3_path}/output_npy')
+
+            Path(f'{self.glid3_path}/output').mkdir(parents=True, exist_ok=True)
+            Path(f'{self.glid3_path}/output_npy').mkdir(parents=True, exist_ok=True)
 
             kw = {
                 'init_image': f_in.name,
                 'skip_timesteps': int(self.diffusion_steps * skip_rate),
                 'steps': self.diffusion_steps,
                 'model_path': 'finetune.pt',
-                'batch_size': 6,
-                'num_batches': 6,
+                'batch_size': 4,
+                'num_batches': 4,
                 'text': f'"{text}"',
+                'prefix': d.id,
             }
             kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
             print('diffusion...')
@@ -42,6 +44,12 @@ class GLID3Diffusion(Executor):
                 kw['ctime'] = os.path.getctime(f)
                 _d = Document(uri=f, tags=kw).convert_uri_to_datauri()
                 d.matches.append(_d)
+
+            # remove all outputs
+            for f in glob.glob(f'{self.glid3_path}/output/{d.id}*.png'):
+                if os.path.isfile(f):
+                    os.remove(f)
+
             print('done!')
 
     @requests(on='/diffuse')
