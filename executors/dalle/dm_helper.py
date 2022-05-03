@@ -11,7 +11,18 @@ from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key
 from vqgan_jax.modeling_flax_vqgan import VQModel
 
-DALLE_MODEL = 'dalle-mini/dalle-mini/mega-1:latest'
+# # dalle-mini
+# DALLE_MODEL = "dalle-mini/dalle-mini/kvwti2c9:latest"
+# dtype = jnp.float32
+#
+# # dalle-mega
+# DALLE_MODEL = 'dalle-mini/dalle-mini/mega-1:latest'
+# dtype=jnp.float32
+
+# dall-mega-fp16
+DALLE_MODEL = "dalle-mini/dalle-mini/mega-1-fp16:latest"
+dtype=jnp.float16
+
 DALLE_COMMIT_ID = None
 
 VQGAN_REPO = 'dalle-mini/vqgan_imagenet_f16_16384'
@@ -23,13 +34,14 @@ temperature = None
 cond_scale = 3.0
 
 wandb.init(anonymous='must')
-dtype = jnp.float32
+
 # Load models & tokenizer
-model = DalleBart.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID)
+
+model, params = DalleBart.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID, dtype=dtype, _do_init=False)
 vqgan = VQModel.from_pretrained(VQGAN_REPO, revision=VQGAN_COMMIT_ID)
 
-print('device', jax.device_count())
-model._params = replicate(model.params)
+print('device count:', jax.device_count())
+params = replicate(params)
 vqgan._params = replicate(vqgan.params)
 
 
