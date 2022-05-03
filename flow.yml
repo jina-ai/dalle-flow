@@ -25,6 +25,7 @@ executors:
       - executors/glid3/executor.py
     env:
       CUDA_VISIBLE_DEVICES: 1
+    replicas: 2
 #  - name: upscaler
 #    uses: WaifuUpscaler
 #    py_modules:
@@ -39,6 +40,7 @@ executors:
       swinir_path: ../SwinIR
     env:
       CUDA_VISIBLE_DEVICES: 1
+    replicas: 3
   - name: store
     uses: MyStore
     py_modules:
