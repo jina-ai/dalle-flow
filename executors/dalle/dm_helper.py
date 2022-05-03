@@ -92,7 +92,7 @@ def generate_images(prompt: str, num_predictions: int):
         encoded_images = p_generate(
             tokenized_prompt,
             shard_prng_key(subkey),
-            model.params,
+            params,
             gen_top_k,
             gen_top_p,
             temperature,
