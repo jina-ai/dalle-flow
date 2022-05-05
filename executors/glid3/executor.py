@@ -8,14 +8,12 @@ from jina import Executor, DocumentArray, Document, requests
 
 
 class GLID3Diffusion(Executor):
-    def __init__(self, glid3_path: str, steps: int, **kwargs):
+    def __init__(self, glid3_path: str, **kwargs):
         super().__init__(**kwargs)
         os.environ['GLID_MODEL_PATH'] = glid3_path
-        from dalle_flow_glid3.cli_parser import parser
-        args = parser.parse_args(['--steps', str(steps)])
-        self.diffusion_steps = steps
+        self.diffusion_steps = 100
         from dalle_flow_glid3.sample import static_args
-        print(args, static_args)
+        print(static_args)
 
     def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
         with tempfile.NamedTemporaryFile(
