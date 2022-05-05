@@ -26,7 +26,7 @@ class GLID3Diffusion(Executor):
                 'init_image': f_in.name if d.uri else None,
                 'skip_timesteps': int(self.diffusion_steps * skip_rate) if d.uri else 0,
                 'steps': self.diffusion_steps,
-                'batch_size': 8,
+                'batch_size': num_images,
                 'num_batches': 1,
                 'text': f'"{text}"',
                 'output_path': d.id
