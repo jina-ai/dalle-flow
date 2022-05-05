@@ -39,7 +39,7 @@ class GLID3Diffusion(Executor):
 
             print('done!')
 
-    @requests(on='/diffuse')
+    @requests(on='/')
     async def diffusion(self, docs: DocumentArray, parameters: Dict, **kwargs):
         skip_rate = float(parameters.get('skip_rate', 0.5))
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
