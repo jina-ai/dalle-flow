@@ -40,7 +40,7 @@ class GLID3Diffusion(Executor):
             # remove all outputs
             shutil.rmtree(self.default_args.output_path, ignore_errors=True)
 
-            print('done!')
+            print(f'done with [{text}]!')
 
     @requests(on='/')
     async def diffusion(self, docs: DocumentArray, parameters: Dict, **kwargs):
