@@ -28,6 +28,7 @@ class GLID3Diffusion(Executor):
                 self.default_args.init_image = f_in.name
             else:
                 self.default_args.init_image = None
+            print(self.default_args)
             self.default_args.skip_timesteps = int(self.diffusion_steps * skip_rate)
             self.default_args.text = text
             self.default_args.batch_size = num_images

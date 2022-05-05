@@ -6,10 +6,10 @@ with:
     JINA_LOG_LEVEL: debug
     JINA_EARLY_STOP: 1
 executors:
-  - name: dalle
-    uses: executors/dalle/config.yml
-    env:
-      CUDA_VISIBLE_DEVICES: 0
+#  - name: dalle
+#    uses: executors/dalle/config.yml
+#    env:
+#      CUDA_VISIBLE_DEVICES: 0
   - name: diffusion
     uses: GLID3Diffusion
     uses_with:
@@ -26,7 +26,7 @@ executors:
       clip_server: grpc://0.0.0.0:51000
     py_modules:
       - executors/rerank/executor.py
-    needs: [dalle, diffusion]
+#    needs: [dalle, diffusion]
   - name: upscaler
     uses: SwinIRUpscaler
     py_modules:
