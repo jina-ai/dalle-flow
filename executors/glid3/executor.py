@@ -33,6 +33,10 @@ class GLID3Diffusion(Executor):
             self.default_args.batch_size = num_images
             self.default_args.output_path = d.id
 
+            from dalle_flow_glid3.sample import do_run
+
+            do_run(self.default_args)
+
             for f in glob.glob(f'{self.default_args.output_path}/*.png'):
                 _d = Document(uri=f, text=d.text).convert_uri_to_datauri()
                 d.matches.append(_d)
