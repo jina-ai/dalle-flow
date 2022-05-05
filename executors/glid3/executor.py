@@ -24,7 +24,7 @@ class GLID3Diffusion(Executor):
 
             kw = {
                 'init_image': f_in.name if d.uri else None,
-                'skip_timesteps': int(self.diffusion_steps * skip_rate),
+                'skip_timesteps': int(self.diffusion_steps * skip_rate) if d.uri else 0,
                 'steps': self.diffusion_steps,
                 'batch_size': 8,
                 'num_batches': 1,
