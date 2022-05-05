@@ -13,37 +13,43 @@ class GLID3Diffusion(Executor):
         self.diffusion_steps = steps
         os.environ['GLID_MODEL_PATH'] = glid3_path
         from dalle_flow_glid3.sample import static_args
-        self.default_args = static_args
-        self.default_args.steps = self.diffusion_steps
-
-        self.default_args.num_batches = 1
+        print(static_args)
 
     def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
         with tempfile.NamedTemporaryFile(
                 suffix='.png',
         ) as f_in:
             print(f'diffusion [{text}] ...')
+            from dalle_flow_glid3.cli_parser import parser
+
+            kw = {
+                'init_image': f_in.name if d.uri else None,
+                'skip_timesteps': int(self.diffusion_steps * skip_rate),
+                'steps': self.diffusion_steps,
+                'batch_size': 8,
+                'num_batches': 1,
+                'text': f'"{text}"',
+                'output_path': d.id
+            }
+            kw_str_list = []
+            for k, v in kw.items():
+                if v is not None:
+                    kw_str_list.extend([f'--{k}', str(v)])
             if d.uri:
                 d.save_uri_to_file(f_in.name)
-                self.default_args.init_image = f_in.name
-            else:
-                self.default_args.init_image = None
-            print(self.default_args)
-            self.default_args.skip_timesteps = int(self.diffusion_steps * skip_rate)
-            self.default_args.text = text
-            self.default_args.batch_size = num_images
-            self.default_args.output_path = d.id
 
             from dalle_flow_glid3.sample import do_run
 
-            do_run(self.default_args)
+            args = parser.parse_args(kw_str_list)
 
-            for f in glob.glob(f'{self.default_args.output_path}/*.png'):
+            do_run(args)
+
+            for f in glob.glob(f'{args.output_path}/*.png'):
                 _d = Document(uri=f, text=d.text).convert_uri_to_datauri()
                 d.matches.append(_d)
 
             # remove all outputs
-            shutil.rmtree(self.default_args.output_path, ignore_errors=True)
+            shutil.rmtree(args.output_path, ignore_errors=True)
 
             print(f'done with [{text}]!')
 
