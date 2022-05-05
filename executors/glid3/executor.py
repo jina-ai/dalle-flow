@@ -41,6 +41,7 @@ class GLID3Diffusion(Executor):
             from dalle_flow_glid3.sample import do_run
 
             args = parser.parse_args(kw_str_list)
+            print(args)
 
             do_run(args)
 
