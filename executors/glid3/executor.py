@@ -23,8 +23,11 @@ class GLID3Diffusion(Executor):
                 suffix='.png',
         ) as f_in:
             print(f'diffusion [{text}] ...')
-            d.save_uri_to_file(f_in.name)
-            self.default_args.init_image = f_in.name
+            if d.uri:
+                d.save_uri_to_file(f_in.name)
+                self.default_args.init_image = f_in.name
+            else:
+                self.default_args.init_image = None
             self.default_args.skip_timesteps = int(self.diffusion_steps * skip_rate)
             self.default_args.text = text
             self.default_args.batch_size = num_images
