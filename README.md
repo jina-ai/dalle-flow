@@ -17,6 +17,13 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 **Why Human-in-the-Loop?** Generative art is a creative process. While recent advances of DALL·E unleash people's creativity, having a single-prompt-single-output UX/UI locks the imagination to a _single_ possibility, which is bad no matter how fine this single result is. DALL·E Flow is an alternative to the one-liner, by formalizing the generative art as an iterative procedure.
 
+## Updates
+
+- 🌟 2022/5/6 DALL·E Flow just got updated!
+  - The first step will generate 16 candidates: 8 from DALL·E Mega, 8 from GLID3-XL; ranked by CLIP-as-service.
+  - Optimized the flow efficiency: the overall speed, diffusion and upscaling are much faster now!
+
+
 ## Gallery
 
 [![](https://img.shields.io/badge/instagram-jina.ai-white?logo=instagram&style=social)](https://www.instagram.com/jina.ai/)
@@ -68,7 +75,7 @@ Here we generate 16 candidates, 8 from DALLE-mega and 8 from GLID3 XL, this is a
 
 
 <p align="center">
-<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/client-dalle.png?raw=true" width="60%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/client-dalle.png?raw=true" width="70%">
 </p>
 
 ### Step 2: Select and refinement via GLID3 XL
