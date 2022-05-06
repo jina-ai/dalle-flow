@@ -25,7 +25,7 @@ executors:
       clip_server: grpc://0.0.0.0:51000
     py_modules:
       - executors/rerank/executor.py
-#    needs: [dalle, diffusion]
+    needs: [dalle, diffusion]
 #  - name: upscaler
 #    uses: SwinIRUpscaler
 #    py_modules:
