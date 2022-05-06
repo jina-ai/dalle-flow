@@ -14,6 +14,7 @@ executors:
     uses: GLID3Diffusion
     uses_with:
       glid3_path: ../glid-3-xl
+      steps: 200
     py_modules:
       - executors/glid3/executor.py
     env:
