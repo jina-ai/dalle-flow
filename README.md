@@ -19,7 +19,7 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 ## Updates
 
-- 🚧 **_2022/5/8_** Maintaince & upgrade: short downtime (~30min) expected. New Mega checkpoint and optimized GLID3.
+- 🌟 **2022/5/7** New Mega checkpoint & multiple optimization on GLID3: less memory-footprint, use `ViT-L/14@336px` from CLIP-as-service, `steps 100->200`. 
 - 🌟 **2022/5/6** DALL·E Flow just got updated! [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb)
   - Revised the first step: 16 candidates are generated, 8 from DALL·E Mega, 8 from GLID3-XL; then ranked by CLIP-as-service.
   - Improved the flow efficiency: the overall speed, including diffusion and upscaling are much faster now!
