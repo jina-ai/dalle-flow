@@ -19,7 +19,7 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 ## Updates
 
-- 🌟 2022/5/6 DALL·E Flow just got updated!
+- 🌟 2022/5/6 DALL·E Flow just got updated! [Please reopen the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb)
   - The first step will generate 16 candidates: 8 from DALL·E Mega, 8 from GLID3-XL; ranked by CLIP-as-service.
   - Optimized the flow efficiency: the overall speed, diffusion and upscaling are much faster now!
 
