@@ -14,7 +14,7 @@ class SwinIRUpscaler(Executor):
         self.swinir_path = swinir_path
         self.input_path = f'{swinir_path}/input/'
         self.output_path = f'{swinir_path}/results/swinir_real_sr_x4_large/'
-        self.storage = DocumentArray(storage='sqlite', config={'connection': store_path, 'table_name': 'dallemega'})
+        self.store_path = store_path
 
     def _upscale(self, d: Document):
         print(f'upscaling [{d.text}]...')
@@ -54,5 +54,7 @@ class SwinIRUpscaler(Executor):
     async def diffusion(self, docs: DocumentArray, **kwargs):
         for d in docs:
             self._upscale(d)
-        self.storage.extend(docs)
-        print(f'total: {len(self.storage)}')
+
+        with DocumentArray(storage='sqlite', config={'connection': self.store_path, 'table_name': 'dallemega'}) as storage:
+            storage.extend(docs)
+            print(f'total: {len(storage)}')
