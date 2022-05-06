@@ -29,7 +29,7 @@ class SwinIRUpscaler(Executor):
         d.save_uri_to_file(os.path.join(input_path, f'{d.id}.png'))
         kw = {
             'task': 'real_sr',
-            'scale': 4,
+            'scale': 8,
             'model_path': 'model_zoo/swinir/003_realSR_BSRGAN_DFOWMFC_s64w8_SwinIR-L_x4_GAN.pth',
             'folder_lq': input_path,
         }
