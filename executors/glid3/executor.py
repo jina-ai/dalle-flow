@@ -8,10 +8,11 @@ from jina import Executor, DocumentArray, Document, requests
 
 
 class GLID3Diffusion(Executor):
-    def __init__(self, glid3_path: str, **kwargs):
+    def __init__(self, glid3_path: str, step: int = 100, **kwargs):
         super().__init__(**kwargs)
         os.environ['GLID_MODEL_PATH'] = glid3_path
-        self.diffusion_steps = 10
+        os.environ['GLID3_STEPS'] = str(step)
+        self.diffusion_steps = step
         from dalle_flow_glid3.sample import static_args
         assert static_args
 
