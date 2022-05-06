@@ -11,7 +11,7 @@ class GLID3Diffusion(Executor):
     def __init__(self, glid3_path: str, **kwargs):
         super().__init__(**kwargs)
         os.environ['GLID_MODEL_PATH'] = glid3_path
-        self.diffusion_steps = 10
+        self.diffusion_steps = 100
         from dalle_flow_glid3.sample import static_args
         assert static_args
 
@@ -41,7 +41,7 @@ class GLID3Diffusion(Executor):
             from dalle_flow_glid3.sample import do_run
 
             args = parser.parse_args(kw_str_list)
-            do_run(args)
+            await do_run(args)
 
             kw['generator'] = 'GLID3-XL'
             for f in glob.glob(f'{args.output_path}/*.png'):
