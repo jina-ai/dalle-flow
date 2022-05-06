@@ -27,8 +27,6 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 ## Gallery
 
-[![](https://img.shields.io/badge/instagram-jina.ai-white?logo=instagram&style=social)](https://www.instagram.com/jina.ai/)
-
 > Image filename is the corresponding text prompt.
 
 

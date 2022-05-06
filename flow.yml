@@ -4,7 +4,6 @@ with:
   port: 51005
   env:
     JINA_LOG_LEVEL: debug
-    JINA_EARLY_STOP: 1
 executors:
   - name: dalle
     uses: executors/dalle/config.yml
@@ -14,6 +13,7 @@ executors:
     uses: GLID3Diffusion
     uses_with:
       glid3_path: ../glid-3-xl
+      steps: 200
     py_modules:
       - executors/glid3/executor.py
     env:

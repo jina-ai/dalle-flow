@@ -8,7 +8,6 @@ from jina import Executor, DocumentArray, Document, requests
 
 
 class SwinIRUpscaler(Executor):
-
     def __init__(self, swinir_path: str, store_path: str, **kwargs):
         super().__init__(**kwargs)
         self.swinir_path = swinir_path
@@ -35,9 +34,11 @@ class SwinIRUpscaler(Executor):
         }
         kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
 
-        subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}')
+        print(subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}'))
         d.uri = os.path.join(self.output_path, f'{d.id}_SwinIR.png')
         d.convert_uri_to_datauri()
+        d.tags['upscaled'] = True
+        d.tags.update(kw)
 
         print('cleaning...')
         # remove input
@@ -51,10 +52,14 @@ class SwinIRUpscaler(Executor):
         print('done!')
 
     @requests(on='/upscale')
-    async def diffusion(self, docs: DocumentArray, **kwargs):
+    async def upscale(self, docs: DocumentArray, **kwargs):
         for d in docs:
-            self._upscale(d)
-
-        with DocumentArray(storage='sqlite', config={'connection': self.store_path, 'table_name': 'dallemega'}) as storage:
-            storage.extend(docs)
-            print(f'total: {len(storage)}')
+            if not d.tags.get('upscaled'):
+                # only upscale once
+                self._upscale(d)
+                with DocumentArray(
+                    storage='sqlite',
+                    config={'connection': self.store_path, 'table_name': 'dallemega'},
+                ) as storage:
+                    storage.extend(docs)
+                    print(f'total: {len(storage)}')
