@@ -14,7 +14,6 @@ executors:
     uses_with:
       glid3_path: ../glid-3-xl
       steps: 100
-    replicas: 2
     py_modules:
       - executors/glid3/executor.py
     env:
