@@ -15,7 +15,7 @@ class GLID3Diffusion(Executor):
         from dalle_flow_glid3.sample import static_args
         assert static_args
 
-    def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
+    async def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
         with tempfile.NamedTemporaryFile(
                 suffix='.png',
         ) as f_in:
@@ -41,7 +41,7 @@ class GLID3Diffusion(Executor):
             from dalle_flow_glid3.sample import do_run
 
             args = parser.parse_args(kw_str_list)
-            do_run(args)
+            await do_run(args)
 
             kw['generator'] = 'GLID3-XL'
             for f in glob.glob(f'{args.output_path}/*.png'):
@@ -58,4 +58,4 @@ class GLID3Diffusion(Executor):
         skip_rate = float(parameters.get('skip_rate', 0.5))
         num_images = max(1, min(9, int(parameters.get('num_images', 1))))
         for d in docs:
-            self.run_glid3(d, d.text, skip_rate=skip_rate, num_images=num_images)
+            await self.run_glid3(d, d.text, skip_rate=skip_rate, num_images=num_images)
