@@ -1,7 +1,7 @@
 jtype: Flow
 with:
   protocol: grpc
-  port: 51006
+  port: 51005
   env:
     JINA_LOG_LEVEL: debug
     JINA_EARLY_STOP: 1
@@ -9,7 +9,7 @@ executors:
   - name: dalle
     uses: executors/dalle/config.yml
     env:
-      CUDA_VISIBLE_DEVICES: 0
+      CUDA_VISIBLE_DEVICES: 2
   - name: diffusion
     uses: GLID3Diffusion
     uses_with:
