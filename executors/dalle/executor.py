@@ -12,7 +12,7 @@ class DalleGenerator(Executor):
     def generate(self, docs: DocumentArray, parameters: Dict, **kwargs):
 
         # can be of course larger but to save time and reduce the queue when serving public
-        num_images = max(1, min(8, int(parameters.get('num_images', 1))))
+        num_images = max(1, min(9, int(parameters.get('num_images', 1))))
         for d in docs:
             print(f'creating {num_images} images from text prompt [{d.text}]')
             generated_imgs = dm_helper.generate_images(d.text, num_images)
