@@ -9,11 +9,12 @@ from jina import Executor, DocumentArray, Document, requests
 
 class SwinIRUpscaler(Executor):
 
-    def __init__(self, swinir_path: str, **kwargs):
+    def __init__(self, swinir_path: str, store_path: str, **kwargs):
         super().__init__(**kwargs)
         self.swinir_path = swinir_path
         self.input_path = f'{swinir_path}/input/'
         self.output_path = f'{swinir_path}/results/swinir_real_sr_x4_large/'
+        self.storage = DocumentArray(storage='sqlite', config={'connection': store_path, 'table_name': 'dallemega'})
 
     def _upscale(self, d: Document):
         print(f'upscaling [{d.text}]...')
@@ -53,3 +54,5 @@ class SwinIRUpscaler(Executor):
     async def diffusion(self, docs: DocumentArray, **kwargs):
         for d in docs:
             self._upscale(d)
+        self.storage.extend(docs)
+        print(f'total: {len(self.storage)}')

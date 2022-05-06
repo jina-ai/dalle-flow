@@ -59,12 +59,12 @@ Let's submit it to the server and visualize the results:
 ```python
 from docarray import Document
 
-da = Document(text=prompt).post(server_url, parameters={'num_images': 16}).matches
+da = Document(text=prompt).post(server_url, parameters={'num_images': 8}).matches
 
 da.plot_image_sprites(fig_size=(10,10), show_index=True)
 ```
 
-Here we generate 16 candidates as defined in `num_images`, which takes about ~2 minutes. You can use a smaller value if it is too long for you. The results are sorted by [CLIP-as-service](https://github.com/jina-ai/clip-as-service), with index-`0` as the best candidate judged by CLIP. 
+Here we generate 16 candidates, 8 from DALLE-mega and 8 from GLID3 XL, this is as defined in `num_images`, which takes about ~2 minutes. You can use a smaller value if it is too long for you. 
 
 
 <p align="center">
@@ -73,7 +73,7 @@ Here we generate 16 candidates as defined in `num_images`, which takes about ~2 
 
 ### Step 2: Select and refinement via GLID3 XL
 
-Of course, you may think differently. Notice the number in the top-left corner? Select the one you like the most and get a better view:
+The 16 candidates are sorted by [CLIP-as-service](https://github.com/jina-ai/clip-as-service), with index-`0` as the best candidate judged by CLIP. Of course, you may think differently. Notice the number in the top-left corner? Select the one you like the most and get a better view:
 
 ```python
 fav_id = 3
@@ -88,18 +88,18 @@ fav.display()
 Now let's submit the selected candidates to the server for diffusion.
 
 ```python
-diffused = fav.post(f'{server_url}/diffuse', parameters={'skip_rate': 0.5}).matches
+diffused = fav.post(f'{server_url}', parameters={'skip_rate': 0.5, 'num_images': 36}, target_executor='diffusion').matches
 
 diffused.plot_image_sprites(fig_size=(10,10), show_index=True)
 ```
 
-This will give 36 images based on the given image. You may allow the model to improvise more by giving `skip_rate` a near-zero value, or a near-one value to force its closeness to the given image. The whole procedure takes about ~2 minutes.
+This will give 36 images based on the selected image. You may allow the model to improvise more by giving `skip_rate` a near-zero value, or a near-one value to force its closeness to the given image. The whole procedure takes about ~2 minutes.
 
 <p align="center">
 <img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/client-glid.png?raw=true" width="60%">
 </p>
 
-### Step 3: Select and upscale via SwanIR
+### Step 3: Select and upscale via SwinIR
 
 Select the image you like the most, and give it a closer look:
 
@@ -142,6 +142,19 @@ It requires at least 40GB free space on the hard drive, mostly for downloading p
 CPU-only environment is not tested and likely won't work. Google Colab is likely throwing OOM hence also won't work.
 
 
+### Server architecture
+
+<p align="center">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/flow.svg?raw=true" width="60%">
+</p>
+
+If you installed Jina, the above flowchart can be generated via:
+
+```bash
+python -c "from jina import Flow; Flow.load_config('flow.yml').plot('flow.svg')"
+```
+
+
 ### Install
 
 #### Clone repos
@@ -151,7 +164,7 @@ mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/JingyunLiang/SwinIR.git
 git clone https://github.com/CompVis/latent-diffusion.git
-git clone https://github.com/Jack000/glid-3-xl.git
+git clone https://github.com/hanxiao/glid-3-xl.git
 ```
 
 You should have the following folder structure:
