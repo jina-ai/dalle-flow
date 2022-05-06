@@ -6,10 +6,10 @@ with:
     JINA_LOG_LEVEL: debug
     JINA_EARLY_STOP: 1
 executors:
-  - name: dalle
-    uses: executors/dalle/config.yml
-    env:
-      CUDA_VISIBLE_DEVICES: 2
+#  - name: dalle
+#    uses: executors/dalle/config.yml
+#    env:
+#      CUDA_VISIBLE_DEVICES: 2
   - name: diffusion
     uses: GLID3Diffusion
     uses_with:
@@ -17,7 +17,7 @@ executors:
     py_modules:
       - executors/glid3/executor.py
     env:
-      CUDA_VISIBLE_DEVICES: 1
+      CUDA_VISIBLE_DEVICES: 0
     needs: [gateway]
   - name: rerank
     uses: ReRank
@@ -25,14 +25,14 @@ executors:
       clip_server: grpc://0.0.0.0:51000
     py_modules:
       - executors/rerank/executor.py
-    needs: [dalle, diffusion]
-  - name: upscaler
-    uses: SwinIRUpscaler
-    py_modules:
-      - executors/swinir/executor.py
-    uses_with:
-      swinir_path: ../SwinIR
-      store_path: dalle.db
-    env:
-      CUDA_VISIBLE_DEVICES: 1
-    replicas: 2
+#    needs: [dalle, diffusion]
+#  - name: upscaler
+#    uses: SwinIRUpscaler
+#    py_modules:
+#      - executors/swinir/executor.py
+#    uses_with:
+#      swinir_path: ../SwinIR
+#      store_path: dalle.db
+#    env:
+#      CUDA_VISIBLE_DEVICES: 1
+#    replicas: 2
