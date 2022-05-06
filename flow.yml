@@ -4,7 +4,6 @@ with:
   port: 51006
   env:
     JINA_LOG_LEVEL: debug
-    JINA_EARLY_STOP: 1
 executors:
   - name: dalle
     uses: executors/dalle/config.yml
@@ -18,7 +17,7 @@ executors:
     py_modules:
       - executors/glid3/executor.py
     env:
-      CUDA_VISIBLE_DEVICES: 0
+      CUDA_VISIBLE_DEVICES: 1
     needs: [gateway]
   - name: rerank
     uses: ReRank
