@@ -1,31 +1,31 @@
 jtype: Flow
 with:
   protocol: grpc
-  port: 51006
+  port: 51005
   env:
     JINA_LOG_LEVEL: debug
 executors:
-#  - name: dalle
-#    uses: executors/dalle/config.yml
-#    env:
-#      CUDA_VISIBLE_DEVICES: 0
-#  - name: diffusion
-#    uses: GLID3Diffusion
-#    uses_with:
-#      glid3_path: ../glid-3-xl
-#      steps: 200
-#    py_modules:
-#      - executors/glid3/executor.py
-#    env:
-#      CUDA_VISIBLE_DEVICES: 1
-#    needs: [gateway]
-#  - name: rerank
-#    uses: ReRank
-#    uses_with:
-#      clip_server: grpc://0.0.0.0:51000
-#    py_modules:
-#      - executors/rerank/executor.py
-#    needs: [dalle, diffusion]
+  - name: dalle
+    uses: executors/dalle/config.yml
+    env:
+      CUDA_VISIBLE_DEVICES: 2
+  - name: diffusion
+    uses: GLID3Diffusion
+    uses_with:
+      glid3_path: ../glid-3-xl
+      steps: 200
+    py_modules:
+      - executors/glid3/executor.py
+    env:
+      CUDA_VISIBLE_DEVICES: 1
+    needs: [gateway]
+  - name: rerank
+    uses: ReRank
+    uses_with:
+      clip_server: grpc://0.0.0.0:51000
+    py_modules:
+      - executors/rerank/executor.py
+    needs: [dalle, diffusion]
   - name: upscaler
     uses: SwinIRUpscaler
     py_modules:
@@ -35,4 +35,4 @@ executors:
       store_path: dalle.db
     env:
       CUDA_VISIBLE_DEVICES: 1
-#    replicas: 2
+    replicas: 2
