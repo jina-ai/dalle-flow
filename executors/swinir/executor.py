@@ -34,7 +34,7 @@ class SwinIRUpscaler(Executor):
         }
         kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
 
-        subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}')
+        print(subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}'))
         d.uri = os.path.join(self.output_path, f'{d.id}_SwinIR.png')
         d.convert_uri_to_datauri()
         d.tags['upscaled'] = True
