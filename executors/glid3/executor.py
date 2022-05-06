@@ -13,7 +13,7 @@ class GLID3Diffusion(Executor):
         os.environ['GLID_MODEL_PATH'] = glid3_path
         self.diffusion_steps = 100
         from dalle_flow_glid3.sample import static_args
-        print(static_args)
+        assert static_args
 
     def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
         with tempfile.NamedTemporaryFile(
@@ -41,8 +41,6 @@ class GLID3Diffusion(Executor):
             from dalle_flow_glid3.sample import do_run
 
             args = parser.parse_args(kw_str_list)
-            print(args)
-
             do_run(args)
 
             kw['generator'] = 'GLID3-XL'

@@ -59,7 +59,7 @@ Let's submit it to the server and visualize the results:
 ```python
 from docarray import Document
 
-da = Document(text=prompt).post(server_url, parameters={'num_images': 16}).matches
+da = Document(text=prompt).post(server_url, parameters={'num_images': 8}).matches
 
 da.plot_image_sprites(fig_size=(10,10), show_index=True)
 ```

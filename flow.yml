@@ -13,7 +13,6 @@ executors:
   - name: diffusion
     uses: GLID3Diffusion
     uses_with:
-      steps: 80
       glid3_path: ../glid-3-xl
     py_modules:
       - executors/glid3/executor.py
