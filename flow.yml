@@ -18,6 +18,7 @@ executors:
       - executors/glid3/executor.py
     env:
       CUDA_VISIBLE_DEVICES: 1
+    replicas: 2
     needs: [gateway]
   - name: rerank
     uses: ReRank
@@ -36,3 +37,9 @@ executors:
     env:
       CUDA_VISIBLE_DEVICES: 1
     replicas: 2
+  - name: store
+    uses: MyStore
+    py_modules:
+      - executors/store/executor.py
+    uses_with:
+      store_path: dalle-flow
