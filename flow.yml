@@ -42,4 +42,4 @@ executors:
     py_modules:
       - executors/store/executor.py
     uses_with:
-      store_path: dalle-flow
+      store_path: dalle-flow.db
