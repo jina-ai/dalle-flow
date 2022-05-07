@@ -18,7 +18,7 @@ executors:
       - executors/glid3/executor.py
     env:
       CUDA_VISIBLE_DEVICES: 1
-    replicas: 2
+    replicas: 1
     needs: [gateway]
   - name: rerank
     uses: ReRank
