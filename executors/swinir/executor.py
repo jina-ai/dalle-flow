@@ -57,3 +57,16 @@ class SwinIRUpscaler(Executor):
             if not d.tags.get('upscaled'):
                 # only upscale once
                 self._upscale(d)
+                d.blob = None
+                d.embedding = None
+
+                try:
+                    with DocumentArray(
+                        storage='sqlite',
+                        config={'connection': self.store_path, 'table_name': 'dallemega'},
+                    ) as storage:
+                        storage.extend(docs)
+                        print(f'total: {len(storage)}')
+                except:
+                    print('db broken')
+
