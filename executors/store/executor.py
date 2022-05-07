@@ -9,7 +9,7 @@ class MyStore(Executor):
         super().__init__(**kwargs)
         now = datetime.now()
         table_name = now.strftime('%Y%d%m%H%M%S')
-        self.storage = DocumentArray(storage='sqlite', config={'connection': store_path, 'table_name': table_name})
+        self.storage = DocumentArray(storage='sqlite', config={'connection': store_path, 'table_name': f'table{table_name}'})
 
     @requests(on='/')
     def store(self, docs: DocumentArray, **kwargs):
