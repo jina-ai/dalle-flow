@@ -13,7 +13,10 @@ class SwinIRUpscaler(Executor):
         self.swinir_path = swinir_path
         self.input_path = f'{swinir_path}/input/'
         self.output_path = f'{swinir_path}/results/swinir_real_sr_x4_large/'
-        self.store_path = store_path
+        self.store = DocumentArray(
+            storage='sqlite',
+            config={'connection': store_path, 'table_name': self.runtime_args.name},
+        )
 
     def _upscale(self, d: Document):
         print(f'upscaling [{d.text}]...')
@@ -34,7 +37,9 @@ class SwinIRUpscaler(Executor):
         }
         kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
 
-        print(subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}'))
+        print(
+            subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}')
+        )
         d.uri = os.path.join(self.output_path, f'{d.id}_SwinIR.png')
         d.convert_uri_to_datauri()
         d.tags['upscaled'] = True
@@ -61,12 +66,7 @@ class SwinIRUpscaler(Executor):
                 d.embedding = None
 
                 try:
-                    with DocumentArray(
-                        storage='sqlite',
-                        config={'connection': self.store_path, 'table_name': 'dallemega'},
-                    ) as storage:
-                        storage.extend(docs)
-                        print(f'total: {len(storage)}')
-                except:
-                    print('db broken')
-
+                    self.store.extend(docs)
+                    print(f'total: {len(self.store)}')
+                except Exception as ex:
+                    print(f'db broken!!! {ex!r}')
