@@ -64,7 +64,7 @@ class SwinIRUpscaler(Executor):
                 d.embedding = None
 
                 try:
-                    db_name = f'{self.base_path}{self.runtime_args.name}{self.failover}'
+                    db_name = f'{self.base_path}{self.runtime_args.name.replace("/", "")}{self.failover}'
                     with DocumentArray(
                             storage='sqlite',
                             config={'connection': db_name,
