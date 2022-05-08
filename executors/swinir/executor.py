@@ -13,10 +13,8 @@ class SwinIRUpscaler(Executor):
         self.swinir_path = swinir_path
         self.input_path = f'{swinir_path}/input/'
         self.output_path = f'{swinir_path}/results/swinir_real_sr_x4_large/'
-        self.store = DocumentArray(
-            storage='sqlite',
-            config={'connection': store_path, 'table_name': self.runtime_args.name},
-        )
+        self.base_path = store_path
+        self.failover = 0
 
     def _upscale(self, d: Document):
         print(f'upscaling [{d.text}]...')
@@ -66,7 +64,13 @@ class SwinIRUpscaler(Executor):
                 d.embedding = None
 
                 try:
-                    self.store.extend(docs)
-                    print(f'total: {len(self.store)}')
+                    with DocumentArray(
+                            storage='sqlite',
+                            config={'connection': f'{self.base_path}-{self.failover}',
+                                    'table_name': self.runtime_args.name},
+                    ) as store:
+                        store.extend(docs)
+                        print(f'total: {len(store)}')
                 except Exception as ex:
-                    print(f'db broken!!! {ex!r}')
+                    self.failover += 1
+                    print(f'db broken!!! {ex!r}, failed: {self.failover}')
