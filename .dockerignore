@@ -1,0 +1,9 @@
+# ignore everything
+**
+.*
+
+# Allow files and directories
+!executors/**
+!flow.yml
+!*requirements.txt
+!README.md

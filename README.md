@@ -189,12 +189,14 @@ cd latent-diffusion && pip install -e . && cd -
 cd glid-3-xl && pip install -e . && cd -
 ```
 
-There are couple models we need to download first for GLID-3-XL:
+There are couple models we need to download for GLID-3-XL:
 
 ```bash
+cd glid-3-xl
 wget https://dall-3.com/models/glid-3-xl/bert.pt
 wget https://dall-3.com/models/glid-3-xl/kl-f8.pt
 wget https://dall-3.com/models/glid-3-xl/finetune.pt
+cd -
 ```
 
 #### Install flow
