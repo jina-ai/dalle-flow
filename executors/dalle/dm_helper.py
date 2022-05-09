@@ -1,6 +1,6 @@
 import time
 
-time.sleep(10)  # let diffusion load first to avoid the surge competition on GPU memory, which results in OOM
+time.sleep(20)  # let diffusion load first to avoid the surge competition on GPU memory, which results in OOM
 
 import random
 from functools import partial
