@@ -15,10 +15,10 @@ ENV PIP_NO_CACHE_DIR=1 \
 
 
 RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-install-recommends -y ${APT_PACKAGES}; fi && \
-    && ln -sf python3 /usr/bin/python \
-    && ln -sf pip3 /usr/bin/pip \
-    && pip install --upgrade pip \
-    && pip install wheel setuptools && \
+    ln -sf python3 /usr/bin/python && \
+    ln -sf pip3 /usr/bin/pip && \
+    pip install --upgrade pip && \
+    pip install wheel setuptools && \
     git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
     git clone --depth=1 https://github.com/hanxiao/glid-3-xl.git && \
