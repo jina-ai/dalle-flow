@@ -9,24 +9,24 @@ executors:
     uses: executors/dalle/config.yml
     env:
       CUDA_VISIBLE_DEVICES: 0
-  - name: diffusion
-    uses: GLID3Diffusion
-    uses_with:
-      glid3_path: ../glid-3-xl
-      steps: 100
-    py_modules:
-      - executors/glid3/executor.py
-    env:
-      CUDA_VISIBLE_DEVICES: 0
-    replicas: 1
-    needs: [gateway]
+#  - name: diffusion
+#    uses: GLID3Diffusion
+#    uses_with:
+#      glid3_path: ../glid-3-xl
+#      steps: 100
+#    py_modules:
+#      - executors/glid3/executor.py
+#    env:
+#      CUDA_VISIBLE_DEVICES: 0
+#    replicas: 1
+#    needs: [gateway]
   - name: rerank
     uses: ReRank
     uses_with:
       clip_server: grpc://0.0.0.0:51000
     py_modules:
       - executors/rerank/executor.py
-    needs: [dalle, diffusion]
+    needs: [dalle]
   - name: upscaler
     uses: SwinIRUpscaler
     py_modules:
