@@ -9,6 +9,7 @@ executors:
     uses: executors/dalle/config.yml
     env:
       CUDA_VISIBLE_DEVICES: 0
+      XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
 #  - name: diffusion
 #    uses: GLID3Diffusion
 #    uses_with:
