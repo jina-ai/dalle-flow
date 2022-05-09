@@ -10,24 +10,25 @@ executors:
     env:
       CUDA_VISIBLE_DEVICES: 0
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
-#  - name: diffusion
-#    uses: GLID3Diffusion
-#    uses_with:
-#      glid3_path: ../glid-3-xl
-#      steps: 100
-#    py_modules:
-#      - executors/glid3/executor.py
-#    env:
-#      CUDA_VISIBLE_DEVICES: 0
-#    replicas: 1
-#    needs: [gateway]
-#  - name: rerank
-#    uses: ReRank
-#    uses_with:
-#      clip_server: grpc://0.0.0.0:51000
-#    py_modules:
-#      - executors/rerank/executor.py
-#    needs: [dalle]
+  - name: diffusion
+    uses: GLID3Diffusion
+    uses_with:
+      glid3_path: ../glid-3-xl
+      steps: 100
+    py_modules:
+      - executors/glid3/executor.py
+    env:
+      CUDA_VISIBLE_DEVICES: 0
+      XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
+    replicas: 1
+    needs: [gateway]
+  - name: rerank
+    uses: ReRank
+    uses_with:
+      clip_server: grpc://0.0.0.0:51000
+    py_modules:
+      - executors/rerank/executor.py
+    needs: [dalle, diffusion]
   - name: upscaler
     uses: SwinIRUpscaler
     py_modules:
