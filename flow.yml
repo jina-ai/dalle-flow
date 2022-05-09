@@ -8,7 +8,7 @@ executors:
   - name: dalle
     uses: executors/dalle/config.yml
     env:
-      CUDA_VISIBLE_DEVICES: 2
+      CUDA_VISIBLE_DEVICES: 0
   - name: diffusion
     uses: GLID3Diffusion
     uses_with:
@@ -17,7 +17,7 @@ executors:
     py_modules:
       - executors/glid3/executor.py
     env:
-      CUDA_VISIBLE_DEVICES: 1
+      CUDA_VISIBLE_DEVICES: 0
     replicas: 1
     needs: [gateway]
   - name: rerank
