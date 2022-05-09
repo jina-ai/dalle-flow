@@ -37,7 +37,7 @@ executors:
       swinir_path: ../SwinIR
       store_path: dalle.db
     env:
-      CUDA_VISIBLE_DEVICES: 1
+      CUDA_VISIBLE_DEVICES: 0
     replicas: 2
   - name: store
     uses: MyStore
