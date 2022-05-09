@@ -3,7 +3,7 @@ FROM nvidia/cuda:11.6.0-runtime-ubuntu20.04
 # given by builder
 ARG PIP_TAG
 # something like "gcc libc-dev make libatlas-base-dev ruby-dev"
-ARG APT_PACKAGES="git wget python3 python3-pip"
+ARG APT_PACKAGES="git wget"
 
 WORKDIR /dalle
 
