@@ -1,7 +1,3 @@
-import time
-
-time.sleep(20)  # let diffusion load first to avoid the surge competition on GPU memory, which results in OOM
-
 import random
 from functools import partial
 
@@ -42,11 +38,11 @@ wandb.init(anonymous='must')
 # Load models & tokenizer
 
 model, params = DalleBart.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID, dtype=dtype, _do_init=False)
-vqgan, vqgan_params = VQModel.from_pretrained(VQGAN_REPO, revision=VQGAN_COMMIT_ID, dtype=dtype, _do_init=False)
+vqgan = VQModel.from_pretrained(VQGAN_REPO, revision=VQGAN_COMMIT_ID)
 
 print('device count:', jax.device_count())
 params = replicate(params)
-vqgan_params = replicate(vqgan_params)
+vqgan._params = replicate(vqgan.params)
 
 
 # model inference
@@ -107,7 +103,7 @@ def generate_images(prompt: str, num_predictions: int):
         encoded_images = encoded_images.sequences[..., 1:]
 
         # decode images
-        decoded_images = p_decode(encoded_images, vqgan_params)
+        decoded_images = p_decode(encoded_images, vqgan.params)
         decoded_images = decoded_images.clip(0.0, 1.0).reshape((-1, 256, 256, 3))
         for img in decoded_images:
             images.append(Image.fromarray(np.asarray(img * 255, dtype=np.uint8)))
