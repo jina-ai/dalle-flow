@@ -1,7 +1,7 @@
 jtype: Flow
 with:
   protocol: grpc
-  port: 51007
+  port: 51005
   env:
     JINA_LOG_LEVEL: debug
 executors:
@@ -25,7 +25,7 @@ executors:
   - name: rerank
     uses: ReRank
     uses_with:
-      clip_server: grpc://0.0.0.0:51000
+      clip_server: grpc://demo-cas.jina.ai:51000
     py_modules:
       - executors/rerank/executor.py
     needs: [dalle, diffusion]
