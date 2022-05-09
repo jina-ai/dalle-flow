@@ -3,7 +3,7 @@ FROM nvidia/cuda:11.6.0-runtime-ubuntu20.04
 # given by builder
 ARG PIP_TAG
 # something like "gcc libc-dev make libatlas-base-dev ruby-dev"
-ARG APT_PACKAGES="git wget"
+ARG APT_PACKAGES="git wget python3 python3-pip"
 
 WORKDIR /dalle
 
@@ -13,14 +13,12 @@ COPY executors dalle-flow/executors
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-RUN apt update \
-    && apt install -y --no-install-recommends python3 python3-pip \
+
+RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-install-recommends -y ${APT_PACKAGES}; fi && \
     && ln -sf python3 /usr/bin/python \
     && ln -sf pip3 /usr/bin/pip \
     && pip install --upgrade pip \
-    && pip install wheel setuptools
-
-RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-install-recommends -y ${APT_PACKAGES}; fi && \
+    && pip install wheel setuptools && \
     git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
     git clone --depth=1 https://github.com/hanxiao/glid-3-xl.git && \
