@@ -13,12 +13,14 @@ COPY executors dalle-flow/executors
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-pip \
+    && ln -sf python3 /usr/bin/python \
+    && ln -sf pip3 /usr/bin/pip \
+    && pip install --upgrade pip \
+    && pip install wheel setuptools
 
 RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-install-recommends -y ${APT_PACKAGES}; fi && \
-    ln -sf python3 /usr/bin/python && \
-    ln -sf pip3 /usr/bin/pip && \
-    pip install --upgrade pip && \
-    pip install wheel setuptools && \
     git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
     git clone --depth=1 https://github.com/hanxiao/glid-3-xl.git && \
