@@ -62,16 +62,3 @@ class SwinIRUpscaler(Executor):
                 self._upscale(d)
                 d.blob = None
                 d.embedding = None
-
-                try:
-                    db_name = f'{self.base_path}{self.runtime_args.name.replace("/", "")}{self.failover}'
-                    with DocumentArray(
-                            storage='sqlite',
-                            config={'connection': db_name,
-                                    'table_name': 'dallemega'},
-                    ) as store:
-                        store.extend(docs)
-                        print(f'total: {len(store)} at {db_name}')
-                except Exception as ex:
-                    self.failover += 1
-                    print(f'db broken!!! {ex!r}, failed: {self.failover}')
