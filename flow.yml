@@ -20,13 +20,13 @@ executors:
 #      CUDA_VISIBLE_DEVICES: 0
 #    replicas: 1
 #    needs: [gateway]
-  - name: rerank
-    uses: ReRank
-    uses_with:
-      clip_server: grpc://0.0.0.0:51000
-    py_modules:
-      - executors/rerank/executor.py
-    needs: [dalle]
+#  - name: rerank
+#    uses: ReRank
+#    uses_with:
+#      clip_server: grpc://0.0.0.0:51000
+#    py_modules:
+#      - executors/rerank/executor.py
+#    needs: [dalle]
   - name: upscaler
     uses: SwinIRUpscaler
     py_modules:
