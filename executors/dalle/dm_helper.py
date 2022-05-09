@@ -1,3 +1,7 @@
+import time
+
+time.sleep(2)  # let diffusion load first to avoid the surge competition on GPU memory, which results in OOM
+
 import random
 from functools import partial
 
