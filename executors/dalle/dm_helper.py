@@ -42,7 +42,7 @@ wandb.init(anonymous='must')
 # Load models & tokenizer
 
 model, params = DalleBart.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID, dtype=dtype, _do_init=False)
-vqgan, vqgan_params = VQModel.from_pretrained(VQGAN_REPO, revision=VQGAN_COMMIT_ID, dtype=dtype, _do_init=False)
+vqgan, vqgan_params = VQModel.from_pretrained(VQGAN_REPO, revision=VQGAN_COMMIT_ID, dtype=dtype)
 
 print('device count:', jax.device_count())
 params = replicate(params)
