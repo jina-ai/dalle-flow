@@ -7,6 +7,7 @@ with:
 executors:
   - name: dalle
     uses: executors/dalle/config.yml
+    timeout_ready: -1  # slow download speed often leads to timeout
     env:
       CUDA_VISIBLE_DEVICES: 0
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html

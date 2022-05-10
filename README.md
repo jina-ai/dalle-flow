@@ -19,7 +19,7 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 ## Updates
 
-- 🌟 **2022/5/9** Less memory-footprint overall, the whole Flow can now fit into one GPU with 18GB memory.
+- 🌟 **2022/5/9** New Mega checkpoint! Less memory-footprint overall, the whole Flow can now fit into one GPU with 18GB memory.
 - 🌟 **2022/5/7** New Mega checkpoint & multiple optimization on GLID3: less memory-footprint, use `ViT-L/14@336px` from CLIP-as-service, `steps 100->200`. 
 - 🌟 **2022/5/6** DALL·E Flow just got updated! [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb)
   - Revised the first step: 16 candidates are generated, 8 from DALL·E Mega, 8 from GLID3-XL; then ranked by CLIP-as-service.
