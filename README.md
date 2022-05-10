@@ -19,7 +19,7 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 ## Updates
 
-- 🌟 **2022/5/9** New Mega checkpoint! Less memory-footprint overall, the whole Flow can now fit into one GPU with 18GB memory.
+- 🌟🐳 **2022/5/10** [A Dockerfile is added! Now you can easily deploy your own DALL·E Flow](#run-in-docker). New Mega checkpoint! Smaller memory-footprint, the whole Flow can now fit into **one GPU with 21GB memory**.
 - 🌟 **2022/5/7** New Mega checkpoint & multiple optimization on GLID3: less memory-footprint, use `ViT-L/14@336px` from CLIP-as-service, `steps 100->200`. 
 - 🌟 **2022/5/6** DALL·E Flow just got updated! [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb)
   - Revised the first step: 16 candidates are generated, 8 from DALL·E Mega, 8 from GLID3-XL; then ranked by CLIP-as-service.
@@ -139,7 +139,7 @@ You can host your own server by following the instruction below.
 
 ### Hardware requirements
 
-It is highly recommended to run DALL·E Flow on a GPU machine. In fact, one GPU is probably not enough. DALL·E Mega needs one with 22GB memory. SwinIR and GLID-3 also need one; as they can be spawned on-demandly in seconds, they can share one GPU.
+DALL·E Flow needs one GPU with 21GB memory at its peak. All services are squeezed into this one GPU.
 
 It requires at least 40GB free space on the hard drive, mostly for downloading pretrained models.
 
@@ -152,11 +152,37 @@ CPU-only environment is not tested and likely won't work. Google Colab is likely
 <img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/flow.svg?raw=true" width="70%">
 </p>
 
-If you installed Jina, the above flowchart can be generated via:
+If you have installed Jina, the above flowchart can be generated via:
 
 ```bash
 python -c "from jina import Flow; Flow.load_config('flow.yml').plot('flow.svg')"
 ```
+
+### Run in Docker
+
+We have provided a Dockerfile which allows you to run the server out of the box.
+
+The Dockerfile is using CUDA 11.6 as the base image, you may want to adjust it according to your system.
+
+```bash
+git clone https://github.com/jina-ai/dalle-flow.git
+cd dalle-flow
+
+docker build -t jinaai/dalle-flow .
+```
+
+The building will take 10 minutes with average internet speed, which results in a 10GB Docker image.
+
+To run it, simply do:
+
+```bash
+docker run -p 51005:51005 -v $HOME/.cache:/root/.cache --gpus all jinaai/dalle-flow
+```
+
+- The first run will take ~10 minutes with average internet speed.
+- `-v $HOME/.cache:/root/.cache` avoids repeated model downloading on every docker run.
+- The first part of `-p 51005:51005` is your host public port. Make sure people can access this port if you are serving publicly. The second par of it is [the port defined in flow.yml](https://github.com/jina-ai/dalle-flow/blob/e7e313522608668daeec1b7cd84afe56e5b19f1e/flow.yml#L4).
+
 
 
 ### Install
