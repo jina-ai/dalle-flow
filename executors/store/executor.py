@@ -7,8 +7,11 @@ class MyStore(Executor):
         super().__init__(**kwargs)
         self.storage = DocumentArray(storage='sqlite', config={'connection': store_path, 'table_name': f'dallemega'})
 
-    @requests(on='/')
+    @requests(on='/upscale')
     def store(self, docs: DocumentArray, **kwargs):
         docs[...].blobs = None  # remove all blobs from anywhere to save space
-        self.storage.extend(docs)
-        print(f'total: {len(self.storage)}')
+        docs[...].embeddings = None
+        for d in docs.find({'tags__upscaled': {'$exists': True}}):
+            if d.id not in self.storage:
+                self.storage.append(d)
+                print(f'total: {len(self.storage)}')

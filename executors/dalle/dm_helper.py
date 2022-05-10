@@ -21,7 +21,7 @@ from vqgan_jax.modeling_flax_vqgan import VQModel
 
 # dall-mega-fp16
 DALLE_MODEL = "dalle-mini/dalle-mini/mega-1-fp16:latest"
-dtype=jnp.float16
+dtype = jnp.float16
 
 DALLE_COMMIT_ID = None
 
@@ -37,8 +37,12 @@ wandb.init(anonymous='must')
 
 # Load models & tokenizer
 
-model, params = DalleBart.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID, dtype=dtype, _do_init=False)
-vqgan, vqgan_params = VQModel.from_pretrained(VQGAN_REPO, revision=VQGAN_COMMIT_ID, dtype=dtype, _do_init=False)
+model, params = DalleBart.from_pretrained(
+    DALLE_MODEL, revision=DALLE_COMMIT_ID, dtype=dtype, _do_init=False
+)
+vqgan, vqgan_params = VQModel.from_pretrained(
+    VQGAN_REPO, revision=VQGAN_COMMIT_ID, dtype=jnp.float32, _do_init=False
+)
 
 print('device count:', jax.device_count())
 params = replicate(params)
