@@ -9,7 +9,7 @@ executors:
     uses: executors/dalle/config.yml
     timeout_ready: -1  # slow download speed often leads to timeout
     env:
-      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+      CUDA_VISIBLE_DEVICES: 2  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
   - name: diffusion
     uses: GLID3Diffusion
@@ -19,7 +19,7 @@ executors:
     py_modules:
       - executors/glid3/executor.py
     env:
-      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+      CUDA_VISIBLE_DEVICES: 2  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1
     needs: [gateway]
@@ -38,7 +38,7 @@ executors:
       swinir_path: ../SwinIR
       store_path: dalle.db
     env:
-      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+      CUDA_VISIBLE_DEVICES: 1  # change this if you have multiple GPU
   - name: store
     uses: MyStore
     py_modules:
