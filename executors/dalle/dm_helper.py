@@ -31,7 +31,7 @@ VQGAN_COMMIT_ID = 'e93a26e7707683d349bf5d5c41c5b0ef69b677a9'
 gen_top_k = None
 gen_top_p = 0.9
 temperature = None
-cond_scale = 3.0
+cond_scale = 10.0
 
 wandb.init(anonymous='must')
 
