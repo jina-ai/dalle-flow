@@ -185,7 +185,7 @@ docker run -p 51005:51005 -v $HOME/.cache:/root/.cache --gpus all jinaai/dalle-f
 
 
 
-### Install
+### Run natively
 
 #### Clone repos
 
