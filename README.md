@@ -143,6 +143,8 @@ DALL·E Flow needs one GPU with 21GB memory at its peak. All services are squeez
 
 It requires at least 40GB free space on the hard drive, mostly for downloading pretrained models.
 
+High-speed internet is required. Slow/unstable internet may throw frustrating timeout when downloading models.
+
 CPU-only environment is not tested and likely won't work. Google Colab is likely throwing OOM hence also won't work.
 
 
@@ -160,9 +162,9 @@ python -c "from jina import Flow; Flow.load_config('flow.yml').plot('flow.svg')"
 
 ### Run in Docker
 
-We have provided a Dockerfile which allows you to run the server out of the box.
+We have provided [a Dockerfile](https://github.com/jina-ai/dalle-flow/blob/main/Dockerfile) which allows you to run a server out of the box.
 
-The Dockerfile is using CUDA 11.6 as the base image, you may want to adjust it according to your system.
+Our Dockerfile is using CUDA 11.6 as the base image, you may want to adjust it according to your system.
 
 ```bash
 git clone https://github.com/jina-ai/dalle-flow.git
@@ -183,9 +185,17 @@ docker run -p 51005:51005 -v $HOME/.cache:/root/.cache --gpus all jinaai/dalle-f
 - `-v $HOME/.cache:/root/.cache` avoids repeated model downloading on every docker run.
 - The first part of `-p 51005:51005` is your host public port. Make sure people can access this port if you are serving publicly. The second par of it is [the port defined in flow.yml](https://github.com/jina-ai/dalle-flow/blob/e7e313522608668daeec1b7cd84afe56e5b19f1e/flow.yml#L4).
 
+You should see the screen like following once running:
 
+<p align="center">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/docker-run.png?raw=true" width="50%">
+</p>
+
+Note that unlike running natively, running inside Docker may give less vivid progressbar, color logs, and prints. This is due to the limitations of the terminal in a Docker container. It does not affect the actual usage.
 
 ### Run natively
+
+Running natively requires some manual steps, but it is often easier to debug.
 
 #### Clone repos
 
