@@ -6,7 +6,7 @@ import jax.numpy as jnp
 import numpy as np
 import wandb
 from PIL import Image
-from dalle_mini import DalleBart, DalleBartProcessor
+from dalle_mini.model import DalleBart, DalleBartTokenizer
 from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key
 from vqgan_jax.modeling_flax_vqgan import VQModel
@@ -71,7 +71,7 @@ def p_decode(indices, params):
     return vqgan.decode_code(indices, params=params)
 
 
-processor = DalleBartProcessor.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID)
+processor = DalleBartTokenizer.from_pretrained(DALLE_MODEL, revision=DALLE_COMMIT_ID)
 
 
 def tokenize_prompt(prompt: str):
