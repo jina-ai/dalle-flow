@@ -6,7 +6,7 @@ import jax.numpy as jnp
 import numpy as np
 import wandb
 from PIL import Image
-from dalle_mini import DalleBart, DalleBartProcessor
+from dalle_mini.model import DalleBart, DalleBartTokenizer
 from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key
 from vqgan_jax.modeling_flax_vqgan import VQModel
