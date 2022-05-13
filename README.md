@@ -19,6 +19,7 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 ## Updates
 
+- **2022/5/13b** Removing TLS as Cloudflare gives 100s timeout, making DALLE Flow in usable [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - 🔐 **2022/5/13** New Mega checkpoint! All connections are now with TLS, [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - 🐳 **2022/5/10** [A Dockerfile is added! Now you can easily deploy your own DALL·E Flow](#run-in-docker). New Mega checkpoint! Smaller memory-footprint, the whole Flow can now fit into **one GPU with 21GB memory**.
 - 🌟 **2022/5/7** New Mega checkpoint & multiple optimization on GLID3: less memory-footprint, use `ViT-L/14@336px` from CLIP-as-service, `steps 100->200`. 
@@ -47,7 +48,7 @@ We have provided a demo server for you to play:
 > ⚠️ **Due to the massive requests, our server may be delay in response. Yet we are _very_ confident on keeping the uptime high.** You can also deploy your own server by [following the instruction here](#server).
 
 ```python
-server_url = 'grpcs://dalle-flow.jina.ai:2087'
+server_url = 'grpc://dalle-flow.jina.ai:51005'
 ```
 
 
