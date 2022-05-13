@@ -1,7 +1,9 @@
 jtype: Flow
 with:
   protocol: grpc
-  port: 51005
+  port: 2087
+  ssl_certfile: server.crt
+  ssl_keyfile: server.key
   env:
     JINA_LOG_LEVEL: debug
 executors:
