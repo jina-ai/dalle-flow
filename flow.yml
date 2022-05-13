@@ -26,7 +26,7 @@ executors:
   - name: rerank
     uses: ReRank
     uses_with:
-      clip_server: grpc://demo-cas.jina.ai:51000
+      clip_server: grpcs://demo-cas.jina.ai:2096
     py_modules:
       - executors/rerank/executor.py
     needs: [dalle, diffusion]
