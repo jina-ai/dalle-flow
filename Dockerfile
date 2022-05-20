@@ -14,7 +14,7 @@ ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 python3-pip wget \
+    && apt-get install -y --no-install-recommends python3 python3-pip wget libglib2.0-0 libsm6 libxrender1 libxext6 libgl1 \
     && ln -sf python3 /usr/bin/python \
     && ln -sf pip3 /usr/bin/pip \
     && pip install --upgrade pip \
