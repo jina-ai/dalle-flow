@@ -18,7 +18,8 @@ RUN apt-get update \
     && ln -sf python3 /usr/bin/python \
     && ln -sf pip3 /usr/bin/pip \
     && pip install --upgrade pip \
-    && pip install wheel setuptools
+    && pip install wheel setuptools \
+    && apt install nvidia-cuda-toolkit
 
 RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-install-recommends -y ${APT_PACKAGES}; fi && \
     git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git  && \
