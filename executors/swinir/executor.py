@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 from jina import Executor, DocumentArray, Document, requests
+from jina.logging.predefined import default_logger
 
 
 class SwinIRUpscaler(Executor):
@@ -17,7 +18,7 @@ class SwinIRUpscaler(Executor):
         self.failover = 0
 
     def _upscale(self, d: Document):
-        print(f'upscaling [{d.text}]...')
+        default_logger.info(f'upscaling [{d.text}]...')
 
         os.chdir(self.swinir_path)
 
@@ -35,7 +36,7 @@ class SwinIRUpscaler(Executor):
         }
         kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
 
-        print(
+        default_logger.info(
             subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}')
         )
         d.uri = os.path.join(self.output_path, f'{d.id}_SwinIR.png')
@@ -43,7 +44,7 @@ class SwinIRUpscaler(Executor):
         d.tags['upscaled'] = True
         d.tags.update(kw)
 
-        print('cleaning...')
+        default_logger.info('cleaning...')
         # remove input
         shutil.rmtree(input_path, ignore_errors=True)
 
@@ -52,7 +53,7 @@ class SwinIRUpscaler(Executor):
             if os.path.isfile(f):
                 os.remove(f)
 
-        print('done!')
+        default_logger.info('done!')
 
     @requests(on='/upscale')
     async def upscale(self, docs: DocumentArray, **kwargs):
