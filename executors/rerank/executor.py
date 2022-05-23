@@ -1,6 +1,5 @@
 from clip_client import Client
 from jina import Executor, requests, DocumentArray
-from jina.logging.predefined import default_logger
 
 
 class ReRank(Executor):
@@ -11,7 +10,7 @@ class ReRank(Executor):
 
     @requests(on='/')
     async def rerank(self, docs: DocumentArray, **kwargs):
-        default_logger.info(docs.texts)
+        self.logger.info(docs.texts)
         docs = await self._client.arank(docs)
-        default_logger.info(docs.texts)
+        self.logger.info(docs.texts)
         return docs
