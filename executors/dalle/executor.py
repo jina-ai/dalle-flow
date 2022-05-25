@@ -10,6 +10,7 @@ class DalleGenerator(Executor):
 
     @requests(on='/')
     def generate(self, docs: DocumentArray, parameters: Dict, **kwargs):
+        print('dalle, requests:', {d.tags['request'] for d in docs})
 
         # can be of course larger but to save time and reduce the queue when serving public
         num_images = max(1, min(9, int(parameters.get('num_images', 1))))
@@ -23,6 +24,8 @@ class DalleGenerator(Executor):
                 _d = Document(blob=buffered.getvalue(), mime_type='image/png',
                               tags={'text': d.text, 'generator': 'DALLE-mega'}).convert_blob_to_datauri()
                 _d.text = d.text
+
+                print('dalle, requests:', d.tags['request'], 'datauri: ', _d.uri)
                 d.matches.append(_d)
 
             self.logger.info(f'done with [{d.text}]')

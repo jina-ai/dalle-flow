@@ -10,6 +10,12 @@ class ReRank(Executor):
 
     @requests(on='/')
     async def rerank(self, docs: DocumentArray, **kwargs):
+        print('re-rank, requests:', {d.tags['request'] for d in docs})
+        for d in docs:
+            print('re-rank, request:', d.tags['request'], 'received matches datauris:', '\n'.join([
+                m.uri for m in d.matches
+            ]))
+
         self.logger.info(docs.texts)
         docs = await self._client.arank(docs)
         self.logger.info(docs.texts)
