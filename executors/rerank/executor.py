@@ -16,7 +16,7 @@ class ReRank(Executor):
                 m.uri for m in d.matches
             ]))
 
-        self.logger.info(docs.texts)
+        print(docs.texts)
         docs = await self._client.arank(docs)
-        self.logger.info(docs.texts)
+        print(docs.texts)
         return docs
