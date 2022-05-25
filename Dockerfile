@@ -8,7 +8,6 @@ ARG APT_PACKAGES="git wget"
 WORKDIR /dalle
 
 ADD requirements.txt dalle-flow/
-COPY executors dalle-flow/executors
 
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
@@ -39,6 +38,7 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     # now remove apt packages
     if [ -n "${APT_PACKAGES}" ]; then apt-get remove -y --auto-remove ${APT_PACKAGES} && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*; fi
 
+COPY executors dalle-flow/executors
 ADD flow.yml dalle-flow/
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
