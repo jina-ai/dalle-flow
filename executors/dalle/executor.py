@@ -10,12 +10,10 @@ class DalleGenerator(Executor):
 
     @requests(on='/')
     def generate(self, docs: DocumentArray, parameters: Dict, **kwargs):
-        print('dalle, requests:', {d.tags['request'] for d in docs})
 
         # can be of course larger but to save time and reduce the queue when serving public
         num_images = max(1, min(9, int(parameters.get('num_images', 1))))
         for d in docs:
-            print(f'dalle {num_images} [{d.text}]...')
             generated_imgs = dm_helper.generate_images(d.text, num_images)
 
             for img in generated_imgs:
@@ -28,4 +26,3 @@ class DalleGenerator(Executor):
                 print('dalle, requests:', d.tags['request'], 'datauri: ', _d.uri)
                 d.matches.append(_d)
 
-            print(f'done with [{d.text}]')

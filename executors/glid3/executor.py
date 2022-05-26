@@ -56,10 +56,7 @@ class GLID3Diffusion(Executor):
 
     @requests(on='/')
     async def diffusion(self, docs: DocumentArray, parameters: Dict, **kwargs):
-        print('diffusion, requests:', {d.tags['request'] for d in docs})
         skip_rate = float(parameters.get('skip_rate', 0.5))
         num_images = max(1, min(9, int(parameters.get('num_images', 1))))
         for d in docs:
             await self.run_glid3(d, d.text, skip_rate=skip_rate, num_images=num_images)
-            for m in d.matches:
-                print('diffusion, request:', d.tags['request'], 'datauri: ',  m.uri)
