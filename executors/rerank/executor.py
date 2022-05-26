@@ -17,7 +17,7 @@ class ReRank(Executor):
             ]))
 
         print(docs.texts)
-        docs = await self._client.arank(docs)
+        # docs = await self._client.arank(docs)
         print(docs.texts)
         for d in docs:
             print('re-rank, processed request (after clip):', d.tags['request'], 'received matches datauris:', '\n'.join([
