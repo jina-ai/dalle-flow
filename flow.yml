@@ -25,12 +25,12 @@ executors:
     replicas: 4
     needs: [gateway]
   - name: rerank
-    uses: ReRank
-    replicas: 1
-    uses_with:
-      clip_server: grpcs://demo-cas.jina.ai:2096
-    py_modules:
-      - executors/rerank/executor.py
+#    uses: ReRank
+#    replicas: 1
+#    uses_with:
+#      clip_server: grpcs://demo-cas.jina.ai:2096
+#    py_modules:
+#      - executors/rerank/executor.py
     needs: [dalle, diffusion]
   - name: upscaler
     replicas: 5
