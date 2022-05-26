@@ -22,7 +22,5 @@ class DalleGenerator(Executor):
                 _d = Document(blob=buffered.getvalue(), mime_type='image/png',
                               tags={'text': d.text, 'generator': 'DALLE-mega'}).convert_blob_to_datauri()
                 _d.text = d.text
-
-                print('dalle, requests:', d.tags['request'], 'datauri: ', _d.uri)
                 d.matches.append(_d)
 

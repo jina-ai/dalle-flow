@@ -20,7 +20,7 @@ class GLID3Diffusion(Executor):
         with tempfile.NamedTemporaryFile(
                 suffix='.png',
         ) as f_in:
-            print(f'diffusion [{text}] ...')
+            self.logger.info(f'diffusion [{text}] ...')
             from dalle_flow_glid3.cli_parser import parser
 
             kw = {
@@ -52,7 +52,7 @@ class GLID3Diffusion(Executor):
             # remove all outputs
             shutil.rmtree(args.output_path, ignore_errors=True)
 
-            print(f'done with [{text}]!')
+            self.logger.info(f'done with [{text}]!')
 
     @requests(on='/')
     async def diffusion(self, docs: DocumentArray, parameters: Dict, **kwargs):

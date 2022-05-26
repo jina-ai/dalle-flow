@@ -3,7 +3,6 @@ import os
 os.environ['JINA_HUBBLE_REGISTRY'] = 'https://apihubble.staging.jina.ai'
 
 from jina import Executor, requests, DocumentArray
-from jina.logging.predefined import default_logger
 
 
 class MyStore(Executor):
@@ -20,4 +19,4 @@ class MyStore(Executor):
             if d.id not in self.storage:
                 self.storage.append(d)
                 DocumentArray([d]).push(f'dalle-flow-{d.id}')
-                default_logger.info(f'total: {len(self.storage)}')
+                self.logger.info(f'total: {len(self.storage)}')
