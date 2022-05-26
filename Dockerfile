@@ -44,4 +44,6 @@ ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
 WORKDIR /dalle/dalle-flow
 
+RUN pip install -U jina
+
 ENTRYPOINT ["jina", "flow", "--uses", "flow.yml"]
