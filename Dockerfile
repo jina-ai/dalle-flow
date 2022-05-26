@@ -38,12 +38,13 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     # now remove apt packages
     if [ -n "${APT_PACKAGES}" ]; then apt-get remove -y --auto-remove ${APT_PACKAGES} && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*; fi
 
+RUN pip install -U jina
+
 COPY executors dalle-flow/executors
 ADD flow.yml dalle-flow/
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
 WORKDIR /dalle/dalle-flow
 
-RUN pip install -U jina
 
 ENTRYPOINT ["jina", "flow", "--uses", "flow.yml"]
