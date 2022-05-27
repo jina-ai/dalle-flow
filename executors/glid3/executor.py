@@ -42,7 +42,7 @@ class GLID3Diffusion(Executor):
             from dalle_flow_glid3.sample import do_run
 
             args = parser.parse_args(kw_str_list)
-            await do_run(args)
+            do_run(args)
 
             kw['generator'] = 'GLID3-XL'
             for f in glob.glob(f'{args.output_path}/*.png'):
