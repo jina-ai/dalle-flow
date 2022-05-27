@@ -34,9 +34,14 @@ class SwinIRUpscaler(Executor):
             'folder_lq': input_path,
         }
         kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
+        if os.getenv('CUDA_VISIBLE_DEVICES'):
+            env_statement = f'CUDA_VISIBLE_DEVICES={os.getenv("CUDA_VISIBLE_DEVICES")} '
+        else:
+            env_statement = ''
+
 
         self.logger.info(
-            subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}')
+            subprocess.getoutput(f'{env_statement}python main_test_swinir.py --large_model {kw_str}')
         )
         d.uri = os.path.join(self.output_path, f'{d.id}_SwinIR.png')
         d.convert_uri_to_datauri()
