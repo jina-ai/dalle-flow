@@ -1,6 +1,6 @@
 # jina-related
 #jina>=3.4.5
-git+https://github.com/jina-ai/jina.git@af4632764798fbfea5747c13694442275f97bedf
+git+https://github.com/jina-ai/jina.git@c61c413433bb90318994d3b0a2bad741dbe8ced5
 clip_client>=0.4.0
 docarray>=0.13.5
 # dalle-mini
