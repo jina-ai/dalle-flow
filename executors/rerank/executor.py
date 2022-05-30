@@ -10,4 +10,5 @@ class ReRank(Executor):
 
     @requests(on='/')
     async def rerank(self, docs: DocumentArray, **kwargs):
+        self.logger.info(f'rerank: received request {docs[0].tags["request"]}')
         return docs

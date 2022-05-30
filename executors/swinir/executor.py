@@ -8,12 +8,11 @@ from jina import Executor, DocumentArray, Document, requests
 
 
 class SwinIRUpscaler(Executor):
-    def __init__(self, swinir_path: str, store_path: str, **kwargs):
+    def __init__(self, swinir_path: str, **kwargs):
         super().__init__(**kwargs)
         self.swinir_path = swinir_path
         self.input_path = f'{swinir_path}/input/'
         self.output_path = f'{swinir_path}/results/swinir_real_sr_x4_large/'
-        self.base_path = store_path
         self.failover = 0
 
     def _upscale(self, d: Document):
@@ -56,9 +55,11 @@ class SwinIRUpscaler(Executor):
 
     @requests(on='/upscale')
     async def upscale(self, docs: DocumentArray, **kwargs):
+        self.logger.info(f'upscaler: handling request {docs[0].tags["request"]}')
         for d in docs:
             if not d.tags.get('upscaled'):
                 # only upscale once
                 self._upscale(d)
                 d.blob = None
                 d.embedding = None
+        self.logger.info(f'upscaler: finished request {docs[0].tags["request"]}')

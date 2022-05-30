@@ -39,7 +39,6 @@ executors:
       - executors/swinir/executor.py
     uses_with:
       swinir_path: ../SwinIR
-      store_path: dalle.db
     env:
       CUDA_VISIBLE_DEVICES: -1
   - name: store
