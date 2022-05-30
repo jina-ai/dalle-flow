@@ -12,26 +12,6 @@ executors:
     env:
       CUDA_VISIBLE_DEVICES: 0,1,2,3  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
-  - name: diffusion
-    uses: GLID3Diffusion
-    uses_with:
-      glid3_path: ../glid-3-xl
-      steps: 100
-    py_modules:
-      - executors/glid3/executor.py
-    env:
-      CUDA_VISIBLE_DEVICES: RR0:4 # change this if you have multiple GPU
-      XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
-    replicas: 4
-    needs: [gateway]
-  - name: rerank
-    uses: ReRank
-    replicas: 1
-    uses_with:
-      clip_server: grpcs://demo-cas.jina.ai:2096
-    py_modules:
-      - executors/rerank/executor.py
-    needs: [dalle, diffusion]
   - name: upscaler
     replicas: 5
     uses: SwinIRUpscaler
