@@ -60,5 +60,9 @@ class GLID3Diffusion(Executor):
         skip_rate = float(parameters.get('skip_rate', 0.5))
         num_images = max(1, min(9, int(parameters.get('num_images', 1))))
         for d in docs:
+            if d.uri:
+                _d = Document(uri=d.uri, text=d.text)
+                d.matches.append(_d)
+                continue
             await self.run_glid3(d, d.text, skip_rate=skip_rate, num_images=num_images)
         self.logger.info(f'diffusion: finished request {docs[0].tags["request"]}')
