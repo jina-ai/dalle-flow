@@ -10,7 +10,7 @@ executors:
     timeout_ready: -1  # slow download speed often leads to timeout
     replicas: 1
     env:
-      CUDA_VISIBLE_DEVICES: 0,1,2,3  # change this if you have multiple GPU
+      CUDA_VISIBLE_DEVICES: 0,1  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
   - name: diffusion
     uses: GLID3Diffusion
