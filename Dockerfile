@@ -25,7 +25,7 @@ RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86
 RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-install-recommends -y ${APT_PACKAGES}; fi && \
     git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
-    git clone --depth=1 https://github.com/hanxiao/glid-3-xl.git && \
+    git clone --depth=1 https://github.com/alaeddine-13/glid-3-xl.git && \
     pip install "jax[cuda11_cudnn82]" -f https://storage.googleapis.com/jax-releases/jax_releases.html && \
     pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113 && \
     cd latent-diffusion && pip install --timeout=1000 -e . && cd - && \
