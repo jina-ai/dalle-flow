@@ -22,7 +22,7 @@ executors:
     env:
       CUDA_VISIBLE_DEVICES: RR2:8 # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
-    replicas: 4
+    replicas: 6
     needs: [gateway]
   - name: rerank
     uses: ReRank
