@@ -1,4 +1,5 @@
 from jina import Executor, requests, DocumentArray
+from jina.logging.predefined import default_logger
 
 
 class MyStore(Executor):
@@ -14,4 +15,4 @@ class MyStore(Executor):
         for d in docs.find({'tags__upscaled': {'$exists': True}}):
             if d.id not in self.storage:
                 self.storage.append(d)
-                print(f'total: {len(self.storage)}')
+                default_logger.info(f'total: {len(self.storage)}')

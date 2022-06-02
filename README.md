@@ -19,7 +19,10 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 ## Updates
 
-- 🌟🐳 **2022/5/10** [A Dockerfile is added! Now you can easily deploy your own DALL·E Flow](#run-in-docker). New Mega checkpoint! Smaller memory-footprint, the whole Flow can now fit into **one GPU with 21GB memory**.
+- ⚠️ **2022/5/23** Fix an upstream bug in CLIP-as-service. This bug makes the 2nd diffusion step irrelevant to the given texts. New Dockerfile proved to be reproducible on a AWS EC2 `p2.x8large` instance.
+- **2022/5/13b** Removing TLS as Cloudflare gives 100s timeout, making DALLE Flow in usable [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
+- 🔐 **2022/5/13** New Mega checkpoint! All connections are now with TLS, [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
+- 🐳 **2022/5/10** [A Dockerfile is added! Now you can easily deploy your own DALL·E Flow](#run-in-docker). New Mega checkpoint! Smaller memory-footprint, the whole Flow can now fit into **one GPU with 21GB memory**.
 - 🌟 **2022/5/7** New Mega checkpoint & multiple optimization on GLID3: less memory-footprint, use `ViT-L/14@336px` from CLIP-as-service, `steps 100->200`. 
 - 🌟 **2022/5/6** DALL·E Flow just got updated! [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb)
   - Revised the first step: 16 candidates are generated, 8 from DALL·E Mega, 8 from GLID3-XL; then ranked by CLIP-as-service.

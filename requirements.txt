@@ -1,5 +1,5 @@
 # jina-related
-jina>=3.3.26.dev12
+jina>=3.4.5
 clip_client>=0.4.0
 docarray>=0.13.5
 # dalle-mini

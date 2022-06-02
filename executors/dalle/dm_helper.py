@@ -1,4 +1,5 @@
 import random
+import time
 from functools import partial
 
 import jax
@@ -33,6 +34,7 @@ gen_top_p = 0.9
 temperature = None
 cond_scale = 10.0
 
+time.sleep(int(random.random() * 10))  # hack, to avoid concurrent wandb.init, which may cause error when replicas>1
 wandb.init(anonymous='must')
 
 # Load models & tokenizer
