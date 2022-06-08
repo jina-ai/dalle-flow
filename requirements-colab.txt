@@ -1,0 +1,15 @@
+# jina-related
+jina>=3.4.5
+clip_client>=0.4.0
+docarray>=0.13.5
+# dalle-mini
+git+https://github.com/openai/CLIP.git
+git+https://github.com/huggingface/transformers.git
+git+https://github.com/patil-suraj/vqgan-jax.git
+git+https://github.com/borisdayma/dalle-mini.git
+# glid3
+dalle_pytorch
+# SwinIR
+opencv-python
+timm
+Cython
