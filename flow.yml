@@ -12,7 +12,8 @@ executors:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
   - name: diffusion
-    uses: GLID3Diffusion
+    uses: GLID3Diffusion 
+    timeout_ready: -1  # slow download speed often leads to timeout
     uses_with:
       glid3_path: ../glid-3-xl
       steps: 100
@@ -32,6 +33,7 @@ executors:
     needs: [dalle, diffusion]
   - name: upscaler
     uses: SwinIRUpscaler
+    timeout_ready: -1  # slow download speed often leads to timeout
     py_modules:
       - executors/swinir/executor.py
     uses_with:
