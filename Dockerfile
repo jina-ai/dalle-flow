@@ -8,7 +8,6 @@ ARG APT_PACKAGES="git wget"
 WORKDIR /dalle
 
 ADD requirements.txt dalle-flow/
-COPY executors dalle-flow/executors
 
 ENV PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
@@ -40,8 +39,23 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     # now remove apt packages
     if [ -n "${APT_PACKAGES}" ]; then apt-get remove -y --auto-remove ${APT_PACKAGES} && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*; fi
 
+COPY executors dalle-flow/executors
 ADD flow.yml dalle-flow/
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64
+
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
+ARG USER_NAME=dalle
+ARG GROUP_NAME=dalle
+
+RUN groupadd -g ${GROUP_ID} ${USER_NAME} &&\
+    useradd -l -u ${USER_ID} -g ${USER_NAME} ${GROUP_NAME} &&\
+    mkdir /home/${USER_NAME} &&\
+    chown ${USER_NAME}:${GROUP_NAME} /home/${USER_NAME} &&\
+    chown -R ${USER_NAME}:${GROUP_NAME} /dalle/
+
+USER ${USER_NAME}
 
 WORKDIR /dalle/dalle-flow
 

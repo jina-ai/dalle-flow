@@ -173,7 +173,7 @@ Our Dockerfile is using CUDA 11.6 as the base image, you may want to adjust it a
 git clone https://github.com/jina-ai/dalle-flow.git
 cd dalle-flow
 
-docker build -t jinaai/dalle-flow .
+docker build --build-arg GROUP_ID=$(id -g ${USER}) --build-arg USER_ID=$(id -u ${USER}) -t jinaai/dalle-flow .
 ```
 
 The building will take 10 minutes with average internet speed, which results in a 10GB Docker image.
@@ -181,7 +181,7 @@ The building will take 10 minutes with average internet speed, which results in 
 To run it, simply do:
 
 ```bash
-docker run -p 51005:51005 -v $HOME/.cache:/root/.cache --gpus all jinaai/dalle-flow
+docker run -p 51005:51005 -v $HOME/.cache:/home/dalle/.cache --gpus all jinaai/dalle-flow
 ```
 
 - The first run will take ~10 minutes with average internet speed.
