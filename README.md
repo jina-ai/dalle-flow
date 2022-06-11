@@ -156,8 +156,8 @@ DALL·E Flow needs one GPU with 21GB VRAM at its peak. All services are squeezed
 - CLIP ViT-L/14-336px ~3GB
 
 The following reasonable tricks can be used for further reducing VRAM:
-- SwinIR can be moved to CPU -3GB
-- CLIP can be delegated to [CLIP-as-service demo server](https://github.com/jina-ai/clip-as-service#text--image-embedding)
+- SwinIR can be moved to CPU (-3GB)
+- CLIP can be delegated to [CLIP-as-service demo server](https://github.com/jina-ai/clip-as-service#text--image-embedding) (-3GB)
 
 
 It requires at least 40GB free space on the hard drive, mostly for downloading pretrained models.
