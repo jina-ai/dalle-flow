@@ -149,7 +149,16 @@ You can host your own server by following the instruction below.
 
 ### Hardware requirements
 
-DALL·E Flow needs one GPU with 21GB memory at its peak. All services are squeezed into this one GPU.
+DALL·E Flow needs one GPU with 21GB VRAM at its peak. All services are squeezed into this one GPU, this includes (roughly)
+- DALLE ~9GB
+- GLID Diffusion ~6GB
+- SwinIR ~3GB
+- CLIP ViT-L/14-336px ~3GB
+
+The following reasonable tricks can be used for further reducing VRAM:
+- SwinIR can be moved to CPU -3GB
+- CLIP can be delegated to [CLIP-as-service demo server](https://github.com/jina-ai/clip-as-service#text--image-embedding)
+
 
 It requires at least 40GB free space on the hard drive, mostly for downloading pretrained models.
 
