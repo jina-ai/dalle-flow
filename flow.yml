@@ -4,6 +4,8 @@ with:
   port: 2087
   ssl_certfile: server.crt
   ssl_keyfile: server.key
+  monitoring: true
+  port_monitoring: 51006
   env:
     JINA_LOG_LEVEL: debug
 executors:
@@ -13,6 +15,7 @@ executors:
     env:
       CUDA_VISIBLE_DEVICES: 2  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
+    port_monitoring: 51007
   - name: diffusion
     uses: GLID3Diffusion
     uses_with:
@@ -25,6 +28,7 @@ executors:
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1
     needs: [gateway]
+    port_monitoring: 51008
   - name: rerank
     uses: ReRank
     uses_with:
@@ -32,6 +36,7 @@ executors:
     py_modules:
       - executors/rerank/executor.py
     needs: [dalle, diffusion]
+    port_monitoring: 51009
   - name: upscaler
     uses: SwinIRUpscaler
     py_modules:
@@ -41,9 +46,11 @@ executors:
       store_path: dalle.db
     env:
       CUDA_VISIBLE_DEVICES: 1  # change this if you have multiple GPU
+    port_monitoring: 51010
   - name: store
     uses: MyStore
     py_modules:
       - executors/store/executor.py
     uses_with:
       store_path: dalle-flow.db
+    port_monitoring: 51011
