@@ -261,6 +261,7 @@ cd -
 ```bash
 cd dalle-flow
 pip install -r requirements.txt
+pip install jax==0.3.13
 ```
 
 ### Start the server
