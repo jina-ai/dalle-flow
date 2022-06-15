@@ -18,7 +18,7 @@ class GLID3Diffusion(Executor):
 
     async def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
         with tempfile.NamedTemporaryFile(
-                suffix='.png',
+                suffix='.png',delete=False
         ) as f_in:
             self.logger.info(f'diffusion [{text}] ...')
             from dalle_flow_glid3.cli_parser import parser
