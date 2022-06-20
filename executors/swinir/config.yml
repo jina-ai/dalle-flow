@@ -1,0 +1,6 @@
+jtype: SwinIRUpscaler
+with:
+  swinir_path: ../SwinIR
+  store_path: dalle.db
+py_modules:
+  - executor.py
