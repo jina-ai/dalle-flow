@@ -23,8 +23,8 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
     git clone --depth=1 https://github.com/hanxiao/glid-3-xl.git && \
-    pip install -U "jax[cuda11]" -f https://storage.googleapis.com/jax-releases/jax_releases.html && \
-    pip install -U "jaxlib[cuda11]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html && \
+    pip install "jax==0.3.13" && \
+    pip install "jaxlib[cuda11_cudnn82]==0.3.10" -f https://storage.googleapis.com/jax-releases/jax_releases.html && \
     pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113 && \
     cd latent-diffusion && pip install --timeout=1000 -e . && cd - && \
     cd glid-3-xl && pip install --timeout=1000 -e . && cd - && \
