@@ -7,6 +7,8 @@
 <p align=center>
 <a href="https://slack.jina.ai"><img src="https://img.shields.io/badge/Slack-3.1k-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
 <a href="https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb"><img src="https://img.shields.io/badge/Open-in%20Colab-orange?logo=google-colab&style=flat-square" alt="Open in Google Colab"/></a>
+<a href="https://hub.docker.com/r/jinaai/dalle-flow"><img alt="Docker Cloud Build Status" src="https://img.shields.io/docker/cloud/build/jinaai/dalle-flow?logo=docker&logoColor=white&style=flat-square"> <img alt="Docker Image Size (latest by date)" src="https://img.shields.io/docker/image-size/jinaai/dalle-flow?logo=docker&logoColor=white&style=flat-square"></a>
+
 </p>
 
 
@@ -27,6 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
+- 🐳 **2022/6/21** [A prebuilt image is now available on Docker Hub!](https://hub.docker.com/r/jinaai/dalle-flow) This image can be run out-of-the-box on CUDA 11.6. Fix an upstream bug in CLIP-as-service. 
 - ⚠️ **2022/5/23** Fix an upstream bug in CLIP-as-service. This bug makes the 2nd diffusion step irrelevant to the given texts. New Dockerfile proved to be reproducible on a AWS EC2 `p2.x8large` instance.
 - **2022/5/13b** Removing TLS as Cloudflare gives 100s timeout, making DALLE Flow in usable [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - 🔐 **2022/5/13** New Mega checkpoint! All connections are now with TLS, [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
@@ -183,6 +186,16 @@ jina export flowchart flow.yml flow.svg
 
 ### Run in Docker
 
+#### Prebuilt image
+
+We have provided [a prebuilt Docker image](https://hub.docker.com/r/jinaai/dalle-flow) that can be pull directly.
+
+```bash
+docker pull jinaai/dalle-flow:latest
+```
+
+#### Build it yourself
+
 We have provided [a Dockerfile](https://github.com/jina-ai/dalle-flow/blob/main/Dockerfile) which allows you to run a server out of the box.
 
 Our Dockerfile is using CUDA 11.6 as the base image, you may want to adjust it according to your system.
@@ -194,7 +207,9 @@ cd dalle-flow
 docker build --build-arg GROUP_ID=$(id -g ${USER}) --build-arg USER_ID=$(id -u ${USER}) -t jinaai/dalle-flow .
 ```
 
-The building will take 10 minutes with average internet speed, which results in a 10GB Docker image.
+The building will take 10 minutes with average internet speed, which results in a 18GB Docker image.
+
+#### Run container
 
 To run it, simply do:
 
