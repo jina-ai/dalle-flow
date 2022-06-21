@@ -10,7 +10,4 @@ class ReRank(Executor):
 
     @requests(on='/')
     async def rerank(self, docs: DocumentArray, **kwargs):
-        self.logger.info(docs.texts)
-        docs = await self._client.arank(docs)
-        self.logger.info(docs.texts)
-        return docs
+        return await self._client.arank(docs)

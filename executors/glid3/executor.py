@@ -2,6 +2,7 @@ import glob
 import os
 import shutil
 import tempfile
+import time
 from typing import Dict
 
 from jina import Executor, DocumentArray, Document, requests
@@ -17,6 +18,8 @@ class GLID3Diffusion(Executor):
         assert static_args
 
     async def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
+        request_time = time.time()
+
         with tempfile.NamedTemporaryFile(
                 suffix='.png',
         ) as f_in:
@@ -44,7 +47,11 @@ class GLID3Diffusion(Executor):
             args = parser.parse_args(kw_str_list)
             await do_run(args)
 
-            kw['generator'] = 'GLID3-XL'
+            kw.update({
+                'generator': 'GLID3-XL',
+                'request_time': request_time,
+                'created_time': time.time(),
+            })
             for f in glob.glob(f'{args.output_path}/*.png'):
                 _d = Document(uri=f, text=d.text, tags=kw).convert_uri_to_datauri()
                 d.matches.append(_d)
