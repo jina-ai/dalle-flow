@@ -17,6 +17,13 @@ DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-s
 
 **Why Human-in-the-Loop?** Generative art is a creative process. While recent advances of DALL·E unleash people's creativity, having a single-prompt-single-output UX/UI locks the imagination to a _single_ possibility, which is bad no matter how fine this single result is. DALL·E Flow is an alternative to the one-liner, by formalizing the generative art as an iterative procedure.
 
+## Usage
+
+DALL·E Flow is in client-server architecture.
+- [Client usage](#Client)
+- [Server usage, i.e. deploy your own server](#Server)
+
+
 ## Updates
 
 - ⚠️ **2022/5/23** Fix an upstream bug in CLIP-as-service. This bug makes the 2nd diffusion step irrelevant to the given texts. New Dockerfile proved to be reproducible on a AWS EC2 `p2.x8large` instance.
@@ -142,7 +149,16 @@ You can host your own server by following the instruction below.
 
 ### Hardware requirements
 
-DALL·E Flow needs one GPU with 21GB memory at its peak. All services are squeezed into this one GPU.
+DALL·E Flow needs one GPU with 21GB VRAM at its peak. All services are squeezed into this one GPU, this includes (roughly)
+- DALLE ~9GB
+- GLID Diffusion ~6GB
+- SwinIR ~3GB
+- CLIP ViT-L/14-336px ~3GB
+
+The following reasonable tricks can be used for further reducing VRAM:
+- SwinIR can be moved to CPU (-3GB)
+- CLIP can be delegated to [CLIP-as-service demo server](https://github.com/jina-ai/clip-as-service#text--image-embedding) (-3GB)
+
 
 It requires at least 40GB free space on the hard drive, mostly for downloading pretrained models.
 
@@ -160,7 +176,8 @@ CPU-only environment is not tested and likely won't work. Google Colab is likely
 If you have installed Jina, the above flowchart can be generated via:
 
 ```bash
-python -c "from jina import Flow; Flow.load_config('flow.yml').plot('flow.svg')"
+# pip install jina
+jina export flowchart flow.yml flow.svg
 ```
 
 ### Run in Docker
@@ -173,7 +190,7 @@ Our Dockerfile is using CUDA 11.6 as the base image, you may want to adjust it a
 git clone https://github.com/jina-ai/dalle-flow.git
 cd dalle-flow
 
-docker build -t jinaai/dalle-flow .
+docker build --build-arg GROUP_ID=$(id -g ${USER}) --build-arg USER_ID=$(id -u ${USER}) -t jinaai/dalle-flow .
 ```
 
 The building will take 10 minutes with average internet speed, which results in a 10GB Docker image.
@@ -181,7 +198,7 @@ The building will take 10 minutes with average internet speed, which results in 
 To run it, simply do:
 
 ```bash
-docker run -p 51005:51005 -v $HOME/.cache:/root/.cache --gpus all jinaai/dalle-flow
+docker run -p 51005:51005 -v $HOME/.cache:/home/dalle/.cache --gpus all jinaai/dalle-flow
 ```
 
 - The first run will take ~10 minutes with average internet speed.
