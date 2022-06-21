@@ -14,4 +14,3 @@ dalle_pytorch
 opencv-python
 timm
 Cython
-jax[cuda11_cudnn82]==0.3.13 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
