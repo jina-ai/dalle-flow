@@ -19,11 +19,14 @@ RUN apt-get update \
     && pip install --upgrade pip \
     && pip install wheel setuptools
 
+
 RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-install-recommends -y ${APT_PACKAGES}; fi && \
     git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
     git clone --depth=1 https://github.com/hanxiao/glid-3-xl.git && \
     pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113 && \
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcudnn8_8.4.0.27-1+cuda11.6_amd64.deb && \
+    apt install ./libcudnn8_8.4.0.27-1+cuda11.6_amd64.deb && \
     cd latent-diffusion && pip install --timeout=1000 -e . && cd - && \
     cd glid-3-xl && pip install --timeout=1000 -e . && cd - && \
     cd dalle-flow && pip install --timeout=1000 --compile -r requirements.txt && cd - && \
