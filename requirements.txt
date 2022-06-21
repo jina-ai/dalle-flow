@@ -3,7 +3,6 @@ jina>=3.4.5
 clip_client>=0.4.20
 docarray>=0.13.5
 # dalle-mini
-jax[cuda] -f https://storage.googleapis.com/jax-releases/jax_releases.html
 flax
 git+https://github.com/openai/CLIP.git
 git+https://github.com/huggingface/transformers.git
@@ -15,3 +14,4 @@ dalle_pytorch
 opencv-python
 timm
 Cython
+jax[cuda11_cudnn82] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
