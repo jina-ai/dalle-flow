@@ -1,0 +1,5 @@
+jtype: ReRank
+with:
+  clip_server: grpcs://demo-cas.jina.ai:2096
+py_modules:
+  - executor.py
