@@ -1,0 +1,10 @@
+jina>=3.4.5
+clip_client>=0.4.0
+docarray>=0.13.5
+
+# jax[cuda] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+flax
+git+https://github.com/openai/CLIP.git
+git+https://github.com/huggingface/transformers.git
+git+https://github.com/patil-suraj/vqgan-jax.git
+git+https://github.com/borisdayma/dalle-mini.git
