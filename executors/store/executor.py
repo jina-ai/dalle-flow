@@ -12,6 +12,6 @@ class MyStore(Executor):
     def store(self, docs: DocumentArray, **kwargs):
         docs[...].blobs = None  # remove all blobs from anywhere to save space
         docs[...].embeddings = None
-        for d in docs.find({'tags__upscaled': {'$exists': True}}):
+        for d in docs.find('$and': [{'tags__upscaled': {'$exists': True}}, {'tags__generator': {'$exists': True}}]):
             d.tags['finish_time'] = time.time()
             DocumentArray([d]).push(f'dalle-flow-{d.id}')
