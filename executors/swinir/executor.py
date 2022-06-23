@@ -55,7 +55,7 @@ class SwinIRUpscaler(Executor):
 
     @requests(on='/upscale')
     async def upscale(self, docs: DocumentArray, **kwargs):
-        for d in docs.find('$and': [{'tags__upscaled': {'$exists': False}}, {'tags__generator': {'$exists': True}}]):
+        for d in docs.find({'$and': [{'tags__upscaled': {'$exists': False}}, {'tags__generator': {'$exists': True}}]}):
             self._upscale(d)
             d.blob = None
             d.embedding = None
