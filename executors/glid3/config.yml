@@ -2,5 +2,6 @@ jtype: GLID3Diffusion
 with:
   glid3_path: ../glid-3-xl
   steps: 100
-py_modules:
-  - executor.py
+metas:
+  py_modules:
+    - executor.py

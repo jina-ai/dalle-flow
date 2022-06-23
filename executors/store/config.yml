@@ -1,5 +1,6 @@
 jtype: MyStore
 with:
   store_path: /home/dalle/db/dalle-flow.db
-py_modules:
-  - executor.py
+metas:
+  py_modules:
+    - executor.py
