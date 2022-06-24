@@ -36,10 +36,6 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     # now remove apt packages
     if [ -n "${APT_PACKAGES}" ]; then apt-get remove -y --auto-remove ${APT_PACKAGES} && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*; fi
 
-COPY executors dalle-flow/executors
-ADD flow.yml dalle-flow/
-ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64
-
 ARG USER_ID=1000
 ARG GROUP_ID=1000
 
@@ -51,6 +47,12 @@ RUN groupadd -g ${GROUP_ID} ${USER_NAME} &&\
     mkdir /home/${USER_NAME} &&\
     chown ${USER_NAME}:${GROUP_NAME} /home/${USER_NAME} &&\
     chown -R ${USER_NAME}:${GROUP_NAME} /dalle/
+
+
+COPY executors dalle-flow/executors
+ADD flow.yml dalle-flow/
+ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64
+RUN pip install jina==3.6.7.dev5
 
 USER ${USER_NAME}
 
