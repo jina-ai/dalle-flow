@@ -1,8 +1,9 @@
 jtype: Flow
 with:
   protocol: grpc
+  monitoring: true
   port: 51005
-  monitoring: true  # enable prometheus & grafana
+  port_monitoring: 51006
   env:
     JINA_LOG_LEVEL: debug
 executors:
@@ -10,7 +11,8 @@ executors:
     uses: executors/dalle/config.yml
     timeout_ready: -1  # slow download speed often leads to timeout
     env:
-      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+      CUDA_VISIBLE_DEVICES: 0, 1  # change this if you have multiple GPU
+      # XLA_PYTHON_CLIENT_PREALLOCATE: false
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1  # change this if you have larger VRAM
   - name: diffusion
@@ -21,9 +23,9 @@ executors:
     py_modules:
       - executors/glid3/executor.py
     env:
-      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+      CUDA_VISIBLE_DEVICES: RR0:2  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
-    replicas: 1  # change this if you have larger VRAM
+    replicas: 2  # change this if you have larger VRAM
     needs: [gateway]
   - name: rerank
     uses: ReRank
@@ -39,7 +41,8 @@ executors:
     uses_with:
       swinir_path: ../SwinIR
     env:
-      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+      CUDA_VISIBLE_DEVICES: -1  # change this if you have multiple GPU
+    replicas: 20
   - name: store
     uses: MyStore
     py_modules:
