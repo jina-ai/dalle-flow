@@ -7,8 +7,7 @@ with:
     JINA_LOG_LEVEL: debug
 executors:
   - name: dalle
-    # uses: docker://jinaai/dalle_executor:latest
-    uses: jinahub+docker://2583xebn
+    uses: jinahub+docker://DalleGenerator
     timeout_ready: -1  # slow download speed often leads to timeout
     env:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
@@ -17,8 +16,7 @@ executors:
       - $HOME/.cache:/root/.cache
       # - $HOME/.cache:/home/dalle/.cache
   - name: diffusion
-    # uses: docker://jinaai/glid3_executor:latest
-    uses: jinahub+docker://zcougdp9
+    uses: jinahub+docker://GLID3Diffusion
     env:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
     replicas: 1
@@ -28,16 +26,13 @@ executors:
       - $HOME/.cache:/root/.cache
       # - $HOME/.cache:/home/dalle/.cache
   - name: rerank
-    # uses: docker://jinaai/rerank_executor:latest
-    uses: jinahub+docker://wyedudam
+    uses: jinahub+docker://ClipReRank
     needs: [dalle, diffusion]
   - name: upscaler
-    # uses: docker://jinaai/swinir_executor:latest
-    uses: jinahub+docker://296f27y7
+    uses: jinahub+docker://SwinIRUpscaler
     env:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
   - name: store
-    # uses: docker://jinaai/store_executor:latest
-    uses: jinahub+docker://jffp33to
+    uses: jinahub+docker://DalleStore
     volumes:
       - $PWD/db:/home/dalle/db
