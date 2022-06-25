@@ -47,4 +47,3 @@ executors:
     uses: MyStore
     py_modules:
       - executors/store/executor.py
-    floating: true
