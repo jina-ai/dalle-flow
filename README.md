@@ -29,6 +29,8 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
+- ⚠️ **2022/6/25** Unexpected downtime between 6/25 0:00 - 12:00 CET due to out of GPU quotas. The new server now has 2 GPUs, add healthcheck in client notebook.
+- **2022/6/3** Reduce default number of images to 2 per pathway, 4 for diffusion.
 - 🐳 **2022/6/21** [A prebuilt image is now available on Docker Hub!](https://hub.docker.com/r/jinaai/dalle-flow) This image can be run out-of-the-box on CUDA 11.6. Fix an upstream bug in CLIP-as-service. 
 - ⚠️ **2022/5/23** Fix an upstream bug in CLIP-as-service. This bug makes the 2nd diffusion step irrelevant to the given texts. New Dockerfile proved to be reproducible on a AWS EC2 `p2.x8large` instance.
 - **2022/5/13b** Removing TLS as Cloudflare gives 100s timeout, making DALLE Flow in usable [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
