@@ -1,5 +1,4 @@
 jtype: DalleGenerator
 metas:
   py_modules:
-    - dm_helper.py
-    - executor.py
+    - executor/__init__.py
