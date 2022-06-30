@@ -34,5 +34,3 @@ executors:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
   - name: store
     uses: jinahub+docker://DalleStore
-    volumes:
-      - $PWD/db:/home/dalle/db

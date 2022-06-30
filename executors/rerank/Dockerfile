@@ -1,4 +1,4 @@
-FROM jinaai/jina:latest
+FROM jinaai/jina:latest-perf
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git
