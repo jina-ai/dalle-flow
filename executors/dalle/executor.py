@@ -16,7 +16,7 @@ class DalleGenerator(Executor):
         request_time = time.time()
         for d in docs:
             self.logger.info(f'dalle {num_images} [{d.text}]...')
-            generated_imgs = dm_helper.generate_images(d.text, num_images)
+            generated_imgs = dm_helper.generate_images(d.text, num_images)[:num_images]
 
             for img in generated_imgs:
                 buffered = BytesIO()
