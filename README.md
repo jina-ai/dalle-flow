@@ -29,6 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
+- ⚠️ **2022/7/6** Due to server migration to AWS EKS, server url changed to `grpcs://dalle-flow.dev.jina.ai`. All connections are now with TLS again, [Please _reopen_ the notebook in Google Colab!](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb)
 - ⚠️ **2022/6/25** Unexpected downtime between 6/25 0:00 - 12:00 CET due to out of GPU quotas. The new server now has 2 GPUs, add healthcheck in client notebook.
 - **2022/6/3** Reduce default number of images to 2 per pathway, 4 for diffusion.
 - 🐳 **2022/6/21** [A prebuilt image is now available on Docker Hub!](https://hub.docker.com/r/jinaai/dalle-flow) This image can be run out-of-the-box on CUDA 11.6. Fix an upstream bug in CLIP-as-service. 
