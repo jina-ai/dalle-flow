@@ -1,1 +1,1 @@
-from .executor import DalleGenerator
+from .dalle import DalleGenerator
