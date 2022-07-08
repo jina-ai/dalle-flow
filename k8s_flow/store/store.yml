@@ -1,0 +1,117 @@
+apiVersion: v1
+data:
+  JINA_LOG_LEVEL: INFO
+  pythonunbuffered: '1'
+  worker_class: uvicorn.workers.UvicornH11Worker
+kind: ConfigMap
+metadata:
+  name: store-configmap
+  namespace: dalle-flow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: store
+  name: store
+  namespace: dalle-flow
+spec:
+  ports:
+  - name: port
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: monitoring
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app: store
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store
+  namespace: dalle-flow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: store
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+      labels:
+        app: store
+        jina_deployment_name: store
+        ns: dalle-flow
+        pod_type: WORKER
+        shard_id: '0'
+    spec:
+      containers:
+      - args:
+        - executor
+        - --name
+        - store
+        - --extra-search-paths
+        - .
+        - --k8s-namespace
+        - dalle-flow
+        - --uses
+        - config.yml
+        - --port
+        - '8080'
+        - --replicas
+        - '2'
+        - --monitoring
+        - --port-monitoring
+        - '9090'
+        - --uses-metas
+        - '{}'
+        - --native
+        command:
+        - jina
+        env:
+        - name: POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: JINA_DEPLOYMENT_NAME
+          value: store
+        envFrom:
+        - configMapRef:
+            name: store-configmap
+        image: jinahub/jffp33to:62c2df1bc1104510007060f7
+        imagePullPolicy: IfNotPresent
+        name: executor
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          tcpSocket:
+            port: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: store
+  name: store
+  namespace: dalle-flow
+spec:
+  endpoints:
+  - port: monitoring
+  namespaceSelector:
+    matchNames:
+    - dalle-flow
+  selector:
+    matchLabels:
+      app: store

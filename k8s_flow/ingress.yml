@@ -1,0 +1,49 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: 'alb'
+    alb.ingress.kubernetes.io/scheme: 'internet-facing'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/backend-protocol: 'HTTP'
+    alb.ingress.kubernetes.io/backend-protocol-version: GRPC
+  labels:
+    app: gateway
+  name: gateway-exposed
+  namespace: dalle-flow
+spec:
+  # ingressClassName: alb
+  rules:
+  - host: dalle-flow.dev.jina.ai
+    http:
+      paths:
+      - backend:
+          service:
+            name: gateway
+            port:
+              number: 51005
+        path: /
+        pathType: Prefix
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: 'alb'
+    alb.ingress.kubernetes.io/scheme: 'internet-facing'
+  labels:
+    app: gateway
+  name: gateway-monitoring-exposed
+  namespace: dalle-flow
+spec:
+  rules:
+  - host: dalle-flow-monitoring.dev.jina.ai
+    http:
+      paths:
+      - backend:
+          service:
+            name: gateway
+            port:
+              number: 51006
+        path: /gateway
+        pathType: Exact

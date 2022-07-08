@@ -1,0 +1,117 @@
+apiVersion: v1
+data:
+  JINA_LOG_LEVEL: INFO
+  pythonunbuffered: '1'
+  worker_class: uvicorn.workers.UvicornH11Worker
+kind: ConfigMap
+metadata:
+  name: rerank-configmap
+  namespace: dalle-flow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: rerank
+  name: rerank
+  namespace: dalle-flow
+spec:
+  ports:
+  - name: port
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: monitoring
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app: rerank
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rerank
+  namespace: dalle-flow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rerank
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+      labels:
+        app: rerank
+        jina_deployment_name: rerank
+        ns: dalle-flow
+        pod_type: WORKER
+        shard_id: '0'
+    spec:
+      containers:
+      - args:
+        - executor
+        - --name
+        - rerank
+        - --extra-search-paths
+        - .
+        - --k8s-namespace
+        - dalle-flow
+        - --uses
+        - config.yml
+        - --port
+        - '8080'
+        - --replicas
+        - '2'
+        - --monitoring
+        - --port-monitoring
+        - '9090'
+        - --uses-metas
+        - '{}'
+        - --native
+        command:
+        - jina
+        env:
+        - name: POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: JINA_DEPLOYMENT_NAME
+          value: rerank
+        envFrom:
+        - configMapRef:
+            name: rerank-configmap
+        image: jinahub/wyedudam:62c2de153f428fc8e9ea2e7e
+        imagePullPolicy: IfNotPresent
+        name: executor
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          tcpSocket:
+            port: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: rerank
+  name: rerank
+  namespace: dalle-flow
+spec:
+  endpoints:
+  - port: monitoring
+  namespaceSelector:
+    matchNames:
+    - dalle-flow
+  selector:
+    matchLabels:
+      app: rerank

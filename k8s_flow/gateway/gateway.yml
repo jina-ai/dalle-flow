@@ -1,0 +1,121 @@
+apiVersion: v1
+data:
+  JINA_LOG_LEVEL: debug
+  pythonunbuffered: '1'
+  worker_class: uvicorn.workers.UvicornH11Worker
+kind: ConfigMap
+metadata:
+  name: gateway-configmap
+  namespace: dalle-flow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: gateway
+  name: gateway
+  namespace: dalle-flow
+spec:
+  ports:
+  - name: port
+    port: 51005
+    protocol: TCP
+    targetPort: 51005
+  - name: monitoring
+    port: 51006
+    protocol: TCP
+    targetPort: 51006
+  selector:
+    app: gateway
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: dalle-flow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+      labels:
+        app: gateway
+        jina_deployment_name: gateway
+        ns: dalle-flow
+        pod_type: GATEWAY
+        shard_id: ''
+    spec:
+      containers:
+      - args:
+        - gateway
+        - --extra-search-paths
+        - .
+        - --k8s-namespace
+        - dalle-flow
+        - --polling
+        - ANY
+        - --port
+        - '51005'
+        - --expose-endpoints
+        - '{}'
+        - --graph-description
+        - '{"dalle": ["rerank"], "start-gateway": ["dalle", "diffusion"], "diffusion":
+          ["rerank"], "rerank": ["upscaler"], "upscaler": ["store"], "store": ["end-gateway"]}'
+        - --deployments-addresses
+        - '{"dalle": ["grpc://dalle.dalle-flow.svc:8080"], "diffusion": ["grpc://diffusion.dalle-flow.svc:8080"],
+          "rerank": ["grpc://rerank.dalle-flow.svc:8080"], "upscaler": ["grpc://upscaler.dalle-flow.svc:8080"],
+          "store": ["grpc://store.dalle-flow.svc:8080"]}'
+        - --pod-role
+        - GATEWAY
+        - --monitoring
+        - --port-monitoring
+        - '51006'
+        command:
+        - jina
+        env:
+        - name: POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: JINA_DEPLOYMENT_NAME
+          value: gateway
+        envFrom:
+        - configMapRef:
+            name: gateway-configmap
+        image: jinaai/jina:3.6.6-py38-standard
+        imagePullPolicy: IfNotPresent
+        name: executor
+        ports:
+        - containerPort: 51005
+        readinessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          tcpSocket:
+            port: 51005
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: gateway
+  name: gateway
+  namespace: dalle-flow
+spec:
+  endpoints:
+  - port: monitoring
+  namespaceSelector:
+    matchNames:
+    - dalle-flow
+  selector:
+    matchLabels:
+      app: gateway
