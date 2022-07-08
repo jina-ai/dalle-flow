@@ -4,7 +4,7 @@ from typing import Dict
 
 from jina import Executor, requests, DocumentArray, Document
 
-import dm_helper
+from . import dm_helper
 
 
 class DalleGenerator(Executor):
