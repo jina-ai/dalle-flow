@@ -1,4 +1,1 @@
-jina>=3.4.5
-docarray>=0.13.5
-
 requests

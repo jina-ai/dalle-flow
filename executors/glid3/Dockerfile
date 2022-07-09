@@ -1,8 +1,8 @@
 FROM nvidia/cuda:11.6.2-runtime-ubuntu20.04
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget git python3 python3-pip \
-    && ln -sf python3 /usr/bin/python \
+    && apt-get install -y --no-install-recommends wget git python3.8 python3-pip \
+    && ln -sf python3.8 /usr/bin/python \
     && ln -sf pip3 /usr/bin/pip \
     && pip install --upgrade pip \
     && pip install wheel setuptools

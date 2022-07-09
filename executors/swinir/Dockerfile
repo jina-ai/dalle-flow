@@ -1,4 +1,4 @@
-FROM jinaai/jina:latest-perf
+FROM jinaai/jina:3.6.9-py38-perf
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git libgl1 libglib2.0-0

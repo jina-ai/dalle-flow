@@ -35,7 +35,7 @@ metadata:
   name: gateway
   namespace: dalle-flow
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: gateway
@@ -92,7 +92,7 @@ spec:
         envFrom:
         - configMapRef:
             name: gateway-configmap
-        image: jinaai/jina:3.6.6-py38-standard
+        image: jinaai/jina:3.6.9-py38-standard
         imagePullPolicy: IfNotPresent
         name: executor
         ports:

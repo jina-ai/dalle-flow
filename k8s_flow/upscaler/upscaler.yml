@@ -88,7 +88,7 @@ spec:
         envFrom:
         - configMapRef:
             name: upscaler-configmap
-        image: jinahub/296f27y7:62c2deaf3f428fc8e9ea2e8f
+        image: jinahub/296f27y7:62c9057ee4c7acb12d073b53
         imagePullPolicy: IfNotPresent
         name: executor
         ports:

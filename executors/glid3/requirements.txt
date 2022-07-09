@@ -1,5 +1,5 @@
-jina>=3.4.5
-clip_client>=0.4.0
-docarray>=0.13.5
+jina==3.6.9
+clip_client
+docarray
 
 dalle_pytorch

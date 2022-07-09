@@ -90,7 +90,7 @@ spec:
         envFrom:
         - configMapRef:
             name: diffusion-configmap
-        image: jinahub/zcougdp9:62b610a6df216ddd7392ca82
+        image: jinahub/zcougdp9:62c9013235589836b63f79d0
         imagePullPolicy: IfNotPresent
         name: executor
         ports:

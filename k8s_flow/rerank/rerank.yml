@@ -88,7 +88,7 @@ spec:
         envFrom:
         - configMapRef:
             name: rerank-configmap
-        image: jinahub/wyedudam:62c2de153f428fc8e9ea2e7e
+        image: jinahub/wyedudam:62c9034335589836b63f79fb
         imagePullPolicy: IfNotPresent
         name: executor
         ports:

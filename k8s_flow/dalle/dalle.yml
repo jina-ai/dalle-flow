@@ -90,7 +90,7 @@ spec:
         envFrom:
         - configMapRef:
             name: dalle-configmap
-        image: jinahub/2583xebn:62b60e87df216ddd7392ca7d
+        image: jinahub/2583xebn:62c900d8e4c7acb12d073b06
         imagePullPolicy: IfNotPresent
         name: executor
         ports:
