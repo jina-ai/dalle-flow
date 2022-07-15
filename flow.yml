@@ -2,46 +2,49 @@ jtype: Flow
 with:
   protocol: grpc
   port: 51005
-  monitoring: true  # enable prometheus & grafana
-  port_monitoring: 51006
   env:
-    JINA_LOG_LEVEL: debug
+    JINA_LOG_LEVEL: DEBUG
 executors:
   - name: dalle
     uses: jinahub+docker://DalleGenerator
-    port_monitoring: 51007
     timeout_ready: -1  # slow download speed often leads to timeout
-    replicas: 2
     # env:
     #   CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
     # gpus: all
     volumes:
       - $HOME/.cache:/root/.cache
       # - $HOME/.cache:/home/dalle/.cache
+    env:
+      JINA_LOG_LEVEL: DEBUG
+
   - name: diffusion
     uses: jinahub+docker://GLID3Diffusion
-    port_monitoring: 51008
     timeout_ready: -1  # slow download speed often leads to timeout
     # env:
     #   CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
-    replicas: 2
     needs: [gateway]
     # gpus: all
     volumes:
       - $HOME/.cache:/root/.cache
       # - $HOME/.cache:/home/dalle/.cache
+    env:
+      JINA_LOG_LEVEL: DEBUG
+
   - name: rerank
     uses: jinahub+docker://ClipReRank
-    port_monitoring: 51009
     needs: [dalle, diffusion]
-    replicas: 2
+    env:
+      JINA_LOG_LEVEL: DEBUG
+
   - name: upscaler
     uses: jinahub+docker://SwinIRUpscaler
-    port_monitoring: 51010
-    replicas: 2
     # env:
     #   CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+    env:
+      JINA_LOG_LEVEL: DEBUG
+
   - name: store
     uses: jinahub+docker://DalleStore
-    port_monitoring: 51011
-    replicas: 2
+    env:
+      JINA_LOG_LEVEL: DEBUG
+

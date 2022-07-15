@@ -1,0 +1,194 @@
+version: '3.3'
+networks:
+  jina-network:
+    driver: bridge
+services:
+  dalle:
+    runtime: nvidia
+    image: jinahub/2583xebn:62d1141df260aabb8cba7991
+    entrypoint:
+    - jina
+    command:
+    - executor
+    - --name
+    - dalle
+    - --extra-search-paths
+    - ''
+    - --uses
+    - config.yml
+    - --port
+    - '8081'
+    - --timeout-ready
+    - '-1'
+    - --port-monitoring
+    - '55700'
+    - --uses-metas
+    - '{}'
+    - --native
+    healthcheck:
+      test: python -m jina.resources.health_check.pod localhost:8081
+      interval: 2s
+    environment:
+    - JINA_LOG_LEVEL=DEBUG
+    volumes:
+    - /home/ubuntu/.cache:/root/.cache
+    networks:
+    - jina-network
+  diffusion:
+    runtime: nvidia
+    image: jinahub/zcougdp9:62d11463c594dc8863b0bfdd
+    entrypoint:
+    - jina
+    command:
+    - executor
+    - --name
+    - diffusion
+    - --extra-search-paths
+    - ''
+    - --uses
+    - config.yml
+    - --port
+    - '8081'
+    - --timeout-ready
+    - '-1'
+    - --port-monitoring
+    - '60042'
+    - --uses-metas
+    - '{}'
+    - --native
+    healthcheck:
+      test: python -m jina.resources.health_check.pod localhost:8081
+      interval: 2s
+    environment:
+    - JINA_LOG_LEVEL=DEBUG
+    volumes:
+    - /home/ubuntu/.cache:/root/.cache
+    networks:
+    - jina-network
+  rerank:
+    image: jinahub/wyedudam:62d1149b87b1ae03d89c053a
+    entrypoint:
+    - jina
+    command:
+    - executor
+    - --name
+    - rerank
+    - --extra-search-paths
+    - ''
+    - --uses
+    - config.yml
+    - --port
+    - '8081'
+    - --port-monitoring
+    - '61140'
+    - --uses-metas
+    - '{}'
+    - --native
+    - --workspace
+    - /app/.jina/executor-workspace
+    healthcheck:
+      test: python -m jina.resources.health_check.pod localhost:8081
+      interval: 2s
+    environment:
+    - JINA_LOG_LEVEL=DEBUG
+    volumes:
+    - /home/ubuntu/.jina/executor-workspace/b26077baf8a64cc2b303b1dc7a091429:/app
+    networks:
+    - jina-network
+  upscaler:
+    runtime: nvidia
+    image: jinahub/296f27y7:62d114dcc594dc8863b0bff2
+    entrypoint:
+    - jina
+    command:
+    - executor
+    - --name
+    - upscaler
+    - --extra-search-paths
+    - ''
+    - --uses
+    - config.yml
+    - --port
+    - '8081'
+    - --port-monitoring
+    - '49544'
+    - --uses-metas
+    - '{}'
+    - --native
+    - --workspace
+    - /app/.jina/executor-workspace
+    healthcheck:
+      test: python -m jina.resources.health_check.pod localhost:8081
+      interval: 2s
+    environment:
+    - JINA_LOG_LEVEL=DEBUG
+    volumes:
+    - /home/ubuntu/.jina/executor-workspace/7fd18d5f71ca4bd89568b59d0cbc06c9:/app
+    networks:
+    - jina-network
+  store:
+    image: jinahub/jffp33to:62d1150ec594dc8863b0bffe
+    entrypoint:
+    - jina
+    command:
+    - executor
+    - --name
+    - store
+    - --extra-search-paths
+    - ''
+    - --uses
+    - config.yml
+    - --port
+    - '8081'
+    - --port-monitoring
+    - '58164'
+    - --uses-metas
+    - '{}'
+    - --native
+    - --workspace
+    - /app/.jina/executor-workspace
+    healthcheck:
+      test: python -m jina.resources.health_check.pod localhost:8081
+      interval: 2s
+    environment:
+    - JINA_LOG_LEVEL=DEBUG
+    volumes:
+    - /home/ubuntu/.jina/executor-workspace/a27571e73ee8483da0c10fd17fd5b348:/app
+    networks:
+    - jina-network
+  gateway:
+    image: jinaai/jina:3.6.13-py38-standard
+    entrypoint:
+    - jina
+    command:
+    - gateway
+    - --extra-search-paths
+    - ''
+    - --polling
+    - ANY
+    - --port
+    - '51005'
+    - --expose-endpoints
+    - '{}'
+    - --graph-description
+    - '{"dalle": ["rerank"], "start-gateway": ["dalle", "diffusion"], "diffusion":
+      ["rerank"], "rerank": ["upscaler"], "upscaler": ["store"], "store": ["end-gateway"]}'
+    - --deployments-addresses
+    - '{"dalle": ["dalle:8081"], "diffusion": ["diffusion:8081"], "rerank": ["rerank:8081"],
+      "upscaler": ["upscaler:8081"], "store": ["store:8081"]}'
+    - --pod-role
+    - GATEWAY
+    - --port-monitoring
+    - '49877'
+    expose:
+    - '51005'
+    ports:
+    - 51005:51005
+    healthcheck:
+      test: python -m jina.resources.health_check.gateway localhost:51005 grpc
+      interval: 2s
+    environment:
+    - JINA_LOG_LEVEL=INFO
+    - JINA_LOG_LEVEL=DEBUG
+    networks:
+    - jina-network
