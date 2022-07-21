@@ -12,7 +12,6 @@ metadata:
   name: gateway-exposed
   namespace: dalle-flow
 spec:
-  # ingressClassName: alb
   rules:
   - host: dalle-flow.dev.jina.ai
     http:
@@ -33,7 +32,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: 'internet-facing'
   labels:
     app: gateway
-  name: gateway-monitoring-exposed
+  name: monitoring-exposed
   namespace: dalle-flow
 spec:
   rules:
@@ -47,3 +46,10 @@ spec:
               number: 51006
         path: /gateway
         pathType: Exact
+      - backend:
+          service:
+            name: prometheus-grafana
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
