@@ -1,0 +1,16 @@
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    remoteWrite:
+    - url: https://prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push
+      basicAuth:
+        username:
+          name: kubepromsecret
+          key: username
+        password:
+          name: kubepromsecret
+          key: password
+      writeRelabelConfigs:
+        - sourceLabels: [job]
+          regex: 'dalle|diffusion|gateway|rerank|store|upscaler'
+          action: keep
