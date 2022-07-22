@@ -98,7 +98,7 @@ spec:
         envFrom:
         - configMapRef:
             name: rerank-configmap
-        image: jinahub/wyedudam:62c9034335589836b63f79fb
+        image: jinahub/wyedudam:62da63a17c9f8a3171f616b8 # FROM jinaai/jina:3.7.0-py38-perf
         imagePullPolicy: IfNotPresent
         name: executor
         ports:

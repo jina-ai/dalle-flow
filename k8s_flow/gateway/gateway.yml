@@ -102,7 +102,7 @@ spec:
         envFrom:
         - configMapRef:
             name: gateway-configmap
-        image: jinaai/jina:3.6.9-py38-standard
+        image: jinaai/jina:3.7.0-py38-standard
         imagePullPolicy: IfNotPresent
         name: executor
         ports:

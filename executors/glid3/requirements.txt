@@ -1,4 +1,4 @@
-jina==3.6.9
+jina==3.7.0
 clip_client
 docarray
 

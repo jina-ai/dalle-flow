@@ -1,4 +1,4 @@
-FROM jinaai/jina:3.6.9-py38-perf
+FROM jinaai/jina:3.7.0-py38-perf
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git
