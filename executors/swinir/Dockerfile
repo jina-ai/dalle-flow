@@ -13,9 +13,10 @@ ENV PIP_NO_CACHE_DIR=1 \
 WORKDIR /workdir
 
 RUN pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
-RUN git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git
 
 COPY . /workdir/executor
+
+RUN git clone --depth=1 https://github.com/delgermurun/SwinIR.git /workdir/executor/executor/SwinIR
 RUN pip install --no-cache-dir -r ./executor/requirements.txt
 
 # ARG USER_ID=1000
