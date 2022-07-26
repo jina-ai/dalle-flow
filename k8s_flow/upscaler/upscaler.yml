@@ -98,7 +98,7 @@ spec:
         envFrom:
         - configMapRef:
             name: upscaler-configmap
-        image: jinahub/296f27y7:62da66737c9f8a3171f6174d # FROM jinaai/jina:3.7.0-py38-perf
+        image: jinahub/296f27y7:62dfa7976ac56762b774ea53 # Jina v3.7.0 with GPU support
         imagePullPolicy: IfNotPresent
         name: executor
         ports:

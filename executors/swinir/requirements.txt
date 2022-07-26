@@ -1,3 +1,5 @@
 opencv-python
 timm
 Cython
+
+jina==3.7.0
