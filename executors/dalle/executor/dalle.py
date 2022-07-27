@@ -1,11 +1,20 @@
 import time
+import torch
 from io import BytesIO
 from typing import Dict
+from min_dalle import MinDalle
 
 from jina import Executor, requests, DocumentArray, Document
 
-from . import dm_helper
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+model = MinDalle(
+    models_root='dalle_pretrained',
+    dtype=torch.float16,
+    device=device,
+    is_mega=True,
+    is_reusable=True
+)
 
 class DalleGenerator(Executor):
     @requests(on='/')
@@ -15,10 +24,20 @@ class DalleGenerator(Executor):
         num_images = max(1, min(9, int(parameters.get('num_images', 1))))
         request_time = time.time()
         for d in docs:
-            self.logger.info(f'dalle {num_images} [{d.text}]...')
-            generated_imgs = dm_helper.generate_images(d.text, num_images)
+            self.logger.info(f'dalle {num_images} [{str(d.text)[:100]}]...')
 
-            for img in generated_imgs:
+            for _ in range(num_images):
+                img = model.generate_image(
+                    text=d.text,
+                    seed=-1,
+                    grid_size=1,
+                    is_seamless=False,
+                    temperature=1,
+                    top_k=256,
+                    supercondition_factor=16,
+                    is_verbose=False
+                )
+
                 buffered = BytesIO()
                 img.save(buffered, format='PNG')
                 _d = Document(
@@ -34,4 +53,4 @@ class DalleGenerator(Executor):
                 _d.text = d.text
                 d.matches.append(_d)
 
-            self.logger.info(f'done with [{d.text}]')
+            self.logger.info(f'done with [{str(d.text)[:100]}]...')

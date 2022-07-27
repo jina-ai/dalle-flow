@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.6.2-cudnn8-devel-ubuntu20.04
+FROM nvidia/cuda:11.6.2-runtime-ubuntu20.04
 
 # given by builder
 ARG PIP_TAG
@@ -24,7 +24,6 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
     git clone --depth=1 https://github.com/hanxiao/glid-3-xl.git && \
-    pip install jax[cuda11_cudnn82]==0.3.13 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html && \
     pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113 && \
     cd latent-diffusion && pip install --timeout=1000 -e . && cd - && \
     cd glid-3-xl && pip install --timeout=1000 -e . && cd - && \
@@ -32,7 +31,15 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     cd glid-3-xl && \
     wget -q https://dall-3.com/models/glid-3-xl/bert.pt &&  \
     wget -q https://dall-3.com/models/glid-3-xl/kl-f8.pt &&  \
-    wget -q https://dall-3.com/models/glid-3-xl/finetune.pt && cd - && \
+    wget -q https://dall-3.com/models/glid-3-xl/finetune.pt && \
+    mkdir /dalle/dalle-flow/dalle_pretrained && cd /dalle/dalle-flow/dalle_pretrained && \
+    mkdir dalle_bart_mega && cd dalle_bart_mega && \
+    wget -q https://huggingface.co/kuprel/min-dalle/resolve/main/encoder.pt && \
+    wget -q https://huggingface.co/kuprel/min-dalle/resolve/main/decoder.pt && \
+    wget -q https://huggingface.co/kuprel/min-dalle/resolve/main/vocab.json && \
+    wget -q https://huggingface.co/kuprel/min-dalle/resolve/main/merges.txt && \
+    cd ../ && mkdir vqgan && cd vqgan && \
+    wget -q https://huggingface.co/kuprel/min-dalle/resolve/main/detoker.pt && cd - && \
     # now remove apt packages
     if [ -n "${APT_PACKAGES}" ]; then apt-get remove -y --auto-remove ${APT_PACKAGES} && apt-get autoremove && apt-get clean && rm -rf /var/lib/apt/lists/*; fi
 
