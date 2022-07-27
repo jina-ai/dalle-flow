@@ -5,7 +5,7 @@ from pathlib import Path
 
 from jina import Executor, DocumentArray, Document, requests
 
-from .SwinIR.main_test_swinir import main
+from .SwinIR.main_test_swinir import main as swin_ir_main
 
 class SwinIRUpscaler(Executor):
     def __init__(self, swinir_path: str, **kwargs):
@@ -32,7 +32,7 @@ class SwinIRUpscaler(Executor):
         }
         kw_str = ';'.join(f'--{k};{str(v)}' for k, v in kw.items()) + ';--large_model'
 
-        main(kw_str.split(';'))
+        swin_ir_main(kw_str.split(';'))
 
         d.uri = os.path.join(self.output_path, f'{d.id}_SwinIR.png')
         d.convert_uri_to_datauri()
