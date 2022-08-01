@@ -14,7 +14,7 @@
 
 
 
-DALL·E Flow is an interactive workflow for generating high-definition images from text prompt. First, it leverages [DALL·E-Mega](https://github.com/borisdayma/dalle-mini) to generate image candidates, and then calls [CLIP-as-service](https://github.com/jina-ai/clip-as-service) to rank the candidates w.r.t. the prompt. The preferred candidate is fed to [GLID-3 XL](https://github.com/Jack000/glid-3-xl) for diffusion, which often enriches the texture and background. Finally, the candidate is upscaled to 1024x1024 via [SwinIR](https://github.com/JingyunLiang/SwinIR).
+DALL·E Flow is an interactive workflow for generating high-definition images from text prompt. First, it leverages [DALL·E-Mega](https://github.com/borisdayma/dalle-mini) and [DALL·E2-LAION](https://github.com/LAION-AI/dalle2-laion) to generate image candidates, and then calls [CLIP-as-service](https://github.com/jina-ai/clip-as-service) to rank the candidates w.r.t. the prompt. The preferred candidate is fed to [GLID-3 XL](https://github.com/Jack000/glid-3-xl) for diffusion, which often enriches the texture and background. Finally, the candidate is upscaled to 1024x1024 via [SwinIR](https://github.com/JingyunLiang/SwinIR).
 
 DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-server architecture, which gives it high scalability, non-blocking streaming, and a modern Pythonic interface. Client can interact with the server via gRPC/Websocket/HTTP with TLS.
 
@@ -29,6 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
+- 🌟 **2022/7/29** Added dalle2-laion to inference engine
 - ⚠️ **2022/7/6** Demo server migration to AWS EKS for better availability and robustness, **server URL is now changing to `grpcs://dalle-flow.dev.jina.ai`**. All connections are now with TLS encryption, [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/6/25** Unexpected downtime between 6/25 0:00 - 12:00 CET due to out of GPU quotas. The new server now has 2 GPUs, add healthcheck in client notebook.
 - **2022/6/3** Reduce default number of images to 2 per pathway, 4 for diffusion.
@@ -244,6 +245,7 @@ git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/JingyunLiang/SwinIR.git
 git clone https://github.com/CompVis/latent-diffusion.git
 git clone https://github.com/hanxiao/glid-3-xl.git
+git clone https://github.com/LAION-AI/dalle2-laion
 ```
 
 You should have the following folder structure:
@@ -262,6 +264,13 @@ dalle/
 ```bash
 cd latent-diffusion && pip install -e . && cd -
 cd glid-3-xl && pip install -e . && cd -
+cd dalle2-laion && pip install -e . && cd -
+```
+
+Install DALLE2-pytorch:
+
+```bash
+pip install dalle2-pytorch==1.0.3
 ```
 
 There are couple models we need to download for GLID-3-XL:
