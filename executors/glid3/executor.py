@@ -45,7 +45,7 @@ class GLID3Diffusion(Executor):
             from dalle_flow_glid3.sample import do_run
 
             args = parser.parse_args(kw_str_list)
-            await do_run(args)
+            await do_run(args, d.embedding)
 
             kw.update({
                 'generator': 'GLID3-XL',

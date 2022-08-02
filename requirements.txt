@@ -1,6 +1,5 @@
 # jina-related
 jina>=3.4.5
-clip_client>=0.4.20
 docarray>=0.13.5
 # dalle-mini
 flax
