@@ -13,16 +13,6 @@ executors:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1  # change this if you have larger VRAM
-  - name: dalle2
-    uses: Dalle2Generator
-    timeout_ready: -1 # Give time to download
-    py_modules:
-      - executors/dalle2/executor.py
-    env:
-      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
-      XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
-    replicas: 1  # change this if you have larger VRAM
-    needs: [gateway]
   - name: diffusion
     uses: GLID3Diffusion
     uses_with:
@@ -41,7 +31,7 @@ executors:
       clip_server: grpcs://demo-cas.jina.ai:2096
     py_modules:
       - executors/rerank/executor.py
-    needs: [dalle, dalle2, diffusion]
+    needs: [dalle, diffusion]
   - name: upscaler
     uses: SwinIRUpscaler
     py_modules:
