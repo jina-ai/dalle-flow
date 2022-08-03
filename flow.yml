@@ -7,6 +7,7 @@ with:
     JINA_LOG_LEVEL: debug
 executors:
   - name: clip_encoder
+    uses: jinahub+docker://CLIPTorchEncoder/latest
     host: 'demo-cas.jina.ai'
     port: 2096
     tls: true
@@ -31,6 +32,7 @@ executors:
     replicas: 1  # change this if you have larger VRAM
     needs: [gateway, clip_encoder]
   - name: rerank
+    uses: jinahub+docker://CLIPTorchEncoder/latest
     host: 'demo-cas.jina.ai'
     port: 2096
     uses_requests:
