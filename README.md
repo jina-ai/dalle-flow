@@ -99,6 +99,7 @@ The 16 candidates are sorted by [CLIP-as-service](https://github.com/jina-ai/cli
 ```python
 fav_id = 3
 fav = da[fav_id]
+fav.embedding = da.embedding
 fav.display()
 ```
 
@@ -243,7 +244,7 @@ mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/JingyunLiang/SwinIR.git
 git clone https://github.com/CompVis/latent-diffusion.git
-git clone https://github.com/hanxiao/glid-3-xl.git
+git clone https://github.com/jina-ai/glid-3-xl.git
 ```
 
 You should have the following folder structure:
