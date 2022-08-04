@@ -14,8 +14,13 @@ class GLID3Diffusion(Executor):
         os.environ['GLID_MODEL_PATH'] = glid3_path
         os.environ['GLID3_STEPS'] = str(steps)
         self.diffusion_steps = steps
-        from dalle_flow_glid3.sample import static_args
+        from dalle_flow_glid3.model import static_args
+        from dalle_flow_glid3.blank_encoding import generate_blank_embeddings
+
         assert static_args
+
+        self.logger.info('Generating blank embeddings')
+        self.blank_bert_embedding, self.blank_clip_embedding = generate_blank_embeddings('a')
 
     def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
         request_time = time.time()
@@ -45,7 +50,7 @@ class GLID3Diffusion(Executor):
             from dalle_flow_glid3.sample import do_run
 
             args = parser.parse_args(kw_str_list)
-            do_run(args, d.embedding)
+            do_run(args, d.embedding, self.blank_bert_embedding, self.blank_clip_embedding)
 
             kw.update({
                 'generator': 'GLID3-XL',
