@@ -6,12 +6,6 @@ with:
   env:
     JINA_LOG_LEVEL: debug
 executors:
-  - name: clip_encoder
-    uses: jinahub+docker://CLIPTorchEncoder/latest
-    host: 'demo-cas.jina.ai'
-    port: 2096
-    tls: true
-    external: true
   - name: dalle
     uses: executors/dalle/config.yml
     timeout_ready: -1  # slow download speed often leads to timeout
@@ -19,6 +13,13 @@ executors:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1  # change this if you have larger VRAM
+  - name: clip_encoder
+    uses: jinahub+docker://CLIPTorchEncoder/latest
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    tls: true
+    external: true
+    needs: [gateway]
   - name: diffusion
     uses: GLID3Diffusion
     uses_with:
@@ -30,7 +31,7 @@ executors:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1  # change this if you have larger VRAM
-    needs: [gateway, clip_encoder]
+    needs: [clip_encoder]
   - name: rerank
     uses: jinahub+docker://CLIPTorchEncoder/latest
     host: 'demo-cas.jina.ai'
