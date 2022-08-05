@@ -10,7 +10,7 @@ from jina import Executor, DocumentArray, Document, requests
 
 
 class GLID3Diffusion(Executor):
-    def __init__(self, glid3_path: str, clip_blank_encoding_file_path: str, steps: int = 100, **kwargs):
+    def __init__(self, glid3_path: str, steps: int = 100, **kwargs):
         super().__init__(**kwargs)
         os.environ['GLID_MODEL_PATH'] = glid3_path
         os.environ['GLID3_STEPS'] = str(steps)
@@ -21,7 +21,7 @@ class GLID3Diffusion(Executor):
         assert static_args
 
         self.logger.info('Generating blank embeddings')
-        with open(clip_blank_encoding_file_path, 'r') as f:
+        with open(os.path.join(os.path.dirname(__file__), 'clip_blank_encoding.json')) as f:
             self.blank_bert_embedding, self.blank_clip_embedding = generate_blank_embeddings('a', json.load(f))
 
     def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):

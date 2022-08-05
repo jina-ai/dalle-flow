@@ -24,7 +24,6 @@ executors:
     uses: GLID3Diffusion
     uses_with:
       glid3_path: ../glid-3-xl
-      clip_blank_encoding_file_path: ./clip_blank_encoding.json
       steps: 100
     py_modules:
       - executors/glid3/executor.py
