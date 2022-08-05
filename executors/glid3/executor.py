@@ -9,7 +9,7 @@ from jina import Executor, DocumentArray, Document, requests
 
 
 class GLID3Diffusion(Executor):
-    def __init__(self, glid3_path: str, steps: int = 100, **kwargs):
+    def __init__(self, glid3_path: str, clip_as_service_url: str, steps: int = 100, **kwargs):
         super().__init__(**kwargs)
         os.environ['GLID_MODEL_PATH'] = glid3_path
         os.environ['GLID3_STEPS'] = str(steps)
@@ -20,7 +20,7 @@ class GLID3Diffusion(Executor):
         assert static_args
 
         self.logger.info('Generating blank embeddings')
-        self.blank_bert_embedding, self.blank_clip_embedding = generate_blank_embeddings('a')
+        self.blank_bert_embedding, self.blank_clip_embedding = generate_blank_embeddings('a', clip_as_service_url)
 
     def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
         request_time = time.time()
@@ -66,7 +66,7 @@ class GLID3Diffusion(Executor):
 
             self.logger.info(f'done with [{text}]!')
 
-    @requests(on='/')
+    @requests
     def diffusion(self, docs: DocumentArray, parameters: Dict, **kwargs):
         skip_rate = float(parameters.get('skip_rate', 0.5))
         num_images = max(1, min(9, int(parameters.get('num_images', 1))))
