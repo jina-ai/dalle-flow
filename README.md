@@ -244,7 +244,7 @@ Running natively requires some manual steps, but it is often easier to debug.
 ```bash
 mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
-git clone https://github.com/JingyunLiang/SwinIR.git
+git clone https://github.com/jina-ai/SwinIR.git
 git clone https://github.com/CompVis/latent-diffusion.git
 git clone https://github.com/jina-ai/glid-3-xl.git
 ```
@@ -264,6 +264,7 @@ dalle/
 
 ```bash
 cd latent-diffusion && pip install -e . && cd -
+cd SwinIR && pip install -e . && cd -
 cd glid-3-xl && pip install -e . && cd -
 ```
 
