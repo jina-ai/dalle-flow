@@ -23,15 +23,12 @@ RUN apt-get update \
 RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-install-recommends -y ${APT_PACKAGES}; fi && \
     git clone --depth=1 https://github.com/JingyunLiang/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
-    git clone --depth=1 https://github.com/hanxiao/glid-3-xl.git && \
-    git clone --depth=1 https://github.com/LAION-AI/dalle2-laion && \
+    git clone --depth=1 https://github.com/jina-ai/glid-3-xl.git && \
     pip install jax[cuda11_cudnn82]==0.3.13 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html && \
     pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113 && \
-    pip install dalle2-pytorch==1.0.3 && \
     cd latent-diffusion && pip install --timeout=1000 -e . && cd - && \
     cd glid-3-xl && pip install --timeout=1000 -e . && cd - && \
     cd dalle-flow && pip install --timeout=1000 --compile -r requirements.txt && cd - && \
-    cd dalle2-laion && pip install --timeout=1000 -e . && cd - && \
     cd glid-3-xl && \
     wget -q https://dall-3.com/models/glid-3-xl/bert.pt &&  \
     wget -q https://dall-3.com/models/glid-3-xl/kl-f8.pt &&  \

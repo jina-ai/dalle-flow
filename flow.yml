@@ -18,6 +18,13 @@ executors:
     volumes:
       - $HOME/.cache:/root/.cache
       # - $HOME/.cache:/home/dalle/.cache
+  - name: clip_encoder
+    uses: jinahub+docker://CLIPTorchEncoder/latest
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    tls: true
+    external: true
+    needs: [gateway]
   - name: diffusion
     uses: jinahub+docker://GLID3Diffusion
     port_monitoring: 51008
@@ -25,14 +32,20 @@ executors:
     # env:
     #   CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
     replicas: 2
-    needs: [gateway]
+    needs: [clip_encoder]
     # gpus: all
     volumes:
       - $HOME/.cache:/root/.cache
       # - $HOME/.cache:/home/dalle/.cache
   - name: rerank
-    uses: jinahub+docker://ClipReRank
     port_monitoring: 51009
+    uses: jinahub+docker://CLIPTorchEncoder/latest
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    uses_requests:
+      '/': rank
+    tls: true
+    external: true
     needs: [dalle, diffusion]
     replicas: 2
   - name: upscaler
