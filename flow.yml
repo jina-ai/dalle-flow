@@ -50,6 +50,4 @@ executors:
     env:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
   - name: store
-    uses: MyStore
-    py_modules:
-      - executors/store/executor.py
+    uses: jinahub+docker://DalleFlowStore/latest

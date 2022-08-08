@@ -1,0 +1,4 @@
+jtype: DalleFlowStore
+metas:
+  py_modules:
+    - executor.py
