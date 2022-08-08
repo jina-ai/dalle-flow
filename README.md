@@ -318,7 +318,7 @@ You can modify and extend the server flow as you like, e.g. changing the model, 
 ### Run your own CLIP
 
 By default [`CLIPTorchEncoder`](https://hub.jina.ai/executor/gzpbl8jh) runs as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors).
-If want to run your own CLIP, you can do that by just changing `external: true` to `external: false` in [`flow.yml`](./flow.yml).
+If you want to run your own CLIP, you can do that by just changing `external: true` to `external: false` in [`flow.yml`](./flow.yml).
 
 <!-- start support-pitch -->
 ## Support
