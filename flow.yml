@@ -13,6 +13,13 @@ executors:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1  # change this if you have larger VRAM
+  - name: clip_encoder
+    uses: jinahub+docker://CLIPTorchEncoder/latest
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    tls: true
+    external: true
+    needs: [gateway]
   - name: diffusion
     uses: GLID3Diffusion
     uses_with:
@@ -24,13 +31,15 @@ executors:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1  # change this if you have larger VRAM
-    needs: [gateway]
+    needs: [clip_encoder]
   - name: rerank
-    uses: ReRank
-    uses_with:
-      clip_server: grpcs://demo-cas.jina.ai:2096
-    py_modules:
-      - executors/rerank/executor.py
+    uses: jinahub+docker://CLIPTorchEncoder/latest
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    uses_requests:
+      '/': rank
+    tls: true
+    external: true
     needs: [dalle, diffusion]
   - name: upscaler
     uses: SwinIRUpscaler

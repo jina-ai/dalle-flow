@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import time
 from typing import Dict
+import json
 
 from jina import Executor, DocumentArray, Document, requests
 
@@ -14,10 +15,16 @@ class GLID3Diffusion(Executor):
         os.environ['GLID_MODEL_PATH'] = glid3_path
         os.environ['GLID3_STEPS'] = str(steps)
         self.diffusion_steps = steps
-        from dalle_flow_glid3.sample import static_args
+        from dalle_flow_glid3.model import static_args
+        from dalle_flow_glid3.blank_encoding import generate_blank_embeddings
+
         assert static_args
 
-    async def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
+        self.logger.info('Generating blank embeddings')
+        with open(os.path.join(os.path.dirname(__file__), 'clip_blank_encoding.json')) as f:
+            self.blank_bert_embedding, self.blank_clip_embedding = generate_blank_embeddings('a', json.load(f))
+
+    def run_glid3(self, d: Document, text: str, skip_rate: float, num_images: int):
         request_time = time.time()
 
         with tempfile.NamedTemporaryFile(
@@ -45,7 +52,7 @@ class GLID3Diffusion(Executor):
             from dalle_flow_glid3.sample import do_run
 
             args = parser.parse_args(kw_str_list)
-            await do_run(args)
+            do_run(args, d.embedding, self.blank_bert_embedding, self.blank_clip_embedding)
 
             kw.update({
                 'generator': 'GLID3-XL',
@@ -61,9 +68,9 @@ class GLID3Diffusion(Executor):
 
             self.logger.info(f'done with [{text}]!')
 
-    @requests(on='/')
-    async def diffusion(self, docs: DocumentArray, parameters: Dict, **kwargs):
+    @requests
+    def diffusion(self, docs: DocumentArray, parameters: Dict, **kwargs):
         skip_rate = float(parameters.get('skip_rate', 0.5))
         num_images = max(1, min(9, int(parameters.get('num_images', 1))))
         for d in docs:
-            await self.run_glid3(d, d.text, skip_rate=skip_rate, num_images=num_images)
+            self.run_glid3(d, d.text, skip_rate=skip_rate, num_images=num_images)

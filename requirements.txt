@@ -1,7 +1,6 @@
 # jina-related
-jina>=3.4.5
-clip_client>=0.4.20
-docarray>=0.13.5
+jina>=3.7.4
+docarray>=0.14.8
 # dalle-mini
 flax
 git+https://github.com/openai/CLIP.git

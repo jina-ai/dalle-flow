@@ -29,6 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
+- ⚠️ **2022/8/8** Started using CLIP-as-servive as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors). Now you can easily [deploy your own CLIP executor](#run-your-own-clip) if you want. There is [a small breaking change](https://github.com/jina-ai/dalle-flow/pull/74/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5R103) as a result of this improvement, so [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/7/6** Demo server migration to AWS EKS for better availability and robustness, **server URL is now changing to `grpcs://dalle-flow.dev.jina.ai`**. All connections are now with TLS encryption, [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/6/25** Unexpected downtime between 6/25 0:00 - 12:00 CET due to out of GPU quotas. The new server now has 2 GPUs, add healthcheck in client notebook.
 - **2022/6/3** Reduce default number of images to 2 per pathway, 4 for diffusion.
@@ -99,6 +100,7 @@ The 16 candidates are sorted by [CLIP-as-service](https://github.com/jina-ai/cli
 ```python
 fav_id = 3
 fav = da[fav_id]
+fav.embedding = da.embedding
 fav.display()
 ```
 
@@ -243,7 +245,7 @@ mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/JingyunLiang/SwinIR.git
 git clone https://github.com/CompVis/latent-diffusion.git
-git clone https://github.com/hanxiao/glid-3-xl.git
+git clone https://github.com/jina-ai/glid-3-xl.git
 ```
 
 You should have the following folder structure:
@@ -314,6 +316,10 @@ Congrats! Now you should be able to [run the client](#client).
 
 You can modify and extend the server flow as you like, e.g. changing the model, adding persistence, or even auto-posting to Instagram/OpenSea. With Jina and DocArray, you can easily make DALL·E Flow [cloud-native and ready for production](https://github.com/jina-ai/jina). 
 
+### Run your own CLIP
+
+By default [`CLIPTorchEncoder`](https://hub.jina.ai/executor/gzpbl8jh) runs as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors).
+If you want to run your own CLIP, you can do that by just changing `external: true` to `external: false` in [`flow.yml`](./flow.yml).
 
 <!-- start support-pitch -->
 ## Support
