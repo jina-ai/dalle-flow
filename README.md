@@ -1,7 +1,7 @@
 <p align="center">
-<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-Loop workflow for creating HD images from text" width="60%">
+<img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-loop workflow for creating HD images from text" width="60%">
 <br>
-<b>A Human-in-the-Loop<sup><a href="https://en.wikipedia.org/wiki/Human-in-the-loop">?</a></sup> workflow for creating HD images from text</b>
+<b>A Human-in-the-loop<sup><a href="https://en.wikipedia.org/wiki/Human-in-the-loop">?</a></sup> workflow for creating HD images from text</b>
 </p>
 
 <p align=center>
@@ -18,7 +18,7 @@ DALL·E Flow is an interactive workflow for generating high-definition images fr
 
 DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-server architecture, which gives it high scalability, non-blocking streaming, and a modern Pythonic interface. Client can interact with the server via gRPC/Websocket/HTTP with TLS.
 
-**Why Human-in-the-Loop?** Generative art is a creative process. While recent advances of DALL·E unleash people's creativity, having a single-prompt-single-output UX/UI locks the imagination to a _single_ possibility, which is bad no matter how fine this single result is. DALL·E Flow is an alternative to the one-liner, by formalizing the generative art as an iterative procedure.
+**Why Human-in-the-loop?** Generative art is a creative process. While recent advances of DALL·E unleash people's creativity, having a single-prompt-single-output UX/UI locks the imagination to a _single_ possibility, which is bad no matter how fine this single result is. DALL·E Flow is an alternative to the one-liner, by formalizing the generative art as an iterative procedure.
 
 ## Usage
 
@@ -29,7 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
-- ⚠️ **2022/8/8** Started using CLIP-as-servive as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors). Now you can easily [deploy your own CLIP executor](#run-your-own-clip) if you want. There is [a small breaking change](https://github.com/jina-ai/dalle-flow/pull/74/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5R103) as a result of this improvement, so [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
+- ⚠️ **2022/8/8** Started using CLIP-as-service as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors). Now you can easily [deploy your own CLIP executor](#run-your-own-clip) if you want. There is [a small breaking change](https://github.com/jina-ai/dalle-flow/pull/74/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5R103) as a result of this improvement, so [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/7/6** Demo server migration to AWS EKS for better availability and robustness, **server URL is now changing to `grpcs://dalle-flow.dev.jina.ai`**. All connections are now with TLS encryption, [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/6/25** Unexpected downtime between 6/25 0:00 - 12:00 CET due to out of GPU quotas. The new server now has 2 GPUs, add healthcheck in client notebook.
 - **2022/6/3** Reduce default number of images to 2 per pathway, 4 for diffusion.
@@ -81,7 +81,8 @@ Let's submit it to the server and visualize the results:
 ```python
 from docarray import Document
 
-da = Document(text=prompt).post(server_url, parameters={'num_images': 8}).matches
+doc = Document(text=prompt).post(server_url, parameters={'num_images': 8})
+da = doc.matches
 
 da.plot_image_sprites(fig_size=(10,10), show_index=True)
 ```
@@ -100,7 +101,7 @@ The 16 candidates are sorted by [CLIP-as-service](https://github.com/jina-ai/cli
 ```python
 fav_id = 3
 fav = da[fav_id]
-fav.embedding = da.embedding
+fav.embedding = doc.embedding
 fav.display()
 ```
 
