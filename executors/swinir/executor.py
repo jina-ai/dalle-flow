@@ -1,11 +1,11 @@
 import glob
 import os
 import shutil
-import subprocess
 from pathlib import Path
 
 from jina import Executor, DocumentArray, Document, requests
 
+from dalle_flow_swin_ir.main_test_swinir import main as swin_ir_main
 
 class SwinIRUpscaler(Executor):
     def __init__(self, swinir_path: str, **kwargs):
@@ -18,8 +18,6 @@ class SwinIRUpscaler(Executor):
     def _upscale(self, d: Document):
         self.logger.info(f'upscaling [{d.text}]...')
 
-        os.chdir(self.swinir_path)
-
         input_path = os.path.join(self.input_path, f'{d.id}/')
 
         Path(input_path).mkdir(parents=True, exist_ok=True)
@@ -29,14 +27,14 @@ class SwinIRUpscaler(Executor):
         kw = {
             'task': 'real_sr',
             'scale': 4,
-            'model_path': 'model_zoo/swinir/003_realSR_BSRGAN_DFOWMFC_s64w8_SwinIR-L_x4_GAN.pth',
+            'model_path': f'{self.swinir_path}/model_zoo/swinir/003_realSR_BSRGAN_DFOWMFC_s64w8_SwinIR-L_x4_GAN.pth',
             'folder_lq': input_path,
+            'save_dir': self.output_path,
         }
-        kw_str = ' '.join(f'--{k} {str(v)}' for k, v in kw.items())
+        kw_str = ';'.join(f'--{k};{str(v)}' for k, v in kw.items()) + ';--large_model'
 
-        self.logger.info(
-            subprocess.getoutput(f'python main_test_swinir.py --large_model {kw_str}')
-        )
+        swin_ir_main(kw_str.split(';'))
+
         d.uri = os.path.join(self.output_path, f'{d.id}_SwinIR.png')
         d.convert_uri_to_datauri()
         d.tags['upscaled'] = True
