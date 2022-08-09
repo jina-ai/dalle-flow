@@ -7,12 +7,13 @@ with:
     JINA_LOG_LEVEL: debug
 executors:
   - name: dalle
-    uses: executors/dalle/config.yml
+    uses: jinahub+docker://DalleGenerator/latest
     timeout_ready: -1  # slow download speed often leads to timeout
     env:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1  # change this if you have larger VRAM
+    gpus: all
   - name: clip_encoder
     uses: jinahub+docker://CLIPTorchEncoder/latest
     host: 'demo-cas.jina.ai'
@@ -20,14 +21,16 @@ executors:
     tls: true
     external: true
     needs: [gateway]
+    gpus: all
   - name: diffusion
-    uses: executors/glid3/config.yml
+    uses: jinahub+docker://GLID3Diffusion/latest
     timeout_ready: -1  # slow download speed often leads to timeout
     env:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
     replicas: 1  # change this if you have larger VRAM
     needs: [clip_encoder]
+    gpus: all
   - name: rerank
     uses: jinahub+docker://CLIPTorchEncoder/latest
     host: 'demo-cas.jina.ai'
@@ -37,9 +40,11 @@ executors:
     tls: true
     external: true
     needs: [dalle, diffusion]
+    gpus: all
   - name: upscaler
-    uses: executors/swinir/config.yml
+    uses: jinahub+docker://SwinIRUpscaler/latest
     env:
-      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+      CUDA_VISIBLE_DEVICES: 1  # change this if you have multiple GPU
+    gpus: all
   - name: store
-    uses: executors/store/config.yml
+    uses: jinahub+docker://DalleFlowStore/latest

@@ -1,0 +1,4 @@
+jina==3.7.4
+docarray==0.14.8
+
+dalle_pytorch
