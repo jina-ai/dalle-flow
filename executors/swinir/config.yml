@@ -1,0 +1,6 @@
+jtype: SwinIRUpscaler
+with:
+  swinir_path: ../SwinIR
+metas:
+  py_modules:
+    - executor.py

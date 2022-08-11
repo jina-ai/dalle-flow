@@ -1,0 +1,86 @@
+jtype: Flow
+with:
+  protocol: grpc
+  port: 51005
+  monitoring: true  # enable prometheus & grafana
+  env:
+    JINA_LOG_LEVEL: debug
+jcloud:
+  gateway:
+    kind: kong
+executors:
+  - name: dalle
+    uses: jinahub+docker://DalleGenerator/latest
+    timeout_ready: -1  # slow download speed often leads to timeout
+    env:
+      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+      XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
+    replicas: 2  # change this if you have larger VRAM
+    gpus: all
+    jcloud:
+      resources:
+        memory: 10G
+        gpu: shared
+  - name: clip_encoder
+    # uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
+    uses: jinahub+docker://CLIPOnnxEncoder/latest-gpu
+    uses_with:
+      name: ViT-L-14-336::openai
+    replicas: 2
+    # host: 'demo-cas.jina.ai'
+    # port: 2096
+    # tls: true
+    # external: false
+    needs: [gateway]
+    gpus: all
+    jcloud:
+      resources:
+        memory: 5G
+        gpu: shared
+  - name: diffusion
+    uses: jinahub+docker://GLID3Diffusion/latest
+    timeout_ready: -1  # slow download speed often leads to timeout
+    env:
+      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+      XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
+    replicas: 2  # change this if you have larger VRAM
+    needs: [clip_encoder]
+    gpus: all
+    jcloud:
+      resources:
+        memory: 10G
+        gpu: shared
+  - name: rerank
+    # uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
+    uses: jinahub+docker://CLIPOnnxEncoder/latest-gpu
+    uses_with:
+      name: ViT-L-14-336::openai
+    uses_requests:
+      '/': rank
+    replicas: 2
+    # host: 'demo-cas.jina.ai'
+    # port: 2096
+    # tls: true
+    # external: false
+    needs: [dalle, diffusion]
+    gpus: all
+    jcloud:
+      resources:
+        memory: 5G
+        gpu: shared
+  - name: upscaler
+    uses: jinahub+docker://SwinIRUpscaler/latest
+    replicas: 2
+    env:
+      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
+    gpus: all
+    jcloud:
+      resources:
+        memory: 5G
+        gpu: shared
+  - name: store
+    uses: jinahub+docker://DalleFlowStore/latest
+    replicas: 2
+    jcloud:
+      resources:
+        memory: 500M

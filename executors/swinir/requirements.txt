@@ -1,0 +1,5 @@
+jina==3.7.4
+
+opencv-python
+timm
+Cython

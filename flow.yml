@@ -21,12 +21,8 @@ executors:
     external: true
     needs: [gateway]
   - name: diffusion
-    uses: GLID3Diffusion
-    uses_with:
-      glid3_path: ../glid-3-xl
-      steps: 100
-    py_modules:
-      - executors/glid3/executor.py
+    uses: executors/glid3/config.yml
+    timeout_ready: -1  # slow download speed often leads to timeout
     env:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
@@ -42,14 +38,8 @@ executors:
     external: true
     needs: [dalle, diffusion]
   - name: upscaler
-    uses: SwinIRUpscaler
-    py_modules:
-      - executors/swinir/executor.py
-    uses_with:
-      swinir_path: ../SwinIR
+    uses: executors/swinir/config.yml
     env:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
   - name: store
-    uses: MyStore
-    py_modules:
-      - executors/store/executor.py
+    uses: executors/store/config.yml

@@ -6,7 +6,7 @@ os.environ['JINA_HUBBLE_REGISTRY'] = 'https://apihubble.staging.jina.ai'
 from jina import Executor, requests, DocumentArray
 
 
-class MyStore(Executor):
+class DalleFlowStore(Executor):
 
     @requests(on='/upscale')
     def store(self, docs: DocumentArray, **kwargs):

@@ -1,0 +1,8 @@
+jina==3.7.4
+docarray==0.14.8
+
+flax
+git+https://github.com/openai/CLIP.git
+git+https://github.com/huggingface/transformers.git
+git+https://github.com/patil-suraj/vqgan-jax.git
+git+https://github.com/borisdayma/dalle-mini.git
