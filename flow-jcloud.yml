@@ -6,8 +6,8 @@ with:
   env:
     JINA_LOG_LEVEL: debug
 jcloud:
-  custom_dns:
-    - dalle-flow.wolf.jina.ai
+  gateway:
+    kind: kong
 executors:
   - name: dalle
     uses: jinahub+docker://DalleGenerator/latest
@@ -22,14 +22,21 @@ executors:
         memory: 10G
         gpu: shared
   - name: clip_encoder
-    uses: jinahub+docker://CLIPTorchEncoder/latest
+    # uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
+    uses: jinahub+docker://CLIPOnnxEncoder/latest-gpu
+    uses_with:
+      name: ViT-L-14-336::openai
     replicas: 2
-    host: 'demo-cas.jina.ai'
-    port: 2096
-    tls: true
-    external: true
+    # host: 'demo-cas.jina.ai'
+    # port: 2096
+    # tls: true
+    # external: false
     needs: [gateway]
     gpus: all
+    jcloud:
+      resources:
+        memory: 5G
+        gpu: shared
   - name: diffusion
     uses: jinahub+docker://GLID3Diffusion/latest
     timeout_ready: -1  # slow download speed often leads to timeout
@@ -44,21 +51,28 @@ executors:
         memory: 10G
         gpu: shared
   - name: rerank
-    uses: jinahub+docker://CLIPTorchEncoder/latest
-    replicas: 2
-    host: 'demo-cas.jina.ai'
-    port: 2096
+    # uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
+    uses: jinahub+docker://CLIPOnnxEncoder/latest-gpu
+    uses_with:
+      name: ViT-L-14-336::openai
     uses_requests:
       '/': rank
-    tls: true
-    external: true
+    replicas: 2
+    # host: 'demo-cas.jina.ai'
+    # port: 2096
+    # tls: true
+    # external: false
     needs: [dalle, diffusion]
     gpus: all
+    jcloud:
+      resources:
+        memory: 5G
+        gpu: shared
   - name: upscaler
     uses: jinahub+docker://SwinIRUpscaler/latest
     replicas: 2
     env:
-      CUDA_VISIBLE_DEVICES: 1  # change this if you have multiple GPU
+      CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
     gpus: all
     jcloud:
       resources:
