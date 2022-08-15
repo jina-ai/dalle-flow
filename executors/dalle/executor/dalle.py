@@ -8,7 +8,7 @@ from . import dm_helper
 
 
 class DalleGenerator(Executor):
-    @requests
+    @requests(on='/')
     def generate(self, docs: DocumentArray, parameters: Dict, **kwargs):
 
         # can be of course larger but to save time and reduce the queue when serving public
