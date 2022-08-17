@@ -1,4 +1,6 @@
 jtype: DalleFlowStore
+with:
+  max_workers: 4
 metas:
   py_modules:
     - executor.py
