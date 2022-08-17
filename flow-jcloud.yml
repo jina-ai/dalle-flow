@@ -80,6 +80,7 @@ executors:
         gpu: shared
   - name: store
     uses: jinahub+docker://DalleFlowStore/latest
+    floating: true
     replicas: 2
     jcloud:
       resources:
