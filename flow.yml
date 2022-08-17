@@ -43,3 +43,4 @@ executors:
       CUDA_VISIBLE_DEVICES: 0  # change this if you have multiple GPU
   - name: store
     uses: executors/store/config.yml
+    floating: true
