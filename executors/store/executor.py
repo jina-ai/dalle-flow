@@ -1,8 +1,6 @@
 import os
 import time
 
-os.environ['JINA_HUBBLE_REGISTRY'] = 'https://apihubble.staging.jina.ai'
-
 from jina import Executor, requests, DocumentArray
 
 
