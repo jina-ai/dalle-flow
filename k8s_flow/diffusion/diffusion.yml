@@ -100,7 +100,7 @@ spec:
         envFrom:
         - configMapRef:
             name: diffusion-configmap
-        image: jinahub/zcougdp9:62da6fd37c9f8a3171f6190e # Jina v3.7.0
+        image: jinahub/zcougdp9:6304d164fe6c2b57227b7367
         imagePullPolicy: IfNotPresent
         name: executor
         ports:

@@ -12,5 +12,5 @@ prometheus:
           key: password
       writeRelabelConfigs:
         - sourceLabels: [job]
-          regex: 'dalle|diffusion|gateway|rerank|store|upscaler'
+          regex: 'dalle|diffusion|gateway|clip_encoder|rerank|store|upscaler'
           action: keep

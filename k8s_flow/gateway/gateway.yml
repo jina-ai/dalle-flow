@@ -79,12 +79,13 @@ spec:
         - --expose-endpoints
         - '{}'
         - --graph-description
-        - '{"dalle": ["rerank"], "start-gateway": ["dalle", "diffusion"], "diffusion":
-          ["rerank"], "rerank": ["upscaler"], "upscaler": ["store"], "store": ["end-gateway"]}'
+        - '{"dalle": ["rerank"], "start-gateway": ["dalle", "clip_encoder"], "clip_encoder":
+          ["diffusion"], "diffusion": ["rerank"], "rerank": ["upscaler"], "upscaler":
+          ["store"], "store": ["end-gateway"]}'
         - --deployments-addresses
-        - '{"dalle": ["grpc://dalle.dalle-flow.svc:8080"], "diffusion": ["grpc://diffusion.dalle-flow.svc:8080"],
-          "rerank": ["grpc://rerank.dalle-flow.svc:8080"], "upscaler": ["grpc://upscaler.dalle-flow.svc:8080"],
-          "store": ["grpc://store.dalle-flow.svc:8080"]}'
+        - '{"dalle": ["grpc://dalle.dalle-flow.svc:8080"], "clip_encoder": ["grpcs://demo-cas.jina.ai:2096"],
+          "diffusion": ["grpc://diffusion.dalle-flow.svc:8080"], "rerank": ["grpcs://demo-cas.jina.ai:2096"],
+          "upscaler": ["grpc://upscaler.dalle-flow.svc:8080"], "store": ["grpc://store.dalle-flow.svc:8080"]}'
         - --pod-role
         - GATEWAY
         - --monitoring
@@ -102,7 +103,7 @@ spec:
         envFrom:
         - configMapRef:
             name: gateway-configmap
-        image: jinaai/jina:3.7.0-py38-standard
+        image: jinaai/jina:3.7.14-py38-standard
         imagePullPolicy: IfNotPresent
         name: executor
         ports:

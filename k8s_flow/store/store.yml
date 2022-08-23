@@ -98,7 +98,7 @@ spec:
         envFrom:
         - configMapRef:
             name: store-configmap
-        image: jinahub/jffp33to:62da4fdd7c9f8a3171f61346 # FROM jinaai/jina:3.7.0-py38-perf
+        image: jinahub/jffp33to:6304a2d059ebf96951457210
         imagePullPolicy: IfNotPresent
         name: executor
         ports:
