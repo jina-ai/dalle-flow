@@ -1,0 +1,129 @@
+apiVersion: v1
+data:
+  JINA_LOG_LEVEL: INFO
+  pythonunbuffered: '1'
+  worker_class: uvicorn.workers.UvicornH11Worker
+kind: ConfigMap
+metadata:
+  name: dalle-configmap
+  namespace: dalle-flow
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dalle
+  name: dalle
+  namespace: dalle-flow
+spec:
+  ports:
+  - name: port
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: monitoring
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app: dalle
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dalle
+  namespace: dalle-flow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dalle
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+      labels:
+        app: dalle
+        jina_deployment_name: dalle
+        ns: dalle-flow
+        pod_type: WORKER
+        shard_id: '0'
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                    - dalle
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+      - args:
+        - executor
+        - --name
+        - dalle
+        - --extra-search-paths
+        - .
+        - --k8s-namespace
+        - dalle-flow
+        - --uses
+        - config.yml
+        - --port
+        - '8080'
+        - --timeout-ready
+        - '-1'
+        - --replicas
+        - '2'
+        - --monitoring
+        - --port-monitoring
+        - '9090'
+        - --uses-metas
+        - '{}'
+        - --native
+        command:
+        - jina
+        env:
+        - name: POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: JINA_DEPLOYMENT_NAME
+          value: dalle
+        envFrom:
+        - configMapRef:
+            name: dalle-configmap
+        image: jinahub/2583xebn:6304ceb26d4e7964d68756da
+        imagePullPolicy: IfNotPresent
+        name: executor
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          tcpSocket:
+            port: 8080
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: dalle
+  name: dalle
+  namespace: dalle-flow
+spec:
+  endpoints:
+  - port: monitoring
+  namespaceSelector:
+    matchNames:
+    - dalle-flow
+  selector:
+    matchLabels:
+      app: dalle
