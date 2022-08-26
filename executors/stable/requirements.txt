@@ -1,0 +1,7 @@
+numpy
+tqdm
+pytorch_lightning
+einops
+numpy
+omegaconf
+https://github.com/crowsonkb/k-diffusion/archive/master.zip

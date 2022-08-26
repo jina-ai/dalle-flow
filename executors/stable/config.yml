@@ -1,0 +1,10 @@
+jtype: StableDiffusionGenerator
+with:
+  stable_path: ../stable-diffusion
+  n_iter: 1
+  n_samples: 1
+  height: 512
+  width: 512
+metas:
+  py_modules:
+    - executor.py

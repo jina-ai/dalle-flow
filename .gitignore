@@ -133,3 +133,6 @@ dmypy.json
 
 # Jina
 .jina/
+
+# Temporary flow files
+flow.tmp.yml

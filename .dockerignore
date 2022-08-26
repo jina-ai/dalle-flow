@@ -5,5 +5,7 @@
 # Allow files and directories
 !executors/**
 !flow.yml
+!flow_parser.py
+!start.sh
 !*requirements.txt
 !README.md

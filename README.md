@@ -14,7 +14,7 @@
 
 
 
-DALL·E Flow is an interactive workflow for generating high-definition images from text prompt. First, it leverages [DALL·E-Mega](https://github.com/borisdayma/dalle-mini) to generate image candidates, and then calls [CLIP-as-service](https://github.com/jina-ai/clip-as-service) to rank the candidates w.r.t. the prompt. The preferred candidate is fed to [GLID-3 XL](https://github.com/Jack000/glid-3-xl) for diffusion, which often enriches the texture and background. Finally, the candidate is upscaled to 1024x1024 via [SwinIR](https://github.com/JingyunLiang/SwinIR).
+DALL·E Flow is an interactive workflow for generating high-definition images from text prompt. First, it leverages [DALL·E-Mega](https://github.com/borisdayma/dalle-mini), [GLID-3 XL](https://github.com/Jack000/glid-3-xl), and [Stable Diffusion](https://github.com/CompVis/stable-diffusion) to generate image candidates, and then calls [CLIP-as-service](https://github.com/jina-ai/clip-as-service) to rank the candidates w.r.t. the prompt. The preferred candidate is fed to [GLID-3 XL](https://github.com/Jack000/glid-3-xl) for diffusion, which often enriches the texture and background. Finally, the candidate is upscaled to 1024x1024 via [SwinIR](https://github.com/JingyunLiang/SwinIR).
 
 DALL·E Flow is built with [Jina](https://github.com/jina-ai/jina) in a client-server architecture, which gives it high scalability, non-blocking streaming, and a modern Pythonic interface. Client can interact with the server via gRPC/Websocket/HTTP with TLS.
 
@@ -29,6 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
+- 🌟 **2022/8/17** Text to image for [Stable Diffusion](https://github.com/CompVis/stable-diffusion) has been added. In order to use it you will need to agree to their ToS, download the weights, then enable the flag in docker or `flow_parser.yml`.
 - ⚠️ **2022/8/8** Started using CLIP-as-service as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors). Now you can easily [deploy your own CLIP executor](#run-your-own-clip) if you want. There is [a small breaking change](https://github.com/jina-ai/dalle-flow/pull/74/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5R103) as a result of this improvement, so [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/7/6** Demo server migration to AWS EKS for better availability and robustness, **server URL is now changing to `grpcs://dalle-flow.dev.jina.ai`**. All connections are now with TLS encryption, [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/6/25** Unexpected downtime between 6/25 0:00 - 12:00 CET due to out of GPU quotas. The new server now has 2 GPUs, add healthcheck in client notebook.
@@ -87,7 +88,7 @@ da = doc.matches
 da.plot_image_sprites(fig_size=(10,10), show_index=True)
 ```
 
-Here we generate 16 candidates, 8 from DALLE-mega and 8 from GLID3 XL, this is as defined in `num_images`, which takes about ~2 minutes. You can use a smaller value if it is too long for you. 
+Here we generate 24 candidates, 8 from DALLE-mega, 8 from GLID3 XL, and 8 from Stable Diffusion, this is as defined in `num_images`, which takes about ~2 minutes. You can use a smaller value if it is too long for you. 
 
 
 <p align="center">
@@ -96,7 +97,7 @@ Here we generate 16 candidates, 8 from DALLE-mega and 8 from GLID3 XL, this is a
 
 ### Step 2: Select and refinement via GLID3 XL
 
-The 16 candidates are sorted by [CLIP-as-service](https://github.com/jina-ai/clip-as-service), with index-`0` as the best candidate judged by CLIP. Of course, you may think differently. Notice the number in the top-left corner? Select the one you like the most and get a better view:
+The 24 candidates are sorted by [CLIP-as-service](https://github.com/jina-ai/clip-as-service), with index-`0` as the best candidate judged by CLIP. Of course, you may think differently. Notice the number in the top-left corner? Select the one you like the most and get a better view:
 
 ```python
 fav_id = 3
@@ -162,6 +163,7 @@ You can host your own server by following the instruction below.
 DALL·E Flow needs one GPU with 21GB VRAM at its peak. All services are squeezed into this one GPU, this includes (roughly)
 - DALLE ~9GB
 - GLID Diffusion ~6GB
+- Stable Diffusion ~10GB (n_samples=1 images, 512x512, slower) or ~18GB (n_samples=4 images, 512x512, faster)
 - SwinIR ~3GB
 - CLIP ViT-L/14-336px ~3GB
 
@@ -170,7 +172,7 @@ The following reasonable tricks can be used for further reducing VRAM:
 - CLIP can be delegated to [CLIP-as-service demo server](https://github.com/jina-ai/clip-as-service#text--image-embedding) (-3GB)
 
 
-It requires at least 40GB free space on the hard drive, mostly for downloading pretrained models.
+It requires at least 50GB free space on the hard drive, mostly for downloading pretrained models.
 
 High-speed internet is required. Slow/unstable internet may throw frustrating timeout when downloading models.
 
@@ -189,6 +191,20 @@ If you have installed Jina, the above flowchart can be generated via:
 # pip install jina
 jina export flowchart flow.yml flow.svg
 ```
+
+
+### Stable Diffusion weights
+
+If you want to use Stable Diffusion, you will first need to register an account on the website [Huggingface](https://huggingface.co/) and agree to the terms and conditions for the model. After logging in, you can find the version of the model required by going here:
+
+[CompVis / stable-diffusion-v-1-4-original](https://huggingface.co/CompVis/stable-diffusion-v-1-4-original)
+
+Under the **Download the Weights** section, click the link for `sd-v1-x.ckpt`. The latest weights at the time of writing are `sd-v1-4.ckpt`.
+
+**DOCKER USERS**:  Put this file into a folder named `ldm/stable-diffusion-v1` and rename it `model.ckpt`. Follow the instructions below carefully because SD is not enabled by default.
+
+**NATIVE USERS**: Put this file into `dalle/stable-diffusion/models/ldm/stable-diffusion-v1/model.ckpt` after finishing the rest of the steps under "Run natively". Follow the instructions below carefully because SD is not enabled by default.
+
 
 ### Run in Docker
 
@@ -220,12 +236,54 @@ The building will take 10 minutes with average internet speed, which results in 
 To run it, simply do:
 
 ```bash
-docker run -p 51005:51005 -v $HOME/.cache:/home/dalle/.cache --gpus all jinaai/dalle-flow
+docker run -p 51005:51005 \
+  -it \
+  -v $HOME/.cache:/home/dalle/.cache \
+  --gpus all \
+  jinaai/dalle-flow
+```
+
+Alternatively, you may also run with some workflows enabled or disabled to prevent out-of-memory crashes. To do that, pass one of these environment variables:
+```
+DISABLE_DALLE_MEGA
+DISABLE_GLID3XL
+DISABLE_SWINIR
+ENABLE_STABLE_DIFFUSION
+```
+
+For example, if you would like to disable GLID3XL workflows, run:
+
+```bash
+docker run -e DISABLE_GLID3XL='1' \
+  -p 51005:51005 \
+  -it \
+  -v $HOME/.cache:/home/dalle/.cache \
+  --gpus all \
+  jinaai/dalle-flow
 ```
 
 - The first run will take ~10 minutes with average internet speed.
 - `-v $HOME/.cache:/root/.cache` avoids repeated model downloading on every docker run.
 - The first part of `-p 51005:51005` is your host public port. Make sure people can access this port if you are serving publicly. The second par of it is [the port defined in flow.yml](https://github.com/jina-ai/dalle-flow/blob/e7e313522608668daeec1b7cd84afe56e5b19f1e/flow.yml#L4).
+- If you want to use Stable Diffusion, it must be enabled manually with the `ENABLE_STABLE_DIFFUSION` flag.
+
+#### Special instructions for Stable Diffusion and Docker
+
+**Stable Diffusion may only be enabled if you have downloaded the weights and make them available as a virtual volume while enabling the environmental flag (`ENABLE_STABLE_DIFFUSION`) for SD**.
+
+You should have previously put the weights into a folder named `ldm/stable-diffusion-v1` and labeled them `model.ckpt`. Replace `YOUR_MODEL_PATH/ldm` below with the path on your own system to pipe the weights into the docker image.
+
+```bash
+docker run -e ENABLE_STABLE_DIFFUSION="1" \
+  -e DISABLE_DALLE_MEGA="1" \
+  -e DISABLE_GLID3XL="1" \
+  -p 51005:51005 \
+  -it \
+  -v YOUR_MODEL_PATH/ldm:/dalle/stable-diffusion/models/ldm/ \
+  -v $HOME/.cache:/home/dalle/.cache \
+  --gpus all \
+  jinaai/dalle-flow
+```
 
 You should see the screen like following once running:
 
@@ -245,7 +303,8 @@ Running natively requires some manual steps, but it is often easier to debug.
 mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/jina-ai/SwinIR.git
-git clone https://github.com/CompVis/latent-diffusion.git
+git clone https://github.com/CompVis/latent-diffusio324n.git
+git clone https://github.com/StableDiffusion/latent-diffusion.git
 git clone https://github.com/jina-ai/glid-3-xl.git
 ```
 
@@ -254,21 +313,29 @@ You should have the following folder structure:
 ```text
 dalle/
  |
- |-- dalle-flow/
  |-- SwinIR/
+ |-- dalle-flow/
  |-- glid-3-xl/
  |-- latent-diffusion/
+ |-- stable-diffusion/
 ```
 
 #### Install auxiliary repos
 
 ```bash
+cd dalle-flow
+python3 -m virtualenv env
+source env/bin/activate && cd -
+pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
+pip install numpy tqdm pytorch_lightning einops numpy omegaconf
+pip install https://github.com/crowsonkb/k-diffusion/archive/master.zip
 cd latent-diffusion && pip install -e . && cd -
+cd stable-diffusion && pip install -e . && cd -
 cd SwinIR && pip install -e . && cd -
 cd glid-3-xl && pip install -e . && cd -
 ```
 
-There are couple models we need to download for GLID-3-XL:
+There are couple models we need to download for GLID-3-XL if you are using that:
 
 ```bash
 cd glid-3-xl
@@ -291,7 +358,14 @@ pip install jax==0.3.13
 Now you are under `dalle-flow/`, run the following command: 
 
 ```bash
-jina flow --uses flow.yml
+# Optionally disable some generative models with the following flags when
+# using flow_parser.py:
+# --disable-dalle-mega
+# --disable-glid3xl
+# --disable-swinir
+# --enable-stable-diffusion
+python flow_parser.py
+jina flow --uses flow.tmp.yml
 ```
 
 You should see this screen immediately:
