@@ -29,7 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
-- 🌟 **2022/8/17** Text to image for [Stable Diffusion](https://github.com/CompVis/stable-diffusion) has been added. In order to use it you will need to agree to their ToS, download the weights, then enable the flag in docker or `flow_parser.yml`.
+- 🌟 **2022/8/17** Text to image for [Stable Diffusion](https://github.com/CompVis/stable-diffusion) has been added. In order to use it you will need to agree to their ToS, download the weights, then enable the flag in docker or `flow_parser.py`.
 - ⚠️ **2022/8/8** Started using CLIP-as-service as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors). Now you can easily [deploy your own CLIP executor](#run-your-own-clip) if you want. There is [a small breaking change](https://github.com/jina-ai/dalle-flow/pull/74/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5R103) as a result of this improvement, so [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/7/6** Demo server migration to AWS EKS for better availability and robustness, **server URL is now changing to `grpcs://dalle-flow.dev.jina.ai`**. All connections are now with TLS encryption, [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/6/25** Unexpected downtime between 6/25 0:00 - 12:00 CET due to out of GPU quotas. The new server now has 2 GPUs, add healthcheck in client notebook.
@@ -303,8 +303,8 @@ Running natively requires some manual steps, but it is often easier to debug.
 mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/jina-ai/SwinIR.git
-git clone https://github.com/CompVis/latent-diffusio324n.git
-git clone https://github.com/StableDiffusion/latent-diffusion.git
+git clone https://github.com/CompVis/stable-diffusion.git
+git clone https://github.com/CompVis/latent-diffusion.git
 git clone https://github.com/jina-ai/glid-3-xl.git
 ```
 
