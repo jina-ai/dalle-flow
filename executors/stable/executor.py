@@ -40,7 +40,7 @@ class StableDiffusionConfig:
     ckpt = '' # model checkpoint path
     config = '' # model configuration file path
     ddim_eta = 0.0
-    ddim_steps = 100
+    ddim_steps = 50
     f = 8 # downsampling factor
     fixed_code = False
     height = 512
@@ -214,7 +214,7 @@ class StableDiffusionGenerator(Executor):
             if sampler == 'euler_ancestral':
                 sampling_fn = K.sampling.sample_euler_ancestral
 
-            sigmas = self.model_k_wrapped.get_sigmas(opt.ddim_steps)
+            sigmas = self.model_k_wrapped.get_sigmas(steps)
             x = torch.randn([n_samples, *shape], device=self.device) * sigmas[0] # for GPU draw
             extra_args = {
                 'cond': c,
@@ -243,7 +243,7 @@ class StableDiffusionGenerator(Executor):
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         opt = self.opt
         opt.scale = scale
-        steps = int(parameters.get('steps', opt.ddim_steps))
+        steps = min(int(parameters.get('steps', opt.ddim_steps)), 250)
 
         # If the number of samples we have is more than would currently be
         # given for n_samples * n_iter, increase n_iter to yield more images.
@@ -536,22 +536,22 @@ class StableDiffusionGenerator(Executor):
                                     if sampler == 'euler_ancestral':
                                         sampling_fn = K.sampling.sample_euler_ancestral
 
-                                sigmas = self.model_k_wrapped.get_sigmas(opt.ddim_steps)
-                                x0 = init_latent
-                                noise = torch.randn_like(x0) * sigmas[opt.ddim_steps - t_enc - 1]
-                                xi = x0 + noise
-                                sigma_sched = sigmas[opt.ddim_steps - t_enc - 1:]
-                                extra_args = {
-                                    'cond': c,
-                                    'uncond': uc,
-                                    'cond_scale': opt.scale,
-                                }
-                                samples = sampling_fn(
-                                    self.model_k_config,
-                                    xi,
-                                    sigma_sched,
-                                    extra_args=extra_args,
-                                )
+                                    sigmas = self.model_k_wrapped.get_sigmas(opt.ddim_steps)
+                                    x0 = init_latent
+                                    noise = torch.randn_like(x0) * sigmas[opt.ddim_steps - t_enc - 1]
+                                    xi = x0 + noise
+                                    sigma_sched = sigmas[opt.ddim_steps - t_enc - 1:]
+                                    extra_args = {
+                                        'cond': c,
+                                        'uncond': uc,
+                                        'cond_scale': opt.scale,
+                                    }
+                                    samples = sampling_fn(
+                                        self.model_k_config,
+                                        xi,
+                                        sigma_sched,
+                                        extra_args=extra_args,
+                                    )
 
                                 x_samples = self.model.decode_first_stage(samples)
                                 x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
