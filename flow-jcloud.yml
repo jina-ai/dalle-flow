@@ -11,7 +11,7 @@ jcloud:
     timeout: 6000
 executors:
   - name: dalle
-    uses: jinahub+docker://DalleGenerator/latest
+    uses: jinahub+docker://DalleGenerator/jcloud-latest
     timeout_ready: -1  # slow download speed often leads to timeout
     env:
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
@@ -27,10 +27,10 @@ executors:
     uses_with:
       name: ViT-L-14-336::openai
     replicas: 2
-    # host: 'demo-cas.jina.ai'
-    # port: 2096
-    # tls: true
-    # external: false
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    tls: true
+    external: true
     needs: [gateway]
     gpus: all
     jcloud:
@@ -38,7 +38,7 @@ executors:
         memory: 5G
         gpu: shared
   - name: diffusion
-    uses: jinahub+docker://GLID3Diffusion/latest
+    uses: jinahub+docker://GLID3Diffusion/jcloud-latest
     timeout_ready: -1  # slow download speed often leads to timeout
     replicas: 2  # change this if you have larger VRAM
     needs: [clip_encoder]
@@ -55,10 +55,10 @@ executors:
     uses_requests:
       '/': rank
     replicas: 2
-    # host: 'demo-cas.jina.ai'
-    # port: 2096
-    # tls: true
-    # external: false
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    tls: true
+    external: true
     needs: [dalle, diffusion]
     gpus: all
     jcloud:
@@ -66,7 +66,7 @@ executors:
         memory: 5G
         gpu: shared
   - name: upscaler
-    uses: jinahub+docker://SwinIRUpscaler/latest
+    uses: jinahub+docker://SwinIRUpscaler/jcloud-latest
     replicas: 2
     gpus: all
     jcloud:
