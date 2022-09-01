@@ -1,0 +1,24 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="11">
+            <item index="0" class="java.lang.String" itemvalue="tqdm" />
+            <item index="1" class="java.lang.String" itemvalue="scipy" />
+            <item index="2" class="java.lang.String" itemvalue="ftfy" />
+            <item index="3" class="java.lang.String" itemvalue="regex" />
+            <item index="4" class="java.lang.String" itemvalue="librosa" />
+            <item index="5" class="java.lang.String" itemvalue="torch" />
+            <item index="6" class="java.lang.String" itemvalue="visdom" />
+            <item index="7" class="java.lang.String" itemvalue="pytorch-ignite" />
+            <item index="8" class="java.lang.String" itemvalue="termcolor" />
+            <item index="9" class="java.lang.String" itemvalue="jina" />
+            <item index="10" class="java.lang.String" itemvalue="wheel" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
