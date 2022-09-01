@@ -2,9 +2,8 @@ jtype: StableDiffusionGenerator
 with:
   stable_path: ../stable-diffusion
   n_iter: 1
-  n_samples: 1
+  n_samples: 4
   height: 512
-  use_half: True
   width: 512
 metas:
   py_modules:
