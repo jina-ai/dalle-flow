@@ -95,14 +95,14 @@ def generate_images(prompt: str, num_predictions: int):
         key, subkey = jax.random.split(key)
 
         # generate images
-        encoded_images = p_generate(
+        encoded_images = model.generate(
             tokenized_prompt,
-            shard_prng_key(subkey),
-            params,
-            gen_top_k,
-            gen_top_p,
-            temperature,
-            cond_scale,
+            prng_key=shard_prng_key(subkey),
+            params=params,
+            top_k=gen_top_k,
+            top_p=gen_top_p,
+            temperature=temperature,
+            condition_scale=cond_scale,
         )
 
         # remove BOS
@@ -112,6 +112,6 @@ def generate_images(prompt: str, num_predictions: int):
         decoded_images = p_decode(encoded_images, vqgan_params)
         decoded_images = decoded_images.clip(0.0, 1.0).reshape((-1, 256, 256, 3))
         for img in decoded_images:
-            images.append(Image.fromarray(np.asarray(img * 255, dtype=np.uint8)))
+            images.append(np.asarray(img * 255, dtype=np.uint8))
 
     return images
