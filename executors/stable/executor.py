@@ -32,6 +32,11 @@ VALID_SAMPLERS = {'ddim', 'k_lms', 'dpm2', 'dpm2_ancestral', 'heun',
     'euler', 'euler_ancestral'}
 
 
+MAX_STEPS = 250
+MIN_HEIGHT = 384
+MIN_WIDTH = 384
+
+
 class StableDiffusionConfig:
     '''
     Configuration for Stable Diffusion.
@@ -138,6 +143,7 @@ class StableDiffusionGenerator(Executor):
     config = ''
     device = None
     input_path = ''
+    max_resolution = None
     model = None
     model_k_wrapped = None
     model_k_config = None
@@ -146,6 +152,7 @@ class StableDiffusionGenerator(Executor):
     def __init__(self,
         stable_path: str,
         height: int=512,
+        max_resolution=589824,
         n_iter: int=1,
         n_samples: int=4,
         use_half: bool=False,
@@ -162,6 +169,8 @@ class StableDiffusionGenerator(Executor):
         self.opt.n_samples = n_samples
         self.opt.n_iter = n_iter
 
+        self.max_resolution = max_resolution
+
         self.config = OmegaConf.load(f"{self.opt.config}")
         self.model = load_model_from_config(self.config, f"{self.opt.ckpt}",
             use_half=use_half)
@@ -174,15 +183,46 @@ class StableDiffusionGenerator(Executor):
 
         self.sampler = DDIMSampler(self.model)
 
-        self.sampler.make_schedule(
-            ddim_num_steps=self.opt.ddim_steps, ddim_eta=self.opt.ddim_eta,
-                verbose=False)
+    def _h_and_w_from_parameters(self, parameters, opt):
+        height = parameters.get('height', opt.height)
+        if height is not None:
+            height = int(height)
+        else:
+            height = opt.height
+        width = parameters.get('width', opt.width)
+        if width is not None:
+            width = int(width)
+        else:
+            width = opt.width
+
+        return height, width
+
+    def _height_and_width_check(self, height, width):
+        if height * width > self.max_resolution:
+            raise ValueError(f'height {height} and width {width} produce too ' +
+                f'many pixels ({height * width}). Max pixels {self.max_resolution}')
+        if height % 64 != 0:
+            raise ValueError(f'height must be a multiple of 64 (got {height})')
+        if width % 64 != 0:
+            raise ValueError(f'width must be a multiple of 64 (got {width})')
+        if height < MIN_HEIGHT:
+            raise ValueError(f'width must be >= {MIN_HEIGHT} (got {height})')
+        if width < MIN_WIDTH:
+            raise ValueError(f'width must be >= {MIN_WIDTH} (got {width})')
 
     def _sample_text(self, prompts, n_samples, batch_size, opt, sampler, steps,
-        start_code, c=None):
+        start_code, c=None, height=None, width=None):
         '''
         Create image(s) from text.
         '''
+
+        self.sampler.make_schedule(
+            ddim_num_steps=steps, ddim_eta=self.opt.ddim_eta,
+                verbose=False)
+
+        _height = opt.height if height is None else height
+        _width = opt.width if width is None else width
+
         uc = None
         if opt.scale != 1.0:
             uc = self.model.get_learned_conditioning(batch_size * [""])
@@ -192,7 +232,7 @@ class StableDiffusionGenerator(Executor):
 
         if c is None:
             c = self.model.get_learned_conditioning(prompts)
-        shape = [opt.C, opt.height // opt.f, opt.width // opt.f]
+        shape = [opt.C, _height // opt.f, _width // opt.f]
 
         samples = None
         if sampler == 'ddim':
@@ -251,7 +291,9 @@ class StableDiffusionGenerator(Executor):
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         opt = self.opt
         opt.scale = scale
-        steps = min(int(parameters.get('steps', opt.ddim_steps)), 250)
+        steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
+        height, width = self._h_and_w_from_parameters(parameters, opt)
+        self._height_and_width_check(height, width)
 
         # If the number of samples we have is more than would currently be
         # given for n_samples * n_iter, increase n_iter to yield more images.
@@ -265,8 +307,8 @@ class StableDiffusionGenerator(Executor):
 
         start_code = None
         if opt.fixed_code:
-            start_code = torch.randn([n_samples, opt.C, opt.height // opt.f,
-                opt.width // opt.f], device=self.device)
+            start_code = torch.randn([n_samples, opt.C, height // opt.f,
+                width // opt.f], device=self.device)
 
         precision_scope = autocast if opt.precision=="autocast" else nullcontext
         with torch.no_grad():
@@ -282,7 +324,8 @@ class StableDiffusionGenerator(Executor):
                         for n in trange(n_iter, desc="Sampling"):
                             for prompts in tqdm(data, desc="data"):
                                 x_samples_ddim = self._sample_text(prompts, n_samples,
-                                    batch_size, opt, sampler, steps, start_code)
+                                    batch_size, opt, sampler, steps, start_code,
+                                    height=height, width=width)
                                 for x_sample in x_samples_ddim:
                                     x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
                                     img = Image.fromarray(x_sample.astype(np.uint8))
@@ -321,6 +364,9 @@ class StableDiffusionGenerator(Executor):
 
         opt = self.opt
         opt.scale = scale
+        steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
+        height, width = self._h_and_w_from_parameters(parameters, opt)
+        self._height_and_width_check(height, width)
 
         # If the number of samples we have is more than would currently be
         # given for n_samples * n_iter, increase n_iter to yield more images.
@@ -334,12 +380,16 @@ class StableDiffusionGenerator(Executor):
         seed_everything(seed)
 
         assert 0. <= strength <= 1., 'can only work with strength in [0.0, 1.0]'
-        t_enc = int(strength * opt.ddim_steps)
+        t_enc = int(strength * steps)
 
         precision_scope = autocast if opt.precision == "autocast" else nullcontext
         with torch.no_grad():
             with precision_scope("cuda"):
                 with self.model.ema_scope():
+                    self.sampler.make_schedule(
+                        ddim_num_steps=steps, ddim_eta=self.opt.ddim_eta,
+                            verbose=False)
+
                     for d in docs:
                         batch_size = n_samples
                         prompt = d.text
@@ -369,8 +419,8 @@ class StableDiffusionGenerator(Executor):
                             init_latent = torch.zeros(
                                 batch_size,
                                 4,
-                                opt.height >> 3,
-                                opt.width >> 3,
+                                height >> 3,
+                                width >> 3,
                             ).cuda()
 
                         for n in trange(n_iter, desc="Sampling"):
@@ -405,11 +455,11 @@ class StableDiffusionGenerator(Executor):
                                     if sampler == 'euler_ancestral':
                                         sampling_fn = K.sampling.sample_euler_ancestral
 
-                                    sigmas = self.model_k_wrapped.get_sigmas(opt.ddim_steps)
+                                    sigmas = self.model_k_wrapped.get_sigmas(steps)
                                     x0 = init_latent
-                                    noise = torch.randn_like(x0) * sigmas[opt.ddim_steps - t_enc - 1]
+                                    noise = torch.randn_like(x0) * sigmas[steps - t_enc - 1]
                                     xi = x0 + noise
-                                    sigma_sched = sigmas[opt.ddim_steps - t_enc - 1:]
+                                    sigma_sched = sigmas[steps - t_enc - 1:]
                                     extra_args = {
                                         'cond': c,
                                         'uncond': uc,
@@ -464,16 +514,23 @@ class StableDiffusionGenerator(Executor):
 
         opt = self.opt
         opt.scale = scale
+        steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
+        height, width = self._h_and_w_from_parameters(parameters, opt)
+        self._height_and_width_check(height, width)
 
         seed_everything(seed)
 
         assert 0.5 <= strength <= 1., 'can only work with strength in [0.5, 1.0]'
-        t_enc = int(strength * opt.ddim_steps)
+        t_enc = int(strength * steps)
 
         precision_scope = autocast if opt.precision == "autocast" else nullcontext
         with torch.no_grad():
             with precision_scope("cuda"):
                 with self.model.ema_scope():
+                    self.sampler.make_schedule(
+                        ddim_num_steps=steps, ddim_eta=self.opt.ddim_eta,
+                            verbose=False)
+
                     for d in docs:
                         batch_size = 1
                         prompt = d.text
@@ -509,11 +566,12 @@ class StableDiffusionGenerator(Executor):
                             if i == 0 or not resample_prior:
                                 start_code = None
                                 if opt.fixed_code:
-                                    start_code = torch.randn([1, opt.C, opt.height // opt.f,
-                                        opt.width // opt.f], device=self.device)
+                                    start_code = torch.randn([1, opt.C, height // opt.f,
+                                        width // opt.f], device=self.device)
                                 x_samples = self._sample_text(None, 1,
-                                    batch_size, opt, sampler, opt.ddim_steps,
-                                    start_code, c=c)
+                                    batch_size, opt, sampler, steps,
+                                    start_code, c=c,
+                                    height=height, width=width)
                             else:
                                 init_image = load_img('', img=last_image).to(self.device)
                                 init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
@@ -547,11 +605,11 @@ class StableDiffusionGenerator(Executor):
                                     if sampler == 'euler_ancestral':
                                         sampling_fn = K.sampling.sample_euler_ancestral
 
-                                    sigmas = self.model_k_wrapped.get_sigmas(opt.ddim_steps)
+                                    sigmas = self.model_k_wrapped.get_sigmas(steps)
                                     x0 = init_latent
-                                    noise = torch.randn_like(x0) * sigmas[opt.ddim_steps - t_enc - 1]
+                                    noise = torch.randn_like(x0) * sigmas[steps - t_enc - 1]
                                     xi = x0 + noise
-                                    sigma_sched = sigmas[opt.ddim_steps - t_enc - 1:]
+                                    sigma_sched = sigmas[steps - t_enc - 1:]
                                     extra_args = {
                                         'cond': c,
                                         'uncond': uc,
