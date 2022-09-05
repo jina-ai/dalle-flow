@@ -70,7 +70,7 @@ def chunk(it, size):
     return iter(lambda: tuple(islice(it, size)), ())
 
 
-def load_model_from_config(config, ckpt):
+def load_model_from_config(config, ckpt, use_half=False):
     pl_sd = torch.load(ckpt, map_location="cpu")
     sd = pl_sd["state_dict"]
     model = instantiate_from_config(config.model)
@@ -78,6 +78,8 @@ def load_model_from_config(config, ckpt):
 
     model.cuda()
     model.eval()
+    if use_half:
+        model.half()
     return model
 
 
@@ -146,6 +148,7 @@ class StableDiffusionGenerator(Executor):
         height: int=512,
         n_iter: int=1,
         n_samples: int=4,
+        use_half: bool=False,
         width: int=512,
         **kwargs,
     ):
@@ -160,7 +163,8 @@ class StableDiffusionGenerator(Executor):
         self.opt.n_iter = n_iter
 
         self.config = OmegaConf.load(f"{self.opt.config}")
-        self.model = load_model_from_config(self.config, f"{self.opt.ckpt}")
+        self.model = load_model_from_config(self.config, f"{self.opt.ckpt}",
+            use_half=use_half)
 
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model = self.model.to(self.device)
@@ -175,18 +179,20 @@ class StableDiffusionGenerator(Executor):
                 verbose=False)
 
     def _sample_text(self, prompts, n_samples, batch_size, opt, sampler, steps,
-        start_code):
+        start_code, c=None):
         '''
         Create image(s) from text.
         '''
         uc = None
         if opt.scale != 1.0:
             uc = self.model.get_learned_conditioning(batch_size * [""])
-        if isinstance(prompts, tuple):
+
+        if prompts is not None and isinstance(prompts, tuple):
             prompts = list(prompts)
-        c = self.model.get_learned_conditioning(prompts)
+
+        if c is None:
+            c = self.model.get_learned_conditioning(prompts)
         shape = [opt.C, opt.height // opt.f, opt.width // opt.f]
-        torch.cuda.empty_cache()
 
         samples = None
         if sampler == 'ddim':
@@ -229,6 +235,8 @@ class StableDiffusionGenerator(Executor):
 
         x_samples_ddim = self.model.decode_first_stage(samples)
         x_samples_ddim = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
+
+        torch.cuda.empty_cache()
         return x_samples_ddim
 
     @requests(on='/')
@@ -445,6 +453,7 @@ class StableDiffusionGenerator(Executor):
         request_time = time.time()
 
         num_images = max(1, min(16, int(parameters.get('num_images', 1))))
+        resample_prior = parameters.get('resample_prior', True)
         sampler = parameters.get('sampler', 'k_lms')
         scale = parameters.get('scale', 7.5)
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
@@ -483,17 +492,28 @@ class StableDiffusionGenerator(Executor):
                         # Interate over interpolation percentages.
                         last_image = None
                         x_samples = None
+
                         for i, percent in to_iterate:
                             init_image = None
                             init_latent = None
-                            if i == 0:
+
+                            c = None
+                            if i < 1:
+                                c = prompt_embedding_start
+                            elif i == len(to_iterate) - 1:
+                                c = prompt_embedding_end
+                            else:
+                                c = slerp(percent, prompt_embedding_start,
+                                    prompt_embedding_end)
+
+                            if i == 0 or not resample_prior:
                                 start_code = None
                                 if opt.fixed_code:
                                     start_code = torch.randn([1, opt.C, opt.height // opt.f,
                                         opt.width // opt.f], device=self.device)
-                                x_samples = self._sample_text([prompts[0]], 1,
+                                x_samples = self._sample_text(None, 1,
                                     batch_size, opt, sampler, opt.ddim_steps,
-                                    start_code)
+                                    start_code, c=c)
                             else:
                                 init_image = load_img('', img=last_image).to(self.device)
                                 init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
@@ -503,15 +523,6 @@ class StableDiffusionGenerator(Executor):
                                 uc = None
                                 if opt.scale != 1.0:
                                     uc = self.model.get_learned_conditioning(batch_size * [""])
-
-                                c = None
-                                if i < 1:
-                                    c = prompt_embedding_start
-                                elif i == len(to_iterate) - 1:
-                                    c = prompt_embedding_end
-                                else:
-                                    c = slerp(percent, prompt_embedding_start,
-                                        prompt_embedding_end)
 
                                 samples = None
                                 if sampler == 'ddim':

@@ -1,4 +1,5 @@
 import glob
+import torch
 import os
 import shutil
 from pathlib import Path
@@ -52,6 +53,9 @@ class SwinIRUpscaler(Executor):
                 os.remove(f)
 
         self.logger.info('done!')
+
+        # Dump memory here because SWINIR uses loads of it
+        torch.cuda.empty_cache()
 
     @requests(on='/upscale')
     async def upscale(self, docs: DocumentArray, **kwargs):
