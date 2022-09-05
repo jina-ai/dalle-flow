@@ -5,6 +5,7 @@ flow*.tmp.yml.
 
 Environmental flags available:
 
+DISABLE_CLIP
 DISABLE_DALLE_MEGA
 DISABLE_GLID3XL
 DISABLE_SWINIR
@@ -19,11 +20,13 @@ import yaml
 
 from collections import OrderedDict
 
+ENV_DISABLE_CLIP = 'DISABLE_CLIP'
 ENV_DISABLE_DALLE_MEGA = 'DISABLE_DALLE_MEGA'
 ENV_DISABLE_GLID3XL = 'DISABLE_GLID3XL'
 ENV_DISABLE_SWINIR = 'DISABLE_SWINIR'
 ENV_ENABLE_STABLE_DIFFUSION = 'ENABLE_STABLE_DIFFUSION'
 
+CAS_FLOW_NAME = 'clip_encoder'
 DALLE_MEGA_FLOW_NAME = 'dalle'
 GLID3XL_FLOW_NAME = 'diffusion'
 RERANK_FLOW_NAME = 'rerank'
@@ -70,6 +73,11 @@ parser.add_argument('-o','--output',
     dest='output',
     help='YAML file to output (default is flow.tmp.yaml)',
     required=False)
+parser.add_argument('--disable-clip',
+    dest='no_clip',
+    action='store_true',
+    help="Disable clip-as-a-service executor (default false)",
+    required=False)
 parser.add_argument('--disable-dalle-mega',
     dest='no_dalle_mega',
     action='store_true',
@@ -101,6 +109,8 @@ output_flow = 'flow.tmp.yml'
 if args.get('output', None) is not None:
     output_flow = args['output']
 
+no_clip = args.get('no_clip') or \
+    os.environ.get(ENV_DISABLE_CLIP, False)
 no_dalle_mega = args.get('no_dalle_mega') or \
     os.environ.get(ENV_DISABLE_DALLE_MEGA, False)
 no_glid3xl = args.get('no_glid3xl') or os.environ.get(ENV_DISABLE_GLID3XL, False)
@@ -172,6 +182,12 @@ with open(flow_to_use, 'r') as f_in:
                 exc['needs'] = list(filter(
                     lambda _n: _n != STABLE_DIFFUSION_FLOW_NAME,
                     exc['needs']))
+
+    if no_clip:
+        flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
+            CAS_FLOW_NAME)
+        flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
+            RERANK_FLOW_NAME)
 
     with open(output_flow, 'w') as f_out:
         f_out.write(yaml.dump(flow_as_dict))
