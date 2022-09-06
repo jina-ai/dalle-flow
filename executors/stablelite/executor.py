@@ -25,6 +25,10 @@ from omegaconf import OmegaConf
 
 VALID_SAMPLERS = {'ddim'}
 
+MAX_STEPS = 250
+MIN_HEIGHT = 384
+MIN_WIDTH = 384
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import optimizedSD
@@ -135,6 +139,7 @@ class StableDiffusionGenerator(Executor):
     config = ''
     device = None
     input_path = ''
+    max_resolution = None
     model = None
     modelCS = None
     modelFS = None
@@ -146,6 +151,7 @@ class StableDiffusionGenerator(Executor):
     def __init__(self,
         stable_path: str,
         height: int=512,
+        max_resolution: int=589824, # 768x768
         n_iter: int=1,
         n_samples: int=4,
         width: int=512,
@@ -160,6 +166,8 @@ class StableDiffusionGenerator(Executor):
         self.opt.width = width
         self.opt.n_samples = n_samples
         self.opt.n_iter = n_iter
+
+        self.max_resolution = max_resolution
 
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -208,9 +216,32 @@ class StableDiffusionGenerator(Executor):
 
         self.sample = self.model.sample
 
-        model.make_schedule(
-            ddim_num_steps=self.opt.ddim_steps, ddim_eta=self.opt.ddim_eta,
-                verbose=False)
+    def _h_and_w_from_parameters(self, parameters, opt):
+        height = parameters.get('height', opt.height)
+        if height is not None:
+            height = int(height)
+        else:
+            height = opt.height
+        width = parameters.get('width', opt.width)
+        if width is not None:
+            width = int(width)
+        else:
+            width = opt.width
+
+        return height, width
+
+    def _height_and_width_check(self, height, width):
+        if height * width > self.max_resolution:
+            raise ValueError(f'height {height} and width {width} produce too ' +
+                f'many pixels ({height * width}). Max pixels {self.max_resolution}')
+        if height % 64 != 0:
+            raise ValueError(f'height must be a multiple of 64 (got {height})')
+        if width % 64 != 0:
+            raise ValueError(f'width must be a multiple of 64 (got {width})')
+        if height < MIN_HEIGHT:
+            raise ValueError(f'width must be >= {MIN_HEIGHT} (got {height})')
+        if width < MIN_WIDTH:
+            raise ValueError(f'width must be >= {MIN_WIDTH} (got {width})')
 
     def to_cuda_modelcs(self):
         self.modelCS.to(self.device)
@@ -244,7 +275,10 @@ class StableDiffusionGenerator(Executor):
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         opt = self.opt
         opt.scale = scale
-        steps = min(int(parameters.get('steps', opt.ddim_steps)), 250)
+
+        steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
+        height, width = self._h_and_w_from_parameters(parameters, opt)
+        self._height_and_width_check(height, width)
 
         # If the number of samples we have is more than would currently be
         # given for n_samples * n_iter, increase n_iter to yield more images.
@@ -258,12 +292,16 @@ class StableDiffusionGenerator(Executor):
 
         start_code = None
         if opt.fixed_code:
-            start_code = torch.randn([n_samples, opt.C, opt.height // opt.f,
-                opt.width // opt.f], device=self.device)
+            start_code = torch.randn([n_samples, opt.C, height // opt.f,
+                width // opt.f], device=self.device)
 
         precision_scope = autocast if opt.precision=="autocast" else nullcontext
         with torch.no_grad():
             with precision_scope("cuda"):
+                self.model.make_schedule(
+                    ddim_num_steps=steps, ddim_eta=self.opt.ddim_eta,
+                        verbose=False)
+
                 for d in docs:
                     batch_size = n_samples
                     prompt = d.text
@@ -280,7 +318,7 @@ class StableDiffusionGenerator(Executor):
                             if isinstance(prompts, tuple):
                                 prompts = list(prompts)
                             c = self.modelCS.get_learned_conditioning(prompts)
-                            shape = [opt.C, opt.height // opt.f, opt.width // opt.f]
+                            shape = [opt.C, height // opt.f, width // opt.f]
 
                             self.to_cpu_modelcs()
                             self.to_cuda_modelfs()
@@ -345,6 +383,10 @@ class StableDiffusionGenerator(Executor):
         opt = self.opt
         opt.scale = scale
 
+        steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
+        height, width = self._h_and_w_from_parameters(parameters, opt)
+        self._height_and_width_check(height, width)
+
         # If the number of samples we have is more than would currently be
         # given for n_samples * n_iter, increase n_iter to yield more images.
         n_samples = opt.n_samples
@@ -362,6 +404,10 @@ class StableDiffusionGenerator(Executor):
         precision_scope = autocast if opt.precision == "autocast" else nullcontext
         with torch.no_grad():
             with precision_scope("cuda"):
+                self.model.make_schedule(
+                    ddim_num_steps=steps, ddim_eta=self.opt.ddim_eta,
+                        verbose=False)
+
                 for d in docs:
                     batch_size = n_samples
                     prompt = d.text
@@ -392,8 +438,8 @@ class StableDiffusionGenerator(Executor):
                         init_latent = torch.zeros(
                             batch_size,
                             4,
-                            opt.height >> 3,
-                            opt.width >> 3,
+                            height >> 3,
+                            width >> 3,
                         ).cuda()
                     self.to_cpu_modelfs()
 
@@ -417,7 +463,7 @@ class StableDiffusionGenerator(Executor):
                                 torch.tensor([t_enc]*batch_size).to(self.device),
                                 seed,
                                 opt.ddim_eta,
-                                opt.ddim_steps,
+                                steps,
                             )
                             # decode it
                             samples = self.model.decode(z_enc, c, t_enc,
@@ -473,14 +519,22 @@ class StableDiffusionGenerator(Executor):
         opt = self.opt
         opt.scale = scale
 
+        steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
+        height, width = self._h_and_w_from_parameters(parameters, opt)
+        self._height_and_width_check(height, width)
+
         seed_everything(seed)
 
         assert 0.5 <= strength <= 1., 'can only work with strength in [0.5, 1.0]'
-        t_enc = int(strength * opt.ddim_steps)
+        t_enc = int(strength * steps)
 
         precision_scope = autocast if opt.precision == "autocast" else nullcontext
         with torch.no_grad():
             with precision_scope("cuda"):
+                self.model.make_schedule(
+                    ddim_num_steps=steps, ddim_eta=self.opt.ddim_eta,
+                        verbose=False)
+
                 for d in docs:
                     batch_size = 1
                     prompt = d.text
@@ -523,15 +577,15 @@ class StableDiffusionGenerator(Executor):
                             self.to_cpu_modelcs()
 
                             self.to_cuda_modelfs()
-                            shape = [opt.C, opt.height // opt.f, opt.width // opt.f]
+                            shape = [opt.C, height // opt.f, width // opt.f]
                             start_code = None
                             if opt.fixed_code:
-                                start_code = torch.randn([1, opt.C, opt.height // opt.f,
-                                    opt.width // opt.f], device=self.device)
+                                start_code = torch.randn([1, opt.C, height // opt.f,
+                                    width // opt.f], device=self.device)
 
                             samples = self.sample(
                                 seed=seed,
-                                S=opt.ddim_steps,
+                                S=steps,
                                 conditioning=c,
                                 batch_size=batch_size,
                                 shape=shape,
@@ -580,7 +634,7 @@ class StableDiffusionGenerator(Executor):
                                 torch.tensor([t_enc]*batch_size).to(self.device),
                                 seed,
                                 opt.ddim_eta,
-                                opt.ddim_steps,
+                                steps,
                                 noise=noise,
                             )
                             # decode it
