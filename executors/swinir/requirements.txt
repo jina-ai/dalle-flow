@@ -1,4 +1,4 @@
-jina==3.7.4
+jina==3.8.3
 
 opencv-python
 timm

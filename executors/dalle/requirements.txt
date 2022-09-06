@@ -1,5 +1,5 @@
-jina==3.7.4
-docarray==0.14.8
+jina==3.8.3
+docarray==0.16.2
 
 flax
 git+https://github.com/openai/CLIP.git
