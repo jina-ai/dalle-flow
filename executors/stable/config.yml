@@ -1,9 +1,10 @@
 jtype: StableDiffusionGenerator
 with:
-  stable_path: ../stable-diffusion
+  height: 512
+  max_resolution: 589824 # 768x768
   n_iter: 1
   n_samples: 1
-  height: 512
+  stable_path: ../stable-diffusion
   use_half: True
   width: 512
 metas:
