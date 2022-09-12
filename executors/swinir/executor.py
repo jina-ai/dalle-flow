@@ -38,7 +38,7 @@ class SwinIRUpscaler(Executor):
 
         try:
             swin_ir_main([*self.swin_ir_args, '--folder_lq', input_path], self.swin_ir_model)
-        except RuntimeError as e:
+        except (RuntimeError, ValueError) as e:
             msg = str(e).lower()
             if 'out of memory' in msg or 'cudnn' in msg or 'resource_exhausted' in msg:
                 self.logger.error('| WARNING: ran out of memory, killing the process')
