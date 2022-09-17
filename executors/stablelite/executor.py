@@ -1,4 +1,4 @@
-import PIL
+import base64
 import importlib
 import numpy as np
 import os
@@ -7,6 +7,8 @@ import sys
 import time
 import torch
 import torch.nn as nn
+
+import PIL
 
 from PIL import Image
 from contextlib import nullcontext
@@ -270,11 +272,10 @@ class StableDiffusionGenerator(Executor):
         sampler = parameters.get('sampler', 'ddim')
         if sampler not in VALID_SAMPLERS:
             raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
-        scale = parameters.get('scale', 7.5)
+        scale = parameters.get('scale', self.opt.scale)
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         opt = self.opt
-        opt.scale = scale
 
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
         height, width = self._h_and_w_from_parameters(parameters, opt)
@@ -312,9 +313,7 @@ class StableDiffusionGenerator(Executor):
                     for n in trange(n_iter, desc="Sampling"):
                         for prompts in tqdm(data, desc="data"):
                             self.to_cuda_modelcs()
-                            uc = None
-                            if opt.scale != 1.0:
-                                uc = self.modelCS.get_learned_conditioning(batch_size * [""])
+                            uc = self.modelCS.get_learned_conditioning(batch_size * [""])
                             if isinstance(prompts, tuple):
                                 prompts = list(prompts)
                             c = self.modelCS.get_learned_conditioning(prompts)
@@ -332,7 +331,7 @@ class StableDiffusionGenerator(Executor):
                                     batch_size=n_samples,
                                     shape=shape,
                                     verbose=False,
-                                    unconditional_guidance_scale=opt.scale,
+                                    unconditional_guidance_scale=scale,
                                     unconditional_conditioning=uc,
                                     eta=opt.ddim_eta,
                                     x_T=start_code)
@@ -347,10 +346,28 @@ class StableDiffusionGenerator(Executor):
                                 img = Image.fromarray(x_sample.astype(np.uint8))
                                 buffered = BytesIO()
                                 img.save(buffered, format='PNG')
+
+                                samples_buffer = BytesIO()
+                                torch.save(samples, samples_buffer)
+                                samples_buffer.seek(0)
+
                                 _d = Document(
+                                    embedding=c, # Not actually the embedding, but these are hidden in the model
                                     blob=buffered.getvalue(),
                                     mime_type='image/png',
                                     tags={
+                                        'latent_repr': base64.b64encode(
+                                            samples_buffer.getvalue()).decode(),
+                                        'request': {
+                                            'api': 'txt2img',
+                                            'height': height,
+                                            'num_images': num_images,
+                                            'sampler': sampler,
+                                            'scale': scale,
+                                            'seed': seed,
+                                            'steps': steps,
+                                            'width': width,
+                                        },
                                         'text': prompt,
                                         'generator': 'stable-diffusion',
                                         'request_time': request_time,
@@ -373,7 +390,7 @@ class StableDiffusionGenerator(Executor):
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
         prompt_override = parameters.get('prompt', None)
         sampler = parameters.get('sampler', 'ddim')
-        scale = parameters.get('scale', 7.5)
+        scale = parameters.get('scale', self.opt.scale)
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         strength = parameters.get('strength', 0.75)
 
@@ -381,7 +398,6 @@ class StableDiffusionGenerator(Executor):
             raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
 
         opt = self.opt
-        opt.scale = scale
 
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
         height, width = self._h_and_w_from_parameters(parameters, opt)
@@ -447,9 +463,7 @@ class StableDiffusionGenerator(Executor):
                         for prompts in tqdm(data, desc="data"):
                             self.to_cuda_modelcs()
 
-                            uc = None
-                            if opt.scale != 1.0:
-                                uc = self.modelCS.get_learned_conditioning(batch_size * [""])
+                            uc = self.modelCS.get_learned_conditioning(batch_size * [""])
                             if isinstance(prompts, tuple):
                                 prompts = list(prompts)
                             c = self.modelCS.get_learned_conditioning(prompts)
@@ -467,7 +481,7 @@ class StableDiffusionGenerator(Executor):
                             )
                             # decode it
                             samples = self.model.decode(z_enc, c, t_enc,
-                                unconditional_guidance_scale=opt.scale,
+                                unconditional_guidance_scale=scale,
                                 unconditional_conditioning=uc)
 
                             self.to_cuda_modelfs()
@@ -480,10 +494,30 @@ class StableDiffusionGenerator(Executor):
                                 img = Image.fromarray(x_sample.astype(np.uint8))
                                 buffered = BytesIO()
                                 img.save(buffered, format='PNG')
+
+                                samples_buffer = BytesIO()
+                                torch.save(samples, samples_buffer)
+                                samples_buffer.seek(0)
+
                                 _d = Document(
+                                    embedding=c, # Not actually the embedding, but these are hidden in the model
                                     blob=buffered.getvalue(),
                                     mime_type='image/png',
                                     tags={
+                                        'api': 'stablediffuse',
+                                        'latent_repr': base64.b64encode(
+                                            samples_buffer.getvalue()).decode(),
+                                        'request': {
+                                            'height': height,
+                                            'latentless': latentless,
+                                            'num_images': num_images,
+                                            'sampler': sampler,
+                                            'scale': scale,
+                                            'seed': seed,
+                                            'steps': steps,
+                                            'strength': strength,
+                                            'width': width,
+                                        },
                                         'text': prompt,
                                         'generator': 'stable-diffusion',
                                         'request_time': request_time,
@@ -509,7 +543,7 @@ class StableDiffusionGenerator(Executor):
         num_images = max(1, min(16, int(parameters.get('num_images', 1))))
         resample_prior = parameters.get('resample_prior', True)
         sampler = parameters.get('sampler', 'ddim')
-        scale = parameters.get('scale', 7.5)
+        scale = parameters.get('scale', self.opt.scale)
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         strength = parameters.get('strength', 0.75)
 
@@ -517,7 +551,6 @@ class StableDiffusionGenerator(Executor):
             raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
 
         opt = self.opt
-        opt.scale = scale
 
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
         height, width = self._h_and_w_from_parameters(parameters, opt)
@@ -571,9 +604,7 @@ class StableDiffusionGenerator(Executor):
 
                         if i == 0 or not resample_prior:
                             self.to_cuda_modelcs()
-                            uc = None
-                            if opt.scale != 1.0:
-                                uc = self.modelCS.get_learned_conditioning(batch_size * [""])
+                            uc = self.modelCS.get_learned_conditioning(batch_size * [""])
                             self.to_cpu_modelcs()
 
                             self.to_cuda_modelfs()
@@ -590,7 +621,7 @@ class StableDiffusionGenerator(Executor):
                                 batch_size=batch_size,
                                 shape=shape,
                                 verbose=False,
-                                unconditional_guidance_scale=opt.scale,
+                                unconditional_guidance_scale=scale,
                                 unconditional_conditioning=uc,
                                 eta=opt.ddim_eta,
                                 x_T=start_code)
@@ -607,9 +638,7 @@ class StableDiffusionGenerator(Executor):
                             self.to_cpu_modelfs()
 
                             self.to_cuda_modelcs()
-                            uc = None
-                            if opt.scale != 1.0:
-                                uc = self.modelCS.get_learned_conditioning(batch_size * [""])
+                            uc = self.modelCS.get_learned_conditioning(batch_size * [""])
                             self.to_cpu_modelcs()
 
                             c = None
@@ -639,7 +668,7 @@ class StableDiffusionGenerator(Executor):
                             )
                             # decode it
                             samples = self.model.decode(z_enc, c, t_enc,
-                                unconditional_guidance_scale=opt.scale,
+                                unconditional_guidance_scale=scale,
                                 unconditional_conditioning=uc)
 
                             self.to_cuda_modelfs()
@@ -653,10 +682,30 @@ class StableDiffusionGenerator(Executor):
                         buffered = BytesIO()
                         img.save(buffered, format='PNG')
                         last_image = img
+
+                        samples_buffer = BytesIO()
+                        torch.save(samples, samples_buffer)
+                        samples_buffer.seek(0)
+
                         _d = Document(
+                            embedding=c, # Not actually the embedding, but these are hidden in the model
                             blob=buffered.getvalue(),
                             mime_type='image/png',
                             tags={
+                                'latent_repr': base64.b64encode(
+                                    samples_buffer.getvalue()).decode(),
+                                'request': {
+                                    'api': 'stableinterpolate',
+                                    'height': height,
+                                    'num_images': num_images,
+                                    'resample_prior': resample_prior,
+                                    'sampler': sampler,
+                                    'scale': scale,
+                                    'seed': seed,
+                                    'steps': steps,
+                                    'strength': strength,
+                                    'width': width,
+                                },
                                 'text': prompt,
                                 'percent': percent,
                                 'generator': 'stable-diffusion',

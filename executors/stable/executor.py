@@ -1,10 +1,14 @@
+import base64
+import json
 import os
 import shutil
 import sys
 import time
 import torch
 
-from typing import Iterable, Optional
+from io import BytesIO
+from random import randint
+from typing import Dict, Iterable, Optional
 
 import k_diffusion as K
 import numpy as np
@@ -13,13 +17,10 @@ import torch.nn as nn
 from PIL import Image
 from contextlib import nullcontext
 from einops import rearrange, repeat
-from io import BytesIO
 from pathlib import Path
 from pytorch_lightning import seed_everything
-from random import randint
 from torch import autocast
 from tqdm import tqdm, trange
-from typing import Dict
 
 from ldm.models.diffusion.ddim import DDIMSampler
 
@@ -83,7 +84,8 @@ class KCFGDenoiser(nn.Module):
         cond: torch.Tensor,
         cond_scale: float,
         cond_arities: Iterable[int],
-        cond_weights: Optional[Iterable[float]]
+        cond_weights: Optional[Iterable[float]],
+        use_half: bool=False,
     ) -> torch.Tensor:
         '''
         Magicool k-sampler prompt positive/negative weighting from birch-san.
@@ -95,8 +97,8 @@ class KCFGDenoiser(nn.Module):
         cond_in = torch.cat((uncond, cond)).to(x.device)
         del uncond, cond
         cond_arities_tensor = torch.tensor(cond_arities, device=cond_in.device)
-        # if x.dtype == torch.float32 or x.dtype == torch.float64:
-        #     x = x.half()
+        if use_half and (x.dtype == torch.float32 or x.dtype == torch.float64):
+            x = x.half()
         x_in = cat_self_with_repeat_interleaved(t=x,
             factors_tensor=cond_arities_tensor, factors=cond_arities,
             output_size=cond_count)
@@ -142,6 +144,7 @@ class StableDiffusionGenerator(Executor):
     model_k_wrapped = None
     model_k_config = None
     sampler = None
+    use_half = False
 
     def __init__(self,
         stable_path: str,
@@ -170,6 +173,7 @@ class StableDiffusionGenerator(Executor):
         self.config = OmegaConf.load(f"{self.opt.config}")
         self.model = load_model_from_config(self.config, f"{self.opt.ckpt}",
             use_half=use_half)
+        self.use_half = use_half
 
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model = self.model.to(self.device)
@@ -207,7 +211,12 @@ class StableDiffusionGenerator(Executor):
             raise ValueError(f'width must be >= {MIN_WIDTH} (got {width})')
 
     def _sample_text(self, prompt, n_samples, batch_size, opt, sampler, steps,
-        start_code, c=None, weighted_subprompts=None, height=None, width=None):
+        start_code,
+        c=None,
+        height=None,
+        scale=7.5,
+        weighted_subprompts=None,
+        width=None):
         '''
         Create image(s) from text.
         '''
@@ -241,7 +250,7 @@ class StableDiffusionGenerator(Executor):
                 batch_size=n_samples,
                 shape=shape,
                 verbose=False,
-                unconditional_guidance_scale=opt.scale,
+                unconditional_guidance_scale=scale,
                 unconditional_conditioning=uc,
                 eta=opt.ddim_eta,
                 x_T=start_code)
@@ -264,9 +273,10 @@ class StableDiffusionGenerator(Executor):
             extra_args = {
                 'cond': c,
                 'uncond': uc,
-                'cond_scale': opt.scale,
+                'cond_scale': scale,
                 'cond_weights': [pr[1] for pr in weighted_subprompts] * batch_size,
                 'cond_arities': (len(weighted_subprompts),) * batch_size,
+                'use_half': self.use_half,
             }
             samples = sampling_fn(
                 self.model_k_config,
@@ -274,13 +284,15 @@ class StableDiffusionGenerator(Executor):
                 sigmas,
                 extra_args=extra_args)
         for i, _ in enumerate(samples):
-            if samples[i].dtype == torch.float32 or samples[i].dtype == torch.float64:
+            if self.use_half and (samples[i].dtype == torch.float32 or
+                samples[i].dtype == torch.float64):
                 samples[i] = samples[i].half()
+
         x_samples_ddim = self.model.decode_first_stage(samples)
         x_samples_ddim = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
 
         torch.cuda.empty_cache()
-        return x_samples_ddim
+        return (c, samples, x_samples_ddim)
 
     @requests(on='/')
     def txt2img(self, docs: DocumentArray, parameters: Dict, **kwargs):
@@ -289,11 +301,10 @@ class StableDiffusionGenerator(Executor):
         sampler = parameters.get('sampler', 'k_lms')
         if sampler not in VALID_SAMPLERS:
             raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
-        scale = parameters.get('scale', 7.5)
+        scale = parameters.get('scale', self.opt.scale)
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         opt = self.opt
-        opt.scale = scale
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
         height, width = self._h_and_w_from_parameters(parameters, opt)
         self._height_and_width_check(height, width)
@@ -326,18 +337,38 @@ class StableDiffusionGenerator(Executor):
                         self.logger.info(f'stable diffusion start {num_images} images, prompt "{prompt}"...')
                         for n in trange(n_iter, desc="Sampling"):
                             for prompts in tqdm(data, desc="data"):
-                                x_samples_ddim = self._sample_text(prompts, n_samples,
+                                c, samples, x_samples_ddim = self._sample_text(prompts, n_samples,
                                     batch_size, opt, sampler, steps, start_code,
-                                    height=height, width=width)
+                                    height=height,
+                                    scale=scale,
+                                    width=width)
                                 for x_sample in x_samples_ddim:
                                     x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
                                     img = Image.fromarray(x_sample.astype(np.uint8))
                                     buffered = BytesIO()
                                     img.save(buffered, format='PNG')
+
+                                    samples_buffer = BytesIO()
+                                    torch.save(samples, samples_buffer)
+                                    samples_buffer.seek(0)
+
                                     _d = Document(
+                                        embedding=c, # Not actually the embedding, but these are hidden in the model
                                         blob=buffered.getvalue(),
                                         mime_type='image/png',
                                         tags={
+                                            'latent_repr': base64.b64encode(
+                                                samples_buffer.getvalue()).decode(),
+                                            'request': {
+                                                'api': 'txt2img',
+                                                'height': height,
+                                                'num_images': num_images,
+                                                'sampler': sampler,
+                                                'scale': scale,
+                                                'seed': seed,
+                                                'steps': steps,
+                                                'width': width,
+                                            },
                                             'text': prompt,
                                             'generator': 'stable-diffusion',
                                             'request_time': request_time,
@@ -358,7 +389,7 @@ class StableDiffusionGenerator(Executor):
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
         prompt_override = parameters.get('prompt', None)
         sampler = parameters.get('sampler', 'k_lms')
-        scale = parameters.get('scale', 7.5)
+        scale = parameters.get('scale', self.opt.scale)
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         strength = parameters.get('strength', 0.75)
 
@@ -366,7 +397,6 @@ class StableDiffusionGenerator(Executor):
             raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
 
         opt = self.opt
-        opt.scale = scale
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
         height, width = self._h_and_w_from_parameters(parameters, opt)
         self._height_and_width_check(height, width)
@@ -445,7 +475,7 @@ class StableDiffusionGenerator(Executor):
                                         init_latent, torch.tensor([t_enc]*batch_size).to(self.device))
                                     # decode it
                                     samples = self.sampler.decode(z_enc, c, t_enc,
-                                        unconditional_guidance_scale=opt.scale,
+                                        unconditional_guidance_scale=scale,
                                         unconditional_conditioning=uc)
                                 if sampler in K_DIFF_SAMPLERS:
                                     # k_lms is the fallthrough
@@ -469,9 +499,10 @@ class StableDiffusionGenerator(Executor):
                                     extra_args = {
                                         'cond': c,
                                         'uncond': uc,
-                                        'cond_scale': opt.scale,
+                                        'cond_scale': scale,
                                         'cond_weights': [pr[1] for pr in weighted_subprompts] * batch_size,
                                         'cond_arities': (len(weighted_subprompts),) * batch_size,
+                                        'use_half': self.use_half,
                                     }
                                     samples = sampling_fn(
                                         self.model_k_config,
@@ -488,10 +519,30 @@ class StableDiffusionGenerator(Executor):
                                     img = Image.fromarray(x_sample.astype(np.uint8))
                                     buffered = BytesIO()
                                     img.save(buffered, format='PNG')
+
+                                    samples_buffer = BytesIO()
+                                    torch.save(samples, samples_buffer)
+                                    samples_buffer.seek(0)
+
                                     _d = Document(
+                                        embedding=c, # Not actually the embedding, but these are hidden in the model
                                         blob=buffered.getvalue(),
                                         mime_type='image/png',
                                         tags={
+                                            'api': 'stablediffuse',
+                                            'latent_repr': base64.b64encode(
+                                                samples_buffer.getvalue()).decode(),
+                                            'request': {
+                                                'height': height,
+                                                'latentless': latentless,
+                                                'num_images': num_images,
+                                                'sampler': sampler,
+                                                'scale': scale,
+                                                'seed': seed,
+                                                'steps': steps,
+                                                'strength': strength,
+                                                'width': width,
+                                            },
                                             'text': prompt,
                                             'generator': 'stable-diffusion',
                                             'request_time': request_time,
@@ -513,7 +564,7 @@ class StableDiffusionGenerator(Executor):
         num_images = max(1, min(16, int(parameters.get('num_images', 1))))
         resample_prior = parameters.get('resample_prior', True)
         sampler = parameters.get('sampler', 'k_lms')
-        scale = parameters.get('scale', 7.5)
+        scale = parameters.get('scale', self.opt.scale)
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         strength = parameters.get('strength', 0.75)
 
@@ -521,7 +572,6 @@ class StableDiffusionGenerator(Executor):
             raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
 
         opt = self.opt
-        opt.scale = scale
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
         height, width = self._h_and_w_from_parameters(parameters, opt)
         self._height_and_width_check(height, width)
@@ -596,7 +646,7 @@ class StableDiffusionGenerator(Executor):
                                 if opt.fixed_code:
                                     start_code = torch.randn([1, opt.C, height // opt.f,
                                         width // opt.f], device=self.device)
-                                x_samples = self._sample_text(None, 1,
+                                _, samples, x_samples = self._sample_text(None, 1,
                                     batch_size, opt, sampler, steps,
                                     start_code,
                                     c=c,
@@ -618,7 +668,7 @@ class StableDiffusionGenerator(Executor):
                                         init_latent, torch.tensor([t_enc]*batch_size).to(self.device))
                                     # decode it
                                     samples = self.sampler.decode(z_enc, c, t_enc,
-                                        unconditional_guidance_scale=opt.scale,
+                                        unconditional_guidance_scale=scale,
                                         unconditional_conditioning=uc)
                                 if sampler in K_DIFF_SAMPLERS:
                                     # k_lms is the fallthrough
@@ -642,9 +692,10 @@ class StableDiffusionGenerator(Executor):
                                     extra_args = {
                                         'cond': c,
                                         'uncond': uc,
-                                        'cond_scale': opt.scale,
+                                        'cond_scale': scale,
                                         'cond_weights': [pr[1] for pr in weighted_subprompts] * batch_size,
                                         'cond_arities': (len(weighted_subprompts),) * batch_size,
+                                        'use_half': self.use_half,
                                     }
                                     samples = sampling_fn(
                                         self.model_k_config,
@@ -661,11 +712,32 @@ class StableDiffusionGenerator(Executor):
 
                             buffered = BytesIO()
                             img.save(buffered, format='PNG')
+                            samples_buffer = samples
+
+                            samples_buffer = BytesIO()
+                            torch.save(samples, samples_buffer)
+                            samples_buffer.seek(0)
+
                             last_image = img
                             _d = Document(
+                                embedding=c, # Not actually the embedding, but these are hidden in the model
                                 blob=buffered.getvalue(),
                                 mime_type='image/png',
                                 tags={
+                                    'latent_repr': base64.b64encode(
+                                        samples_buffer.getvalue()).decode(),
+                                    'request': {
+                                        'api': 'stableinterpolate',
+                                        'height': height,
+                                        'num_images': num_images,
+                                        'resample_prior': resample_prior,
+                                        'sampler': sampler,
+                                        'scale': scale,
+                                        'seed': seed,
+                                        'steps': steps,
+                                        'strength': strength,
+                                        'width': width,
+                                    },
                                     'text': prompt,
                                     'percent': percent,
                                     'generator': 'stable-diffusion',
