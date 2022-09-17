@@ -28,7 +28,7 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     git clone --depth=1 https://github.com/jina-ai/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
     git clone --depth=1 https://github.com/jina-ai/glid-3-xl.git && \
-    git clone --depth=1 https://github.com/CompVis/stable-diffusion.git && \
+    git clone --depth=1 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git && \
     pip install jax[cuda11_cudnn82]==0.3.13 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html && \
     pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116 && \
     pip install PyYAML numpy tqdm pytorch_lightning einops numpy omegaconf && \
