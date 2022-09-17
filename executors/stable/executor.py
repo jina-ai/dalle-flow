@@ -1,8 +1,10 @@
-import PIL
 import os
 import shutil
+import sys
 import time
 import torch
+
+from typing import Iterable, Optional
 
 import k_diffusion as K
 import numpy as np
@@ -12,7 +14,6 @@ from PIL import Image
 from contextlib import nullcontext
 from einops import rearrange, repeat
 from io import BytesIO
-from itertools import islice
 from pathlib import Path
 from pytorch_lightning import seed_everything
 from random import randint
@@ -20,11 +21,23 @@ from torch import autocast
 from tqdm import tqdm, trange
 from typing import Dict
 
-from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 
 from jina import Executor, DocumentArray, Document, requests
 from omegaconf import OmegaConf
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from util import (
+    cat_self_with_repeat_interleaved,
+    combine_weighted_subprompts,
+    load_img,
+    load_model_from_config,
+    repeat_interleave_along_dim_0,
+    slerp,
+    split_weighted_subprompts_and_return_cond_latents,
+    sum_along_slices_of_dim_0
+)
 
 K_DIFF_SAMPLERS = {'k_lms', 'dpm2', 'dpm2_ancestral', 'heun',
     'euler', 'euler_ancestral'}
@@ -62,76 +75,56 @@ class KCFGDenoiser(nn.Module):
         super().__init__()
         self.inner_model = model
 
-    def forward(self, x, sigma, uncond, cond, cond_scale):
-        x_in = torch.cat([x] * 2)
-        sigma_in = torch.cat([sigma] * 2)
-        cond_in = torch.cat([uncond, cond])
-        uncond, cond = self.inner_model(x_in, sigma_in, cond=cond_in).chunk(2)
-        return uncond + (cond - uncond) * cond_scale
+    def forward(
+        self,
+        x: torch.Tensor,
+        sigma: torch.Tensor,
+        uncond: torch.Tensor,
+        cond: torch.Tensor,
+        cond_scale: float,
+        cond_arities: Iterable[int],
+        cond_weights: Optional[Iterable[float]]
+    ) -> torch.Tensor:
+        '''
+        Magicool k-sampler prompt positive/negative weighting from birch-san.
 
-
-def chunk(it, size):
-    it = iter(it)
-    return iter(lambda: tuple(islice(it, size)), ())
-
-
-def load_model_from_config(config, ckpt, use_half=False):
-    pl_sd = torch.load(ckpt, map_location="cpu")
-    sd = pl_sd["state_dict"]
-    model = instantiate_from_config(config.model)
-    m, u = model.load_state_dict(sd, strict=False)
-
-    model.cuda()
-    model.eval()
-    if use_half:
-        model.half()
-    return model
-
-
-def load_img(path, img=None):
-    image = None
-    if img is None:
-        image = Image.open(path).convert("RGB")
-    else:
-        image = img
-    w, h = image.size
-    w, h = map(lambda x: x - x % 32, (w, h))  # resize to integer multiple of 32
-    image = image.resize((w, h), resample=PIL.Image.LANCZOS)
-    image = np.array(image).astype(np.float32) / 255.0
-    image = image[None].transpose(0, 3, 1, 2)
-    image = torch.from_numpy(image)
-    return 2.*image - 1.
-
-
-def slerp(t, v0, v1, DOT_THRESHOLD=0.9995):
-    """
-    helper function to spherically interpolate two arrays v1 v2
-
-    from @xsteenbrugge
-    """
-
-    if not isinstance(v0, np.ndarray):
-        inputs_are_torch = True
-        input_device = v0.device
-        v0 = v0.cpu().numpy()
-        v1 = v1.cpu().numpy()
-
-    dot = np.sum(v0 * v1 / (np.linalg.norm(v0) * np.linalg.norm(v1)))
-    if np.abs(dot) > DOT_THRESHOLD:
-        v2 = (1 - t) * v0 + t * v1
-    else:
-        theta_0 = np.arccos(dot)
-        sin_theta_0 = np.sin(theta_0)
-        theta_t = theta_0 * t
-        sin_theta_t = np.sin(theta_t)
-        s0 = np.sin(theta_0 - theta_t) / sin_theta_0
-        s1 = sin_theta_t / sin_theta_0
-        v2 = s0 * v0 + s1 * v1
-
-    if inputs_are_torch:
-        v2 = torch.from_numpy(v2).to(input_device)
-
-    return v2
+        https://github.com/Birch-san/stable-diffusion/blob/birch-mps-waifu/scripts/txt2img_fork.py
+        '''
+        uncond_count = uncond.size(dim=0)
+        cond_count = cond.size(dim=0)
+        cond_in = torch.cat((uncond, cond)).to(x.device)
+        del uncond, cond
+        cond_arities_tensor = torch.tensor(cond_arities, device=cond_in.device)
+        # if x.dtype == torch.float32 or x.dtype == torch.float64:
+        #     x = x.half()
+        x_in = cat_self_with_repeat_interleaved(t=x,
+            factors_tensor=cond_arities_tensor, factors=cond_arities,
+            output_size=cond_count)
+        del x
+        sigma_in = cat_self_with_repeat_interleaved(t=sigma,
+            factors_tensor=cond_arities_tensor, factors=cond_arities,
+            output_size=cond_count)
+        del sigma
+        uncond_out, conds_out = self.inner_model(x_in, sigma_in, cond=cond_in) \
+            .split([uncond_count, cond_count])
+        del x_in, sigma_in, cond_in
+        unconds = repeat_interleave_along_dim_0(t=uncond_out,
+            factors_tensor=cond_arities_tensor, factors=cond_arities,
+            output_size=cond_count)
+        del cond_arities_tensor
+        # transform
+        #   tensor([0.5, 0.1])
+        # into:
+        #   tensor([[[[0.5000]]],
+        #           [[[0.1000]]]])
+        weight_tensor = torch.tensor(list(cond_weights),
+            device=uncond_out.device, dtype=uncond_out.dtype) * cond_scale
+        weight_tensor = weight_tensor.reshape(len(list(cond_weights)), 1, 1, 1)
+        deltas: torch.Tensor = (conds_out-unconds) * weight_tensor
+        del conds_out, unconds, weight_tensor
+        cond = sum_along_slices_of_dim_0(deltas, arities=cond_arities)
+        del deltas
+        return uncond_out + cond
 
 
 class StableDiffusionGenerator(Executor):
@@ -143,6 +136,7 @@ class StableDiffusionGenerator(Executor):
     config = ''
     device = None
     input_path = ''
+    max_n_subprompts = None
     max_resolution = None
     model = None
     model_k_wrapped = None
@@ -152,6 +146,7 @@ class StableDiffusionGenerator(Executor):
     def __init__(self,
         stable_path: str,
         height: int=512,
+        max_n_subprompts=8,
         max_resolution=589824,
         n_iter: int=1,
         n_samples: int=4,
@@ -169,6 +164,7 @@ class StableDiffusionGenerator(Executor):
         self.opt.n_samples = n_samples
         self.opt.n_iter = n_iter
 
+        self.max_n_subprompts = max_n_subprompts
         self.max_resolution = max_resolution
 
         self.config = OmegaConf.load(f"{self.opt.config}")
@@ -210,8 +206,8 @@ class StableDiffusionGenerator(Executor):
         if width < MIN_WIDTH:
             raise ValueError(f'width must be >= {MIN_WIDTH} (got {width})')
 
-    def _sample_text(self, prompts, n_samples, batch_size, opt, sampler, steps,
-        start_code, c=None, height=None, width=None):
+    def _sample_text(self, prompt, n_samples, batch_size, opt, sampler, steps,
+        start_code, c=None, weighted_subprompts=None, height=None, width=None):
         '''
         Create image(s) from text.
         '''
@@ -223,15 +219,18 @@ class StableDiffusionGenerator(Executor):
         _height = opt.height if height is None else height
         _width = opt.width if width is None else width
 
-        uc = None
-        if opt.scale != 1.0:
-            uc = self.model.get_learned_conditioning(batch_size * [""])
+        if isinstance(prompt, tuple) or isinstance(prompt, list):
+            prompt = prompt[0]
 
-        if prompts is not None and isinstance(prompts, tuple):
-            prompts = list(prompts)
-
+        uc = self.model.get_learned_conditioning(batch_size * [""])
         if c is None:
-            c = self.model.get_learned_conditioning(prompts)
+            c, weighted_subprompts = split_weighted_subprompts_and_return_cond_latents(
+                prompt,
+                self.model.get_learned_conditioning,
+                sampler,
+                uc,
+                max_n_subprompts=self.max_n_subprompts,
+            )
         shape = [opt.C, _height // opt.f, _width // opt.f]
 
         samples = None
@@ -266,13 +265,17 @@ class StableDiffusionGenerator(Executor):
                 'cond': c,
                 'uncond': uc,
                 'cond_scale': opt.scale,
+                'cond_weights': [pr[1] for pr in weighted_subprompts] * batch_size,
+                'cond_arities': (len(weighted_subprompts),) * batch_size,
             }
             samples = sampling_fn(
                 self.model_k_config,
                 x,
                 sigmas,
                 extra_args=extra_args)
-
+        for i, _ in enumerate(samples):
+            if samples[i].dtype == torch.float32 or samples[i].dtype == torch.float64:
+                samples[i] = samples[i].half()
         x_samples_ddim = self.model.decode_first_stage(samples)
         x_samples_ddim = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
 
@@ -425,12 +428,15 @@ class StableDiffusionGenerator(Executor):
 
                         for n in trange(n_iter, desc="Sampling"):
                             for prompts in tqdm(data, desc="data"):
-                                uc = None
-                                if opt.scale != 1.0:
-                                    uc = self.model.get_learned_conditioning(batch_size * [""])
-                                if isinstance(prompts, tuple):
-                                    prompts = list(prompts)
-                                c = self.model.get_learned_conditioning(prompts)
+                                uc = self.model.get_learned_conditioning(batch_size * [""])
+
+                                c, weighted_subprompts = split_weighted_subprompts_and_return_cond_latents(
+                                    prompt,
+                                    self.model.get_learned_conditioning,
+                                    sampler,
+                                    uc,
+                                    max_n_subprompts=self.max_n_subprompts,
+                                )
 
                                 samples = None
                                 if sampler == 'ddim':
@@ -464,6 +470,8 @@ class StableDiffusionGenerator(Executor):
                                         'cond': c,
                                         'uncond': uc,
                                         'cond_scale': opt.scale,
+                                        'cond_weights': [pr[1] for pr in weighted_subprompts] * batch_size,
+                                        'cond_arities': (len(weighted_subprompts),) * batch_size,
                                     }
                                     samples = sampling_fn(
                                         self.model_k_config,
@@ -541,8 +549,23 @@ class StableDiffusionGenerator(Executor):
 
                         self.logger.info(f'stable diffusion interpolate start {num_images} images, prompt "{prompt}"...')
 
-                        prompt_embedding_start = self.model.get_learned_conditioning(prompts[0].strip())
-                        prompt_embedding_end = self.model.get_learned_conditioning(prompts[1].strip())
+                        uc = self.model.get_learned_conditioning(batch_size * [""])
+                        prompt_embedding_start, weighted_subprompts_start = split_weighted_subprompts_and_return_cond_latents(
+                            prompts[0].strip(),
+                            self.model.get_learned_conditioning,
+                            sampler,
+                            uc,
+                            max_n_subprompts=self.max_n_subprompts,
+                        )
+                        prompt_embedding_end, weighted_subprompts_end = split_weighted_subprompts_and_return_cond_latents(
+                            prompts[1].strip(),
+                            self.model.get_learned_conditioning,
+                            sampler,
+                            uc,
+                            max_n_subprompts=self.max_n_subprompts,
+                        )
+                        assert len(weighted_subprompts_start) == len(weighted_subprompts_end), \
+                            'Weighted subprompts for interpolation must be equal in number'
 
                         to_iterate = list(enumerate(np.linspace(0, 1, num_images)))
 
@@ -560,8 +583,13 @@ class StableDiffusionGenerator(Executor):
                             elif i == len(to_iterate) - 1:
                                 c = prompt_embedding_end
                             else:
-                                c = slerp(percent, prompt_embedding_start,
-                                    prompt_embedding_end)
+                                c = prompt_embedding_start.clone().detach()
+                                for i, _ in enumerate(prompt_embedding_start):
+                                    c[i] = slerp(percent, prompt_embedding_start[i],
+                                        prompt_embedding_end[i])
+                            weighted_subprompts = combine_weighted_subprompts(percent,
+                                weighted_subprompts_start,
+                                weighted_subprompts_end)
 
                             if i == 0 or not resample_prior:
                                 start_code = None
@@ -570,17 +598,18 @@ class StableDiffusionGenerator(Executor):
                                         width // opt.f], device=self.device)
                                 x_samples = self._sample_text(None, 1,
                                     batch_size, opt, sampler, steps,
-                                    start_code, c=c,
-                                    height=height, width=width)
+                                    start_code,
+                                    c=c,
+                                    height=height,
+                                    width=width,
+                                    weighted_subprompts=weighted_subprompts)
                             else:
                                 init_image = load_img('', img=last_image).to(self.device)
                                 init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
                                 init_latent = self.model.get_first_stage_encoding(
                                     self.model.encode_first_stage(init_image))
 
-                                uc = None
-                                if opt.scale != 1.0:
-                                    uc = self.model.get_learned_conditioning(batch_size * [""])
+                                uc = self.model.get_learned_conditioning(batch_size * [""])
 
                                 samples = None
                                 if sampler == 'ddim':
@@ -614,6 +643,8 @@ class StableDiffusionGenerator(Executor):
                                         'cond': c,
                                         'uncond': uc,
                                         'cond_scale': opt.scale,
+                                        'cond_weights': [pr[1] for pr in weighted_subprompts] * batch_size,
+                                        'cond_arities': (len(weighted_subprompts),) * batch_size,
                                     }
                                     samples = sampling_fn(
                                         self.model_k_config,
