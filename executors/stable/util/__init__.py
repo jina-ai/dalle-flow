@@ -1,5 +1,11 @@
+import os
 import re
-from typing import Callable, Iterable
+import shutil
+import urllib.request
+
+from functools import partial
+from pathlib import Path
+from typing import Callable, Iterable, List
 
 import PIL
 
@@ -8,8 +14,16 @@ import torch
 
 from PIL import Image
 from itertools import islice
+
+from ldm.modules.encoders.modules import FrozenCLIPEmbedder, BERTEmbedder
+from ldm.modules.embedding_manager import EmbeddingManager
 from ldm.util import instantiate_from_config
 
+TAGS_RE = re.compile('<.*?>')
+sd_concepts_url_fn = lambda concept: f'https://huggingface.co/sd-concepts-library/{concept}/resolve/main/'
+UNLIKELY_TOKENS = [
+    '¯', '°', '±', '²', '³', '´', 'µ', '·', '¸', '¹', 'º', '»', '¼', '½', '¾',
+]
 
 def cat_self_with_repeat_interleaved(
     t: torch.Tensor,
@@ -67,6 +81,129 @@ def combine_weighted_subprompts(alpha, wsp_a, wsp_b):
         ]))
     return wsps
 
+
+def prompt_inject_custom_concepts(
+    prompt: str,
+    input_path: str,
+    use_half: bool,
+):
+    '''
+    Inject custom concepts from the sd-concepts-library into a prompt.
+    '''
+    def _next_token_for_concept():
+        for token in UNLIKELY_TOKENS:
+            yield token
+        yield None
+
+    def _get_clip_token_for_string(tokenizer, string):
+        batch_encoding = tokenizer(string,
+            truncation=True,
+            max_length=77,
+            return_length=True,
+            return_overflowing_tokens=False,
+            padding='max_length',
+            return_tensors='pt',
+        )
+        tokens = batch_encoding['input_ids']
+
+        if torch.count_nonzero(tokens - 49407) == 2:
+            return tokens[0, 1]
+
+        return None
+
+    def _get_placeholder_loop(embedder):
+        new_placeholder  = None
+        token_seq = _next_token_for_concept()
+
+        while True:
+            new_placeholder = next(token_seq)
+            if new_placeholder is None:
+                raise ValueError('Ran out of tokens due to too many ' +
+                    f'concepts (max: {len(UNLIKELY_TOKENS)})')
+
+            token = _get_clip_token_for_string(
+                embedder.tokenizer, new_placeholder)
+
+            if token is not None:
+                return new_placeholder, token
+
+    prompt_injected = prompt
+
+    # Check to see if we have a custom concept.
+    embedding_manager = None
+    embedding_folder = os.path.join(
+        os.path.join(input_path, 'sd_embeddings_store'))
+    Path(input_path).mkdir(parents=True, exist_ok=True)
+    Path(embedding_folder).mkdir(parents=True, exist_ok=True)
+    if '<' in prompt and '>' in prompt:
+        embedding_paths = []
+        for tag in re.findall(TAGS_RE, prompt):
+            concept = tag[1:-1]
+
+            # We found the concept, so dig it up and load it in. Store it
+            # locally in case we need to use it again, too.
+            Path(os.path.join(embedding_folder, concept)) \
+                .mkdir(parents=True, exist_ok=True)
+
+            tag_actual = None
+            token_name_path = os.path.join(
+                embedding_folder,
+                f'{concept}/token_identifier.txt')
+            concept_file_path = os.path.join(
+                embedding_folder,
+                f'{concept}/learned_embeds.bin')
+            if not os.path.isfile(token_name_path):
+                urllib.request.urlretrieve(
+                    sd_concepts_url_fn(concept) + 'token_identifier.txt',
+                    token_name_path)
+                urllib.request.urlretrieve(
+                    sd_concepts_url_fn(concept) + 'learned_embeds.bin',
+                    concept_file_path)
+
+            with open(token_name_path, 'r') as token_name_file:
+                tag_actual = token_name_file.read()
+
+            embedding_paths.append(concept_file_path)
+            prompt_injected = prompt_injected.replace(tag, tag_actual)
+
+        # Merge the embeddings.
+        embedder = FrozenCLIPEmbedder().cuda()
+        EmbeddingManagerCls = partial(EmbeddingManager, embedder, ["*"])
+
+        string_to_token_dict = {}
+        string_to_param_dict = torch.nn.ParameterDict()
+
+        placeholder_to_src = {}
+
+        for manager_ckpt in embedding_paths:
+            manager = EmbeddingManagerCls()
+            manager.load(manager_ckpt)
+            if use_half:
+                manager = manager.half()
+
+            for placeholder_string in manager.string_to_token_dict:
+                if not placeholder_string in string_to_token_dict:
+                    string_to_token_dict[placeholder_string] = manager.string_to_token_dict[placeholder_string]
+                    string_to_param_dict[placeholder_string] = manager.string_to_param_dict[placeholder_string]
+
+                    placeholder_to_src[placeholder_string] = manager_ckpt
+                else:
+                    new_placeholder, new_token = _get_placeholder_loop(
+                        embedder)
+                    string_to_token_dict[new_placeholder] = new_token
+                    string_to_param_dict[new_placeholder] = manager.string_to_param_dict[placeholder_string]
+
+                    placeholder_to_src[new_placeholder] = manager_ckpt
+
+        merged_manager = EmbeddingManagerCls()
+        if use_half:
+            manager = manager.half()
+        merged_manager.string_to_param_dict = string_to_param_dict
+        merged_manager.string_to_token_dict = string_to_token_dict
+        embedding_manager = merged_manager
+
+        shutil.rmtree(os.path.join(input_path, 'embeddings_tmp'), ignore_errors=True)
+    return prompt_injected, embedding_manager
 
 def repeat_along_dim_0(t: torch.Tensor, factor: int) -> torch.Tensor:
     """
@@ -187,10 +324,10 @@ def slerp(t, v0, v1, DOT_THRESHOLD=0.9995):
 def split_weighted_subprompts_and_return_cond_latents(
     text: str,
     get_learned_conditioning: Callable,
+    embedding_manager,
     sampler: str,
     unconditioned_prompt: torch.Tensor,
     max_n_subprompts: int=0,
-    skip_normalize: bool=False,
 ):
     """
     Adapted from:
@@ -233,13 +370,17 @@ def split_weighted_subprompts_and_return_cond_latents(
         for subprompt, weight in weighted_subprompts:
             c = torch.add(
                 c,
-                get_learned_conditioning([subprompt]),
+                get_learned_conditioning([subprompt], embedding_manager),
                 alpha=weight,
             )
     elif len(weighted_subprompts) > 1 and sampler != 'ddim':
-        c = get_learned_conditioning([pr[0] for pr in weighted_subprompts])
+        c_learned = get_learned_conditioning([pr[0] for pr in weighted_subprompts],
+            embedding_manager)
+        c = torch.tile(c_learned, (unconditioned_prompt.size()[0], 1))
     else:   # just standard 1 prompt
-        c = get_learned_conditioning([text])
+        c_learned = get_learned_conditioning([text],
+            embedding_manager)
+        c = torch.tile(c_learned, (unconditioned_prompt.size()[0], 1))
 
     if max_n_subprompts > 0 and len(weighted_subprompts) > max_n_subprompts:
         raise ValueError('The maximum allowed number of weighted subprompts ' +
@@ -270,7 +411,8 @@ def sum_along_slices_of_dim_0(t: torch.Tensor, arities: Iterable[int]) -> torch.
             return t
         return t.sum(dim=0, keepdim=True)
     splits: List[Tensor] = t.split(arities)
+    device = t.device
     del t
     sums: List[Tensor] = [torch.sum(split, dim=0, keepdim=True) for split in splits]
     del splits
-    return torch.cat(sums).to(t.device)
+    return torch.cat(sums).to(device)

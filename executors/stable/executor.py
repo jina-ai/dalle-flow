@@ -21,6 +21,7 @@ from pathlib import Path
 from pytorch_lightning import seed_everything
 from torch import autocast
 from tqdm import tqdm, trange
+from transformers import logging
 
 from ldm.models.diffusion.ddim import DDIMSampler
 
@@ -34,11 +35,16 @@ from util import (
     combine_weighted_subprompts,
     load_img,
     load_model_from_config,
+    prompt_inject_custom_concepts,
     repeat_interleave_along_dim_0,
     slerp,
     split_weighted_subprompts_and_return_cond_latents,
     sum_along_slices_of_dim_0
 )
+
+# Make transformers stop screaming.
+logging.set_verbosity_error()
+
 
 K_DIFF_SAMPLERS = {'k_lms', 'dpm2', 'dpm2_ancestral', 'heun',
     'euler', 'euler_ancestral'}
@@ -214,6 +220,7 @@ class StableDiffusionGenerator(Executor):
         start_code,
         c=None,
         height=None,
+        prompt_concept_injection_required=True,
         scale=7.5,
         weighted_subprompts=None,
         width=None):
@@ -231,11 +238,17 @@ class StableDiffusionGenerator(Executor):
         if isinstance(prompt, tuple) or isinstance(prompt, list):
             prompt = prompt[0]
 
+        embedding_manager = None
+        if prompt_concept_injection_required:
+            prompt, embedding_manager = prompt_inject_custom_concepts(prompt,
+                self.input_path, self.use_half)
+
         uc = self.model.get_learned_conditioning(batch_size * [""])
         if c is None:
             c, weighted_subprompts = split_weighted_subprompts_and_return_cond_latents(
                 prompt,
                 self.model.get_learned_conditioning,
+                embedding_manager,
                 sampler,
                 uc,
                 max_n_subprompts=self.max_n_subprompts,
@@ -275,7 +288,7 @@ class StableDiffusionGenerator(Executor):
                 'uncond': uc,
                 'cond_scale': scale,
                 'cond_weights': [pr[1] for pr in weighted_subprompts] * batch_size,
-                'cond_arities': (len(weighted_subprompts),) * batch_size,
+                'cond_arities': [len(weighted_subprompts),] * batch_size,
                 'use_half': self.use_half,
             }
             samples = sampling_fn(
@@ -429,6 +442,8 @@ class StableDiffusionGenerator(Executor):
                         if prompt_override is not None:
                             prompt = prompt_override
                         assert prompt is not None
+                        prompt_injected, embedding_manager = prompt_inject_custom_concepts(prompt,
+                            self.input_path, self.use_half)
                         self.logger.info(f'stable diffusion img2img start {num_images} images, prompt "{prompt}"...')
                         data = [batch_size * [prompt]]
 
@@ -461,8 +476,9 @@ class StableDiffusionGenerator(Executor):
                                 uc = self.model.get_learned_conditioning(batch_size * [""])
 
                                 c, weighted_subprompts = split_weighted_subprompts_and_return_cond_latents(
-                                    prompt,
+                                    prompt_injected,
                                     self.model.get_learned_conditioning,
+                                    embedding_manager,
                                     sampler,
                                     uc,
                                     max_n_subprompts=self.max_n_subprompts,
@@ -501,7 +517,7 @@ class StableDiffusionGenerator(Executor):
                                         'uncond': uc,
                                         'cond_scale': scale,
                                         'cond_weights': [pr[1] for pr in weighted_subprompts] * batch_size,
-                                        'cond_arities': (len(weighted_subprompts),) * batch_size,
+                                        'cond_arities': [len(weighted_subprompts),] * batch_size,
                                         'use_half': self.use_half,
                                     }
                                     samples = sampling_fn(
@@ -510,6 +526,7 @@ class StableDiffusionGenerator(Executor):
                                         sigma_sched,
                                         extra_args=extra_args,
                                     )
+                                torch.cuda.empty_cache()
 
                                 x_samples = self.model.decode_first_stage(samples)
                                 x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
@@ -529,10 +546,10 @@ class StableDiffusionGenerator(Executor):
                                         blob=buffered.getvalue(),
                                         mime_type='image/png',
                                         tags={
-                                            'api': 'stablediffuse',
                                             'latent_repr': base64.b64encode(
                                                 samples_buffer.getvalue()).decode(),
                                             'request': {
+                                                'api': 'stablediffuse',
                                                 'height': height,
                                                 'latentless': latentless,
                                                 'num_images': num_images,
@@ -595,25 +612,36 @@ class StableDiffusionGenerator(Executor):
                         assert prompt is not None
 
                         prompts = prompt.split('|')
+                        prompts[0], embedding_manager_start = prompt_inject_custom_concepts(prompts[0],
+                            self.input_path, self.use_half)
+                        prompts[1], embedding_manager_end = prompt_inject_custom_concepts(prompts[1],
+                            self.input_path, self.use_half)
                         assert len(prompts) == 2, 'can only interpolate between two prompts'
 
                         self.logger.info(f'stable diffusion interpolate start {num_images} images, prompt "{prompt}"...')
 
                         uc = self.model.get_learned_conditioning(batch_size * [""])
-                        prompt_embedding_start, weighted_subprompts_start = split_weighted_subprompts_and_return_cond_latents(
-                            prompts[0].strip(),
-                            self.model.get_learned_conditioning,
-                            sampler,
-                            uc,
-                            max_n_subprompts=self.max_n_subprompts,
-                        )
-                        prompt_embedding_end, weighted_subprompts_end = split_weighted_subprompts_and_return_cond_latents(
-                            prompts[1].strip(),
-                            self.model.get_learned_conditioning,
-                            sampler,
-                            uc,
-                            max_n_subprompts=self.max_n_subprompts,
-                        )
+
+                        prompt_embedding_start, weighted_subprompts_start = \
+                            split_weighted_subprompts_and_return_cond_latents(
+                                prompts[0].strip(),
+                                self.model.get_learned_conditioning,
+                                embedding_manager_start,
+                                sampler,
+                                uc,
+                                max_n_subprompts=self.max_n_subprompts,
+                            )
+
+                        prompt_embedding_end, weighted_subprompts_end = \
+                            split_weighted_subprompts_and_return_cond_latents(
+                                prompts[1].strip(),
+                                self.model.get_learned_conditioning,
+                                embedding_manager_end,
+                                sampler,
+                                uc,
+                                max_n_subprompts=self.max_n_subprompts,
+                            )
+
                         assert len(weighted_subprompts_start) == len(weighted_subprompts_end), \
                             'Weighted subprompts for interpolation must be equal in number'
 
@@ -634,9 +662,12 @@ class StableDiffusionGenerator(Executor):
                                 c = prompt_embedding_end
                             else:
                                 c = prompt_embedding_start.clone().detach()
-                                for i, _ in enumerate(prompt_embedding_start):
-                                    c[i] = slerp(percent, prompt_embedding_start[i],
-                                        prompt_embedding_end[i])
+                                for embedding_i, _ in enumerate(prompt_embedding_start):
+                                    c[embedding_i] = slerp(
+                                        percent,
+                                        prompt_embedding_start[embedding_i],
+                                        prompt_embedding_end[embedding_i],
+                                    )
                             weighted_subprompts = combine_weighted_subprompts(percent,
                                 weighted_subprompts_start,
                                 weighted_subprompts_end)
@@ -651,6 +682,7 @@ class StableDiffusionGenerator(Executor):
                                     start_code,
                                     c=c,
                                     height=height,
+                                    prompt_concept_injection_required=False,
                                     width=width,
                                     weighted_subprompts=weighted_subprompts)
                             else:
@@ -694,7 +726,7 @@ class StableDiffusionGenerator(Executor):
                                         'uncond': uc,
                                         'cond_scale': scale,
                                         'cond_weights': [pr[1] for pr in weighted_subprompts] * batch_size,
-                                        'cond_arities': (len(weighted_subprompts),) * batch_size,
+                                        'cond_arities': [len(weighted_subprompts),] * batch_size,
                                         'use_half': self.use_half,
                                     }
                                     samples = sampling_fn(
@@ -703,6 +735,7 @@ class StableDiffusionGenerator(Executor):
                                         sigma_sched,
                                         extra_args=extra_args,
                                     )
+                                torch.cuda.empty_cache()
 
                                 x_samples = self.model.decode_first_stage(samples)
                                 x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
