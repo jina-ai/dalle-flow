@@ -387,6 +387,9 @@ def split_weighted_subprompts_and_return_cond_latents(
             f'is {max_n_subprompts}, while {len(weighted_subprompts)} were ' +
             'generated')
 
+    if len(weighted_subprompts) == 0:
+        weighted_subprompts = [('', 1.)]
+
     return c, weighted_subprompts
 
 
