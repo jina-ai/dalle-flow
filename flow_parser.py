@@ -10,7 +10,6 @@ DISABLE_DALLE_MEGA
 DISABLE_GLID3XL
 DISABLE_SWINIR
 ENABLE_STABLE_DIFFUSION
-ENABLE_STABLE_DIFFUSION_LITE
 
 TODO Support jcloud and k8s configurations?
 '''
@@ -26,14 +25,13 @@ ENV_DISABLE_DALLE_MEGA = 'DISABLE_DALLE_MEGA'
 ENV_DISABLE_GLID3XL = 'DISABLE_GLID3XL'
 ENV_DISABLE_SWINIR = 'DISABLE_SWINIR'
 ENV_ENABLE_STABLE_DIFFUSION = 'ENABLE_STABLE_DIFFUSION'
-ENV_ENABLE_STABLE_DIFFUSION_LITE = 'ENABLE_STABLE_DIFFUSION_LITE'
 
 CAS_FLOW_NAME = 'clip_encoder'
 DALLE_MEGA_FLOW_NAME = 'dalle'
 GLID3XL_FLOW_NAME = 'diffusion'
 RERANK_FLOW_NAME = 'rerank'
 SWINIR_FLOW_NAME = 'upscaler'
-stable_diffusion_flow_name = 'stable'
+STABLE_DIFFUSION_FLOW_NAME = 'stable'
 
 
 def represent_ordereddict(dumper, data):
@@ -89,11 +87,6 @@ parser.add_argument('--enable-stable-diffusion',
     action='store_true',
     help="Enable Stable Diffusion executor (default false)",
     required=False)
-parser.add_argument('--enable-stable-diffusion-lite',
-    dest='yes_stable_diffusion_lite',
-    action='store_true',
-    help="Enable Stable Diffusion lite (low VRAM) executor (default false)",
-    required=False)
 
 args = vars(parser.parse_args())
 
@@ -113,22 +106,16 @@ no_glid3xl = args.get('no_glid3xl') or os.environ.get(ENV_DISABLE_GLID3XL, False
 no_swinir = args.get('no_swinir') or os.environ.get(ENV_DISABLE_SWINIR, False)
 yes_stable_diffusion = args.get('yes_stable_diffusion') or \
     os.environ.get(ENV_ENABLE_STABLE_DIFFUSION, False)
-yes_stable_diffusion_lite = args.get('yes_stable_diffusion_lite') or \
-    os.environ.get(ENV_ENABLE_STABLE_DIFFUSION_LITE, False)
-
-if yes_stable_diffusion_lite:
-    yes_stable_diffusion = True
-    stable_diffusion_flow_name = 'stablelite'
 
 STABLE_YAML_DICT = OrderedDict({
     'env': {
         'CUDA_VISIBLE_DEVICES': 0,
         'XLA_PYTHON_CLIENT_ALLOCATOR': 'platform',
     },
-    'name': stable_diffusion_flow_name,
+    'name': STABLE_DIFFUSION_FLOW_NAME,
     'replicas': 1,
     'timeout_ready': -1,
-    'uses': f'executors/{stable_diffusion_flow_name}/config.yml',
+    'uses': f'executors/{STABLE_DIFFUSION_FLOW_NAME}/config.yml',
 })
 
 def _filter_out(flow_exec_list, name):
@@ -154,7 +141,7 @@ with open(flow_to_use, 'r') as f_in:
     rerank_idx = next(i for i, exc in enumerate(flow_as_dict['executors'])
         if exc['name'] == RERANK_FLOW_NAME)
     flow_as_dict['executors'][rerank_idx]['needs'].append(
-        stable_diffusion_flow_name)
+        STABLE_DIFFUSION_FLOW_NAME)
 
     if flow_as_dict is None:
         print('Input yaml was empty')
@@ -175,7 +162,7 @@ with open(flow_to_use, 'r') as f_in:
             SWINIR_FLOW_NAME)
     if not yes_stable_diffusion:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
-            stable_diffusion_flow_name)
+            STABLE_DIFFUSION_FLOW_NAME)
 
     for exc in flow_as_dict['executors']:
         if type(exc.get('needs', None)) == list:
@@ -193,7 +180,7 @@ with open(flow_to_use, 'r') as f_in:
                     exc['needs']))
             if not yes_stable_diffusion:
                 exc['needs'] = list(filter(
-                    lambda _n: _n != stable_diffusion_flow_name,
+                    lambda _n: _n != STABLE_DIFFUSION_FLOW_NAME,
                     exc['needs']))
 
     if no_clip:
