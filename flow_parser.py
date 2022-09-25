@@ -26,6 +26,14 @@ ENV_DISABLE_GLID3XL = 'DISABLE_GLID3XL'
 ENV_DISABLE_SWINIR = 'DISABLE_SWINIR'
 ENV_ENABLE_STABLE_DIFFUSION = 'ENABLE_STABLE_DIFFUSION'
 
+ENV_GPUS_DALLE_MEGA = 'GPUS_DALLE_MEGA'
+ENV_GPUS_GLID3XL = 'GPUS_GLID3XL'
+ENV_GPUS_SWINIR = 'GPUS_SWINIR'
+ENV_GPUS_STABLE_DIFFUSION = 'GPUS_STABLE_DIFFUSION'
+
+FLOW_KEY_ENV = 'env'
+FLOW_KEY_ENV_CUDA_DEV = 'CUDA_VISIBLE_DEVICES'
+
 CAS_FLOW_NAME = 'clip_encoder'
 DALLE_MEGA_FLOW_NAME = 'dalle'
 GLID3XL_FLOW_NAME = 'diffusion'
@@ -87,6 +95,26 @@ parser.add_argument('--enable-stable-diffusion',
     action='store_true',
     help="Enable Stable Diffusion executor (default false)",
     required=False)
+parser.add_argument('--gpus-dalle-mega',
+    dest='gpus_dalle_mega',
+    help="GPU device ID(s) for DALLE-MEGA (default 0)",
+    default=0,
+    required=False)
+parser.add_argument('--gpus-glid3xl',
+    dest='gpus_glid3xl',
+    help="GPU device ID(s) for GLID3XL (default 0)",
+    default=0,
+    required=False)
+parser.add_argument('--gpus-stable-diffusion',
+    dest='gpus_stable_diffusion',
+    help="GPU device ID(s) for Stable Diffusion (default 0)",
+    default=0,
+    required=False)
+parser.add_argument('--gpus-swinir',
+    dest='gpus_swinir',
+    help="GPU device ID(s) for SWINIR (default 0)",
+    default=0,
+    required=False)
 
 args = vars(parser.parse_args())
 
@@ -106,10 +134,18 @@ no_glid3xl = args.get('no_glid3xl') or os.environ.get(ENV_DISABLE_GLID3XL, False
 no_swinir = args.get('no_swinir') or os.environ.get(ENV_DISABLE_SWINIR, False)
 yes_stable_diffusion = args.get('yes_stable_diffusion') or \
     os.environ.get(ENV_ENABLE_STABLE_DIFFUSION, False)
+gpus_dalle_mega = os.environ.get(ENV_GPUS_DALLE_MEGA, False) or \
+    args.get('gpus_dalle_mega')
+gpus_glid3xl = os.environ.get(ENV_GPUS_GLID3XL, False) or \
+    args.get('gpus_glid3xl')
+gpus_stable_diffusion = os.environ.get(ENV_GPUS_STABLE_DIFFUSION, False) or \
+    args.get('gpus_stable_diffusion')
+gpus_swinir = os.environ.get(ENV_GPUS_SWINIR, False) or \
+    args.get('gpus_swinir')
 
 STABLE_YAML_DICT = OrderedDict({
     'env': {
-        'CUDA_VISIBLE_DEVICES': 0,
+        'CUDA_VISIBLE_DEVICES': gpus_stable_diffusion,
         'XLA_PYTHON_CLIENT_ALLOCATOR': 'platform',
     },
     'name': STABLE_DIFFUSION_FLOW_NAME,
@@ -154,12 +190,27 @@ with open(flow_to_use, 'r') as f_in:
     if no_dalle_mega:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
             DALLE_MEGA_FLOW_NAME)
+    else:
+        dalle_mega_idx = next(i for i, exc in enumerate(flow_as_dict['executors'])
+            if exc['name'] == DALLE_MEGA_FLOW_NAME)
+        flow_as_dict['executors'][dalle_mega_idx][FLOW_KEY_ENV][FLOW_KEY_ENV_CUDA_DEV] = gpus_dalle_mega
+
     if no_glid3xl:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
             GLID3XL_FLOW_NAME)
+    else:
+        glid3xl_idx = next(i for i, exc in enumerate(flow_as_dict['executors'])
+            if exc['name'] == GLID3XL_FLOW_NAME)
+        flow_as_dict['executors'][glid3xl_idx][FLOW_KEY_ENV][FLOW_KEY_ENV_CUDA_DEV] = gpus_glid3xl
+
     if no_swinir:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
             SWINIR_FLOW_NAME)
+    else:
+        swinir_idx = next(i for i, exc in enumerate(flow_as_dict['executors'])
+            if exc['name'] == SWINIR_FLOW_NAME)
+        flow_as_dict['executors'][swinir_idx][FLOW_KEY_ENV][FLOW_KEY_ENV_CUDA_DEV] = gpus_swinir
+
     if not yes_stable_diffusion:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
             STABLE_DIFFUSION_FLOW_NAME)
