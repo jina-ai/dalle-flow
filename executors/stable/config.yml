@@ -1,10 +1,10 @@
 jtype: StableDiffusionGenerator
 with:
+  batch_size: 1
   height: 512
   max_n_subprompts: 8
   max_resolution: 589824 # 768x768
   n_iter: 1
-  n_samples: 1
   stable_path: ../stable-diffusion
   use_half: True
   width: 512
