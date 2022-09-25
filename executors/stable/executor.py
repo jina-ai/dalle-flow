@@ -18,13 +18,8 @@ from stable_inference.util import (
 )
 
 from tqdm import trange
-from transformers import logging
 
 from jina import Executor, DocumentArray, Document, requests
-
-
-# Make transformers stop screaming.
-logging.set_verbosity_error()
 
 
 K_DIFF_SAMPLERS = {'k_lms', 'dpm2', 'dpm2_ancestral', 'heun',
