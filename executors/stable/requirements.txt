@@ -2,4 +2,4 @@ numpy
 tqdm
 jina
 docarray
-git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git
+git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.1

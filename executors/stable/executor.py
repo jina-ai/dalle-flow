@@ -24,8 +24,6 @@ from jina import Executor, DocumentArray, Document, requests
 
 K_DIFF_SAMPLERS = {'k_lms', 'dpm2', 'dpm2_ancestral', 'heun',
     'euler', 'euler_ancestral'}
-VALID_SAMPLERS = {'ddim', 'k_lms', 'dpm2', 'dpm2_ancestral', 'heun',
-    'euler', 'euler_ancestral'}
 
 
 MAX_STEPS = 250
@@ -43,7 +41,7 @@ class StableDiffusionGenerator(Executor):
     Executor generator for all stable diffusion API paths.
     '''
     batch_size = 4
-    inference_engine = None
+    stable_diffusion_module = None
 
     def __init__(self,
         stable_path: str,
@@ -56,9 +54,26 @@ class StableDiffusionGenerator(Executor):
         width: int=512,
         **kwargs,
     ):
+        '''
+        @stable_path: Path for the Stable Diffusion library containing the
+          weights and configuration for the model.
+
+        @batch_size: The number of images to create at the same time. It only
+          slightly speeds up inference while dramatically increasing memory
+          usage.
+        @height: Default height of image in pixels.
+        @max_n_subprompts: Maximum number of subprompts you can add to an image
+          in the denoising step. More subprompts = slower denoising.
+        @max_resolution: The maximum resolution for images in pixels, to keep
+          your GPU from OOMing in server applications.
+        @n_iter: Default number of iterations for the sampler.
+        @use_half: Sample with FP16 instead of FP32. Saves some memory for
+          approximately the same results.
+        @width: Default width of image in pixels.
+        '''
         super().__init__(**kwargs)
         self.batch_size = batch_size
-        self.inference_engine = StableDiffusionInference(
+        self.stable_diffusion_module = StableDiffusionInference(
             stable_path=stable_path,
             height=height,
             max_n_subprompts=max_n_subprompts,
@@ -87,11 +102,11 @@ class StableDiffusionGenerator(Executor):
         request_time = time.time()
 
         # Default options for inherence engine.
-        opt = self.inference_engine.opt
+        opt = self.stable_diffusion_module.opt
 
         sampler = parameters.get('sampler', 'k_lms')
-        if sampler not in VALID_SAMPLERS:
-            raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
+        if sampler not in K_DIFF_SAMPLERS:
+            raise ValueError(f'sampler must be in {K_DIFF_SAMPLERS}, got {sampler}')
         scale = parameters.get('scale', opt.scale)
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
@@ -114,7 +129,7 @@ class StableDiffusionGenerator(Executor):
 
             self.logger.info(f'stable diffusion start {num_images} images, prompt "{prompt}"...')
             for i in trange(n_iter, desc="Sampling"):
-                samples, extra_data = self.inference_engine.sample(
+                samples, extra_data = self.stable_diffusion_module.sample(
                     prompt,
                     batch_size,
                     sampler,
@@ -174,7 +189,7 @@ class StableDiffusionGenerator(Executor):
         request_time = time.time()
 
         # Default options for inherence engine.
-        opt = self.inference_engine.opt
+        opt = self.stable_diffusion_module.opt
 
         latentless = parameters.get('latentless', False)
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
@@ -184,8 +199,8 @@ class StableDiffusionGenerator(Executor):
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         strength = parameters.get('strength', 0.75)
 
-        if sampler not in VALID_SAMPLERS:
-            raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
+        if sampler not in K_DIFF_SAMPLERS:
+            raise ValueError(f'sampler must be in {K_DIFF_SAMPLERS}, got {sampler}')
 
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
 
@@ -208,7 +223,7 @@ class StableDiffusionGenerator(Executor):
             assert prompt is not None
 
             for i in trange(n_iter, desc="Sampling"):
-                samples, extra_data = self.inference_engine.sample(
+                samples, extra_data = self.stable_diffusion_module.sample(
                     prompt,
                     batch_size,
                     sampler,
@@ -269,7 +284,7 @@ class StableDiffusionGenerator(Executor):
         request_time = time.time()
 
         # Default options for inherence engine.
-        opt = self.inference_engine.opt
+        opt = self.stable_diffusion_module.opt
 
         num_images = max(1, min(16, int(parameters.get('num_images', 1))))
         resample_prior = parameters.get('resample_prior', True)
@@ -278,8 +293,8 @@ class StableDiffusionGenerator(Executor):
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         strength = parameters.get('strength', 0.75)
 
-        if sampler not in VALID_SAMPLERS:
-            raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
+        if sampler not in K_DIFF_SAMPLERS:
+            raise ValueError(f'sampler must be in {K_DIFF_SAMPLERS}, got {sampler}')
 
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
         height, width = self._h_and_w_from_parameters(parameters, opt)
@@ -298,7 +313,7 @@ class StableDiffusionGenerator(Executor):
                 unconditioning, # Reuse this as it's the same for both
                 weighted_subprompts_start,
                 _, # Don't need the individual embedding managers
-            ) = self.inference_engine.compute_conditioning_and_weights(
+            ) = self.stable_diffusion_module.compute_conditioning_and_weights(
                 prompts[0].strip(),
                 batch_size)
 
@@ -307,7 +322,7 @@ class StableDiffusionGenerator(Executor):
                 _,
                 weighted_subprompts_end,
                 _, # Don't need the individual embedding managers
-            ) = self.inference_engine.compute_conditioning_and_weights(
+            ) = self.stable_diffusion_module.compute_conditioning_and_weights(
                 prompts[1].strip(),
                 batch_size)
 
@@ -338,7 +353,7 @@ class StableDiffusionGenerator(Executor):
 
                 image = None
                 if i == 0 or not resample_prior:
-                    samples_last, extra_data = self.inference_engine.sample(
+                    samples_last, extra_data = self.stable_diffusion_module.sample(
                         prompt,
                         batch_size,
                         sampler,
@@ -357,7 +372,7 @@ class StableDiffusionGenerator(Executor):
                         image,
                     ) = itemgetter('images')(extra_data)
                 else:
-                    samples_last, extra_data = self.inference_engine.sample(
+                    samples_last, extra_data = self.stable_diffusion_module.sample(
                         prompt,
                         batch_size,
                         sampler,
