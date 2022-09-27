@@ -5,6 +5,9 @@ with:
   monitoring: true  # enable prometheus & grafana
   env:
     JINA_LOG_LEVEL: debug
+  exit_on_exceptions:
+    - RuntimeError
+    - ValueError
 jcloud:
   gateway:
     ingress: kong
@@ -15,7 +18,7 @@ executors:
     timeout_ready: -1  # slow download speed often leads to timeout
     env:
       XLA_PYTHON_CLIENT_ALLOCATOR: platform  # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
-    replicas: 2  # change this if you have larger VRAM
+    replicas: 1  # change this if you have larger VRAM
     gpus: all
     jcloud:
       resources:
@@ -26,11 +29,11 @@ executors:
     uses: jinahub+docker://CLIPOnnxEncoder/latest-gpu
     uses_with:
       name: ViT-L-14-336::openai
-    replicas: 2
-    # host: 'demo-cas.jina.ai'
-    # port: 2096
-    # tls: true
-    # external: false
+    replicas: 1
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    tls: true
+    external: true
     needs: [gateway]
     gpus: all
     jcloud:
@@ -40,7 +43,7 @@ executors:
   - name: diffusion
     uses: jinahub+docker://GLID3Diffusion/latest
     timeout_ready: -1  # slow download speed often leads to timeout
-    replicas: 2  # change this if you have larger VRAM
+    replicas: 1  # change this if you have larger VRAM
     needs: [clip_encoder]
     gpus: all
     jcloud:
@@ -54,11 +57,11 @@ executors:
       name: ViT-L-14-336::openai
     uses_requests:
       '/': rank
-    replicas: 2
-    # host: 'demo-cas.jina.ai'
-    # port: 2096
-    # tls: true
-    # external: false
+    replicas: 1
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    tls: true
+    external: true
     needs: [dalle, diffusion]
     gpus: all
     jcloud:
@@ -67,7 +70,7 @@ executors:
         gpu: shared
   - name: upscaler
     uses: jinahub+docker://SwinIRUpscaler/latest
-    replicas: 2
+    replicas: 1
     gpus: all
     jcloud:
       resources:
@@ -76,7 +79,7 @@ executors:
   - name: store
     uses: jinahub+docker://DalleFlowStore/latest
     floating: true
-    replicas: 2
+    replicas: 1
     jcloud:
       resources:
         memory: 500M
