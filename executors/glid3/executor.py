@@ -52,15 +52,7 @@ class GLID3Diffusion(Executor):
             from dalle_flow_glid3.sample import do_run
 
             args = parser.parse_args(kw_str_list)
-            try:
-                do_run(args, d.embedding, self.blank_bert_embedding, self.blank_clip_embedding)
-            except (RuntimeError, ValueError) as e:
-                msg = str(e).lower()
-                if 'out of memory' in msg or 'cudnn' in msg or 'resource_exhausted' in msg:
-                    self.logger.error('| WARNING: ran out of memory, killing the process')
-                    exit(1)
-                else:
-                    raise e
+            do_run(args, d.embedding, self.blank_bert_embedding, self.blank_clip_embedding)
 
             kw.update({
                 'generator': 'GLID3-XL',

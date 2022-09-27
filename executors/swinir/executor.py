@@ -36,15 +36,7 @@ class SwinIRUpscaler(Executor):
 
         d.save_uri_to_file(os.path.join(input_path, f'{d.id}.png'))
 
-        try:
-            swin_ir_main([*self.swin_ir_args, '--folder_lq', input_path], self.swin_ir_model)
-        except (RuntimeError, ValueError) as e:
-            msg = str(e).lower()
-            if 'out of memory' in msg or 'cudnn' in msg or 'resource_exhausted' in msg:
-                self.logger.error('| WARNING: ran out of memory, killing the process')
-                exit(1)
-            else:
-                raise e
+        swin_ir_main([*self.swin_ir_args, '--folder_lq', input_path], self.swin_ir_model)
 
         d.uri = os.path.join(self.output_path, f'{d.id}_SwinIR.png')
         d.convert_uri_to_datauri()

@@ -16,15 +16,7 @@ class DalleGenerator(Executor):
         request_time = time.time()
         for d in docs:
             self.logger.info(f'dalle {num_images} [{d.text}]...')
-            try:
-                generated_imgs = dm_helper.generate_images(d.text, num_images)
-            except (RuntimeError, ValueError) as e:
-                msg = str(e).lower()
-                if 'out of memory' in msg or 'cudnn' in msg or 'resource_exhausted' in msg or 'xlaruntimeerror' in msg:
-                    self.logger.error('| WARNING: ran out of memory, killing the process')
-                    exit(1)
-                else:
-                    raise e
+            generated_imgs = dm_helper.generate_images(d.text, num_images)
 
             for img in generated_imgs:
                 buffered = BytesIO()
