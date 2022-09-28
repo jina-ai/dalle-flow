@@ -18,5 +18,6 @@ else
   ln -s /home/dalle/.cache/finetune.pt /dalle/glid-3-xl/finetune.pt
 fi
 
-python3 flow_parser.py
+. env/bin/activate
+python flow_parser.py
 jina flow --uses flow.tmp.yml

@@ -44,20 +44,17 @@ class StableDiffusionGenerator(Executor):
     stable_diffusion_module = None
 
     def __init__(self,
-        stable_path: str,
         batch_size: int=4,
         height: int=512,
         max_n_subprompts=8,
         max_resolution=589824,
         n_iter: int=1,
         use_half: bool=False,
+        weights_path='',
         width: int=512,
         **kwargs,
     ):
         '''
-        @stable_path: Path for the Stable Diffusion library containing the
-          weights and configuration for the model.
-
         @batch_size: The number of images to create at the same time. It only
           slightly speeds up inference while dramatically increasing memory
           usage.
@@ -69,12 +66,13 @@ class StableDiffusionGenerator(Executor):
         @n_iter: Default number of iterations for the sampler.
         @use_half: Sample with FP16 instead of FP32. Saves some memory for
           approximately the same results.
+        @weights_path: Location of the Stable Diffusion weights checkpoint file.
         @width: Default width of image in pixels.
         '''
         super().__init__(**kwargs)
         self.batch_size = batch_size
         self.stable_diffusion_module = StableDiffusionInference(
-            stable_path=stable_path,
+            checkpoint_loc=weights_path,
             height=height,
             max_n_subprompts=max_n_subprompts,
             max_resolution=max_resolution,

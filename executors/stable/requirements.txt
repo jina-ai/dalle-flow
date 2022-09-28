@@ -1,5 +1,14 @@
-numpy
-tqdm
+numpy==1.23.3
+tqdm==4.64.1
 jina
 docarray
-git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.1
+kornia==0.6.7
+einops==0.4.1
+transformers==4.22.2
+pytorch_lightning==1.7.7
+omegaconf==2.2.3
+protobuf==3.20.0
+taming-transformers @ git+https://github.com/CompVis/taming-transformers.git
+k-diffusion @ git+https://github.com/crowsonkb/k-diffusion.git
+stable-inference @ git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.9
+CLIP @ git+https://github.com/openai/CLIP
