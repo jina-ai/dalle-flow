@@ -1,0 +1,6 @@
+jtype: ClipSegmentation
+with:
+  cache_path: /home/dalle/.cache
+metas:
+  py_modules:
+    - executor.py
