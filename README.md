@@ -163,8 +163,7 @@ You can host your own server by following the instruction below.
 DALL·E Flow needs one GPU with 21GB VRAM at its peak. All services are squeezed into this one GPU, this includes (roughly)
 - DALLE ~9GB
 - GLID Diffusion ~6GB
-- Stable Diffusion ~9GB (n_samples=1 images, 512x512, slower) or ~18GB (n_samples=4 images, 512x512, faster)
-- Stable Diffusion Lite ~5GB, slower than normal SD and doesn't include extra samplers
+- Stable Diffusion ~7GB (batch_size=1 in `config.yml`, 512x512, slower) or ~14GB (batch_size=4 in `config.yml`, 512x512, slightly faster)
 - SwinIR ~3GB
 - CLIP ViT-L/14-336px ~3GB
 
@@ -250,7 +249,6 @@ DISABLE_DALLE_MEGA
 DISABLE_GLID3XL
 DISABLE_SWINIR
 ENABLE_STABLE_DIFFUSION
-ENABLE_STABLE_DIFFUSION_LITE
 ```
 
 For example, if you would like to disable GLID3XL workflows, run:
@@ -267,11 +265,11 @@ docker run -e DISABLE_GLID3XL='1' \
 - The first run will take ~10 minutes with average internet speed.
 - `-v $HOME/.cache:/root/.cache` avoids repeated model downloading on every docker run.
 - The first part of `-p 51005:51005` is your host public port. Make sure people can access this port if you are serving publicly. The second par of it is [the port defined in flow.yml](https://github.com/jina-ai/dalle-flow/blob/e7e313522608668daeec1b7cd84afe56e5b19f1e/flow.yml#L4).
-- If you want to use Stable Diffusion, it must be enabled manually with the `ENABLE_STABLE_DIFFUSION` or `ENABLE_STABLE_DIFFUSION_LITE` flag.
+- If you want to use Stable Diffusion, it must be enabled manually with the `ENABLE_STABLE_DIFFUSION`.
 
 #### Special instructions for Stable Diffusion and Docker
 
-**Stable Diffusion may only be enabled if you have downloaded the weights and make them available as a virtual volume while enabling the environmental flag (`ENABLE_STABLE_DIFFUSION` or `ENABLE_STABLE_DIFFUSION_LITE`) for SD**.
+**Stable Diffusion may only be enabled if you have downloaded the weights and make them available as a virtual volume while enabling the environmental flag (`ENABLE_STABLE_DIFFUSION`) for SD**.
 
 You should have previously put the weights into a folder named `ldm/stable-diffusion-v1` and labeled them `model.ckpt`. Replace `YOUR_MODEL_PATH/ldm` below with the path on your own system to pipe the weights into the docker image.
 
@@ -286,8 +284,6 @@ docker run -e ENABLE_STABLE_DIFFUSION="1" \
   --gpus all \
   jinaai/dalle-flow
 ```
-
-You can run the "lite" version of Stable Diffusion by setting the flag for `ENABLE_STABLE_DIFFUSION_LITE` instead of `ENABLE_STABLE_DIFFUSION`.
 
 You should see the screen like following once running:
 
@@ -307,7 +303,7 @@ Running natively requires some manual steps, but it is often easier to debug.
 mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/jina-ai/SwinIR.git
-git clone https://github.com/CompVis/stable-diffusion.git
+git clone --branch v0.0.10 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git
 git clone https://github.com/CompVis/latent-diffusion.git
 git clone https://github.com/jina-ai/glid-3-xl.git
 ```
@@ -333,6 +329,7 @@ source env/bin/activate && cd -
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
 pip install numpy tqdm pytorch_lightning einops numpy omegaconf
 pip install https://github.com/crowsonkb/k-diffusion/archive/master.zip
+pip install git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.11
 cd latent-diffusion && pip install -e . && cd -
 cd stable-diffusion && pip install -e . && cd -
 cd SwinIR && pip install -e . && cd -
@@ -368,7 +365,6 @@ Now you are under `dalle-flow/`, run the following command:
 # --disable-glid3xl
 # --disable-swinir
 # --enable-stable-diffusion
-# --enable-stable-diffusion-lite
 python flow_parser.py
 jina flow --uses flow.tmp.yml
 ```

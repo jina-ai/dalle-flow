@@ -1,34 +1,28 @@
-import PIL
-import os
-import shutil
+import base64
 import time
 import torch
 
-import k_diffusion as K
+from io import BytesIO
+from operator import itemgetter
+from random import randint
+from typing import Dict
+from urllib.request import urlopen
+
 import numpy as np
-import torch.nn as nn
 
 from PIL import Image
-from contextlib import nullcontext
-from einops import rearrange, repeat
-from io import BytesIO
-from itertools import islice
-from pathlib import Path
-from pytorch_lightning import seed_everything
-from random import randint
-from torch import autocast
-from tqdm import tqdm, trange
-from typing import Dict
+from stable_inference import StableDiffusionInference
+from stable_inference.util import (
+    combine_weighted_subprompts,
+    slerp,
+)
 
-from ldm.util import instantiate_from_config
-from ldm.models.diffusion.ddim import DDIMSampler
+from tqdm import trange
 
 from jina import Executor, DocumentArray, Document, requests
-from omegaconf import OmegaConf
+
 
 K_DIFF_SAMPLERS = {'k_lms', 'dpm2', 'dpm2_ancestral', 'heun',
-    'euler', 'euler_ancestral'}
-VALID_SAMPLERS = {'ddim', 'k_lms', 'dpm2', 'dpm2_ancestral', 'heun',
     'euler', 'euler_ancestral'}
 
 
@@ -37,152 +31,56 @@ MIN_HEIGHT = 384
 MIN_WIDTH = 384
 
 
-class StableDiffusionConfig:
-    '''
-    Configuration for Stable Diffusion.
-    '''
-    C = 4 # latent channels
-    ckpt = '' # model checkpoint path
-    config = '' # model configuration file path
-    ddim_eta = 0.0
-    ddim_steps = 50
-    f = 8 # downsampling factor
-    fixed_code = False
-    height = 512
-    n_iter = 1 # number of times to sample
-    n_samples = 1 # batch size, GPU memory use scales quadratically with this but it makes it sample faster!
-    precision = 'autocast'
-    scale = 7.5 # unconditional guidance scale
-    seed = 1
-    width = 512
-
-
-class KCFGDenoiser(nn.Module):
-    def __init__(self, model):
-        super().__init__()
-        self.inner_model = model
-
-    def forward(self, x, sigma, uncond, cond, cond_scale):
-        x_in = torch.cat([x] * 2)
-        sigma_in = torch.cat([sigma] * 2)
-        cond_in = torch.cat([uncond, cond])
-        uncond, cond = self.inner_model(x_in, sigma_in, cond=cond_in).chunk(2)
-        return uncond + (cond - uncond) * cond_scale
-
-
-def chunk(it, size):
-    it = iter(it)
-    return iter(lambda: tuple(islice(it, size)), ())
-
-
-def load_model_from_config(config, ckpt, use_half=False):
-    pl_sd = torch.load(ckpt, map_location="cpu")
-    sd = pl_sd["state_dict"]
-    model = instantiate_from_config(config.model)
-    m, u = model.load_state_dict(sd, strict=False)
-
-    model.cuda()
-    model.eval()
-    if use_half:
-        model.half()
-    return model
-
-
-def load_img(path, img=None):
-    image = None
-    if img is None:
-        image = Image.open(path).convert("RGB")
-    else:
-        image = img
-    w, h = image.size
-    w, h = map(lambda x: x - x % 32, (w, h))  # resize to integer multiple of 32
-    image = image.resize((w, h), resample=PIL.Image.LANCZOS)
-    image = np.array(image).astype(np.float32) / 255.0
-    image = image[None].transpose(0, 3, 1, 2)
-    image = torch.from_numpy(image)
-    return 2.*image - 1.
-
-
-def slerp(t, v0, v1, DOT_THRESHOLD=0.9995):
-    """
-    helper function to spherically interpolate two arrays v1 v2
-
-    from @xsteenbrugge
-    """
-
-    if not isinstance(v0, np.ndarray):
-        inputs_are_torch = True
-        input_device = v0.device
-        v0 = v0.cpu().numpy()
-        v1 = v1.cpu().numpy()
-
-    dot = np.sum(v0 * v1 / (np.linalg.norm(v0) * np.linalg.norm(v1)))
-    if np.abs(dot) > DOT_THRESHOLD:
-        v2 = (1 - t) * v0 + t * v1
-    else:
-        theta_0 = np.arccos(dot)
-        sin_theta_0 = np.sin(theta_0)
-        theta_t = theta_0 * t
-        sin_theta_t = np.sin(theta_t)
-        s0 = np.sin(theta_0 - theta_t) / sin_theta_0
-        s1 = sin_theta_t / sin_theta_0
-        v2 = s0 * v0 + s1 * v1
-
-    if inputs_are_torch:
-        v2 = torch.from_numpy(v2).to(input_device)
-
-    return v2
+def document_to_pil(doc):
+    uri_data = urlopen(doc.uri)
+    return Image.open(BytesIO(uri_data.read()))
 
 
 class StableDiffusionGenerator(Executor):
     '''
     Executor generator for all stable diffusion API paths.
     '''
-    opt: StableDiffusionConfig = StableDiffusionConfig()
-
-    config = ''
-    device = None
-    input_path = ''
-    max_resolution = None
-    model = None
-    model_k_wrapped = None
-    model_k_config = None
-    sampler = None
+    batch_size = 4
+    stable_diffusion_module = None
 
     def __init__(self,
-        stable_path: str,
+        batch_size: int=4,
         height: int=512,
+        max_n_subprompts=8,
         max_resolution=589824,
         n_iter: int=1,
-        n_samples: int=4,
         use_half: bool=False,
+        weights_path='',
         width: int=512,
         **kwargs,
     ):
+        '''
+        @batch_size: The number of images to create at the same time. It only
+          slightly speeds up inference while dramatically increasing memory
+          usage.
+        @height: Default height of image in pixels.
+        @max_n_subprompts: Maximum number of subprompts you can add to an image
+          in the denoising step. More subprompts = slower denoising.
+        @max_resolution: The maximum resolution for images in pixels, to keep
+          your GPU from OOMing in server applications.
+        @n_iter: Default number of iterations for the sampler.
+        @use_half: Sample with FP16 instead of FP32. Saves some memory for
+          approximately the same results.
+        @weights_path: Location of the Stable Diffusion weights checkpoint file.
+        @width: Default width of image in pixels.
+        '''
         super().__init__(**kwargs)
-        self.input_path = stable_path
-        self.opt.config = f'{stable_path}/configs/stable-diffusion/v1-inference.yaml'
-        self.opt.ckpt = f'{stable_path}/models/ldm/stable-diffusion-v1/model.ckpt'
-
-        self.opt.height = height
-        self.opt.width = width
-        self.opt.n_samples = n_samples
-        self.opt.n_iter = n_iter
-
-        self.max_resolution = max_resolution
-
-        self.config = OmegaConf.load(f"{self.opt.config}")
-        self.model = load_model_from_config(self.config, f"{self.opt.ckpt}",
-            use_half=use_half)
-
-        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-        self.model = self.model.to(self.device)
-
-        self.model_k_wrapped = K.external.CompVisDenoiser(self.model)
-        self.model_k_config = KCFGDenoiser(self.model_k_wrapped)
-
-        self.sampler = DDIMSampler(self.model)
-
+        self.batch_size = batch_size
+        self.stable_diffusion_module = StableDiffusionInference(
+            checkpoint_loc=weights_path,
+            height=height,
+            max_n_subprompts=max_n_subprompts,
+            max_resolution=max_resolution,
+            n_iter=n_iter,
+            use_half=use_half,
+            width=width,
+        )
+        
     def _h_and_w_from_parameters(self, parameters, opt):
         height = parameters.get('height', opt.height)
         if height is not None:
@@ -197,152 +95,89 @@ class StableDiffusionGenerator(Executor):
 
         return height, width
 
-    def _height_and_width_check(self, height, width):
-        if height * width > self.max_resolution:
-            raise ValueError(f'height {height} and width {width} produce too ' +
-                f'many pixels ({height * width}). Max pixels {self.max_resolution}')
-        if height % 64 != 0:
-            raise ValueError(f'height must be a multiple of 64 (got {height})')
-        if width % 64 != 0:
-            raise ValueError(f'width must be a multiple of 64 (got {width})')
-        if height < MIN_HEIGHT:
-            raise ValueError(f'width must be >= {MIN_HEIGHT} (got {height})')
-        if width < MIN_WIDTH:
-            raise ValueError(f'width must be >= {MIN_WIDTH} (got {width})')
-
-    def _sample_text(self, prompts, n_samples, batch_size, opt, sampler, steps,
-        start_code, c=None, height=None, width=None):
-        '''
-        Create image(s) from text.
-        '''
-
-        self.sampler.make_schedule(
-            ddim_num_steps=steps, ddim_eta=self.opt.ddim_eta,
-                verbose=False)
-
-        _height = opt.height if height is None else height
-        _width = opt.width if width is None else width
-
-        uc = None
-        if opt.scale != 1.0:
-            uc = self.model.get_learned_conditioning(batch_size * [""])
-
-        if prompts is not None and isinstance(prompts, tuple):
-            prompts = list(prompts)
-
-        if c is None:
-            c = self.model.get_learned_conditioning(prompts)
-        shape = [opt.C, _height // opt.f, _width // opt.f]
-
-        samples = None
-        if sampler == 'ddim':
-            samples, _ = self.sampler.sample(
-                S=steps,
-                conditioning=c,
-                batch_size=n_samples,
-                shape=shape,
-                verbose=False,
-                unconditional_guidance_scale=opt.scale,
-                unconditional_conditioning=uc,
-                eta=opt.ddim_eta,
-                x_T=start_code)
-        if sampler in K_DIFF_SAMPLERS:
-            # k_lms is the fallthrough
-            sampling_fn = K.sampling.sample_lms
-            if sampler == 'dpm2':
-                sampling_fn = K.sampling.sample_dpm_2
-            if sampler == 'dpm2_ancestral':
-                sampling_fn = K.sampling.sample_dpm_2_ancestral
-            if sampler == 'heun':
-                sampling_fn = K.sampling.sample_heun
-            if sampler == 'euler':
-                sampling_fn = K.sampling.sample_euler
-            if sampler == 'euler_ancestral':
-                sampling_fn = K.sampling.sample_euler_ancestral
-
-            sigmas = self.model_k_wrapped.get_sigmas(steps)
-            x = torch.randn([n_samples, *shape], device=self.device) * sigmas[0] # for GPU draw
-            extra_args = {
-                'cond': c,
-                'uncond': uc,
-                'cond_scale': opt.scale,
-            }
-            samples = sampling_fn(
-                self.model_k_config,
-                x,
-                sigmas,
-                extra_args=extra_args)
-
-        x_samples_ddim = self.model.decode_first_stage(samples)
-        x_samples_ddim = torch.clamp((x_samples_ddim + 1.0) / 2.0, min=0.0, max=1.0)
-
-        torch.cuda.empty_cache()
-        return x_samples_ddim
-
     @requests(on='/')
     def txt2img(self, docs: DocumentArray, parameters: Dict, **kwargs):
         request_time = time.time()
 
+        # Default options for inherence engine.
+        opt = self.stable_diffusion_module.opt
+
         sampler = parameters.get('sampler', 'k_lms')
-        if sampler not in VALID_SAMPLERS:
-            raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
-        scale = parameters.get('scale', 7.5)
+        if sampler not in K_DIFF_SAMPLERS:
+            raise ValueError(f'sampler must be in {K_DIFF_SAMPLERS}, got {sampler}')
+        scale = parameters.get('scale', opt.scale)
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
-        opt = self.opt
-        opt.scale = scale
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
         height, width = self._h_and_w_from_parameters(parameters, opt)
-        self._height_and_width_check(height, width)
 
         # If the number of samples we have is more than would currently be
-        # given for n_samples * n_iter, increase n_iter to yield more images.
-        n_samples = opt.n_samples
+        # given for batch_size * n_iter, increase n_iter to yield more images.
+        n_samples = self.batch_size
         n_iter = opt.n_iter
         if num_images < n_samples:
             n_samples = num_images
         if num_images // n_samples > n_iter:
             n_iter = num_images // n_samples
-        seed_everything(seed)
 
-        start_code = None
-        if opt.fixed_code:
-            start_code = torch.randn([n_samples, opt.C, height // opt.f,
-                width // opt.f], device=self.device)
+        for d in docs:
+            batch_size = n_samples
+            prompt = d.text
+            assert prompt is not None
 
-        precision_scope = autocast if opt.precision=="autocast" else nullcontext
-        with torch.no_grad():
-            with precision_scope("cuda"):
-                with self.model.ema_scope():
-                    for d in docs:
-                        batch_size = n_samples
-                        prompt = d.text
-                        assert prompt is not None
-                        data = [batch_size * [prompt]]
+            self.logger.info(f'stable diffusion start {num_images} images, prompt "{prompt}"...')
+            for i in trange(n_iter, desc="Sampling"):
+                samples, extra_data = self.stable_diffusion_module.sample(
+                    prompt,
+                    batch_size,
+                    sampler,
+                    seed + i,
+                    steps,
+                    height=height,
+                    scale=scale,
+                    width=width,
+                )
 
-                        self.logger.info(f'stable diffusion start {num_images} images, prompt "{prompt}"...')
-                        for n in trange(n_iter, desc="Sampling"):
-                            for prompts in tqdm(data, desc="data"):
-                                x_samples_ddim = self._sample_text(prompts, n_samples,
-                                    batch_size, opt, sampler, steps, start_code,
-                                    height=height, width=width)
-                                for x_sample in x_samples_ddim:
-                                    x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
-                                    img = Image.fromarray(x_sample.astype(np.uint8))
-                                    buffered = BytesIO()
-                                    img.save(buffered, format='PNG')
-                                    _d = Document(
-                                        blob=buffered.getvalue(),
-                                        mime_type='image/png',
-                                        tags={
-                                            'text': prompt,
-                                            'generator': 'stable-diffusion',
-                                            'request_time': request_time,
-                                            'created_time': time.time(),
-                                        },
-                                    ).convert_blob_to_datauri()
-                                    _d.text = prompt
-                                    d.matches.append(_d)
+                (
+                    conditioning,
+                    images,
+                ) = itemgetter('conditioning', 'images')(extra_data)
+
+                for img in images:
+                    buffered = BytesIO()
+                    img.save(buffered, format='PNG')
+
+                    samples_buffer = BytesIO()
+                    torch.save(samples, samples_buffer)
+                    samples_buffer.seek(0)
+
+                    _d = Document(
+                        embedding=conditioning,
+                        blob=buffered.getvalue(),
+                        mime_type='image/png',
+                        tags={
+                            'latent_repr': base64.b64encode(
+                                samples_buffer.getvalue()).decode(),
+                            'request': {
+                                'api': 'txt2img',
+                                'height': height,
+                                'num_images': num_images,
+                                'sampler': sampler,
+                                'scale': scale,
+                                'seed': seed,
+                                'steps': steps,
+                                'width': width,
+                            },
+                            'text': prompt,
+                            'generator': 'stable-diffusion',
+                            'request_time': request_time,
+                            'created_time': time.time(),
+                        },
+                    ).convert_blob_to_datauri()
+                    _d.text = prompt
+                    d.matches.append(_d)
+
+                torch.cuda.empty_cache()
 
     @requests(on='/stablediffuse')
     def stablediffuse(self, docs: DocumentArray, parameters: Dict, **kwargs):
@@ -351,149 +186,93 @@ class StableDiffusionGenerator(Executor):
         '''
         request_time = time.time()
 
+        # Default options for inherence engine.
+        opt = self.stable_diffusion_module.opt
+
         latentless = parameters.get('latentless', False)
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
         prompt_override = parameters.get('prompt', None)
         sampler = parameters.get('sampler', 'k_lms')
-        scale = parameters.get('scale', 7.5)
+        scale = parameters.get('scale', opt.scale)
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         strength = parameters.get('strength', 0.75)
 
-        if sampler not in VALID_SAMPLERS:
-            raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
+        if sampler not in K_DIFF_SAMPLERS:
+            raise ValueError(f'sampler must be in {K_DIFF_SAMPLERS}, got {sampler}')
 
-        opt = self.opt
-        opt.scale = scale
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
-        height, width = self._h_and_w_from_parameters(parameters, opt)
-        self._height_and_width_check(height, width)
 
         # If the number of samples we have is more than would currently be
         # given for n_samples * n_iter, increase n_iter to yield more images.
-        n_samples = opt.n_samples
+        n_samples = self.batch_size
         n_iter = opt.n_iter
         if num_images < n_samples:
             n_samples = num_images
         if num_images // n_samples > n_iter:
             n_iter = num_images // n_samples
 
-        seed_everything(seed)
+        assert 0. < strength < 1., 'can only work with strength in (0.0, 1.0)'
 
-        assert 0. <= strength <= 1., 'can only work with strength in [0.0, 1.0]'
-        t_enc = int(strength * steps)
+        for d in docs:
+            batch_size = n_samples
+            prompt = d.text
+            if prompt_override is not None:
+                prompt = prompt_override
+            assert prompt is not None
 
-        precision_scope = autocast if opt.precision == "autocast" else nullcontext
-        with torch.no_grad():
-            with precision_scope("cuda"):
-                with self.model.ema_scope():
-                    self.sampler.make_schedule(
-                        ddim_num_steps=steps, ddim_eta=self.opt.ddim_eta,
-                            verbose=False)
+            for i in trange(n_iter, desc="Sampling"):
+                samples, extra_data = self.stable_diffusion_module.sample(
+                    prompt,
+                    batch_size,
+                    sampler,
+                    seed + i,
+                    steps,
+                    init_pil_image=document_to_pil(d),
+                    init_pil_image_as_random_latent=latentless,
+                    scale=scale,
+                    strength=strength,
+                )
 
-                    for d in docs:
-                        batch_size = n_samples
-                        prompt = d.text
-                        if prompt_override is not None:
-                            prompt = prompt_override
-                        assert prompt is not None
-                        self.logger.info(f'stable diffusion img2img start {num_images} images, prompt "{prompt}"...')
-                        data = [batch_size * [prompt]]
+                (
+                    conditioning,
+                    images,
+                ) = itemgetter('conditioning', 'images')(extra_data)
 
-                        input_path = os.path.join(self.input_path, f'{d.id}/')
+                for img in images:
+                    buffered = BytesIO()
+                    img.save(buffered, format='PNG')
 
-                        Path(input_path).mkdir(parents=True, exist_ok=True)
-                        Path(os.path.join(input_path, 'out')).mkdir(parents=True, exist_ok=True)
+                    samples_buffer = BytesIO()
+                    torch.save(samples, samples_buffer)
+                    samples_buffer.seek(0)
 
-                        temp_file_path = os.path.join(input_path, f'{d.id}.png')
-                        d.save_uri_to_file(temp_file_path)
+                    _d = Document(
+                        embedding=conditioning,
+                        blob=buffered.getvalue(),
+                        mime_type='image/png',
+                        tags={
+                            'latent_repr': base64.b64encode(
+                                samples_buffer.getvalue()).decode(),
+                            'request': {
+                                'api': 'stablediffuse',
+                                'latentless': latentless,
+                                'num_images': num_images,
+                                'sampler': sampler,
+                                'scale': scale,
+                                'seed': seed,
+                                'steps': steps,
+                                'strength': strength,
+                            },
+                            'text': prompt,
+                            'generator': 'stable-diffusion',
+                            'request_time': request_time,
+                            'created_time': time.time(),
+                        },
+                    ).convert_blob_to_datauri()
+                    _d.text = prompt
+                    d.matches.append(_d)
 
-                        assert os.path.isfile(temp_file_path)
-                        init_image = load_img(temp_file_path).to(self.device)
-                        init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
-
-                        init_latent = None
-                        if not latentless:
-                            init_latent = self.model.get_first_stage_encoding(
-                                self.model.encode_first_stage(init_image))  # move to latent space
-                        else:
-                            init_latent = torch.zeros(
-                                batch_size,
-                                4,
-                                height >> 3,
-                                width >> 3,
-                            ).cuda()
-
-                        for n in trange(n_iter, desc="Sampling"):
-                            for prompts in tqdm(data, desc="data"):
-                                uc = None
-                                if opt.scale != 1.0:
-                                    uc = self.model.get_learned_conditioning(batch_size * [""])
-                                if isinstance(prompts, tuple):
-                                    prompts = list(prompts)
-                                c = self.model.get_learned_conditioning(prompts)
-
-                                samples = None
-                                if sampler == 'ddim':
-                                    # encode (scaled latent)
-                                    z_enc = self.sampler.stochastic_encode(
-                                        init_latent, torch.tensor([t_enc]*batch_size).to(self.device))
-                                    # decode it
-                                    samples = self.sampler.decode(z_enc, c, t_enc,
-                                        unconditional_guidance_scale=opt.scale,
-                                        unconditional_conditioning=uc)
-                                if sampler in K_DIFF_SAMPLERS:
-                                    # k_lms is the fallthrough
-                                    sampling_fn = K.sampling.sample_lms
-                                    if sampler == 'dpm2':
-                                        sampling_fn = K.sampling.sample_dpm_2
-                                    if sampler == 'dpm2_ancestral':
-                                        sampling_fn = K.sampling.sample_dpm_2_ancestral
-                                    if sampler == 'heun':
-                                        sampling_fn = K.sampling.sample_heun
-                                    if sampler == 'euler':
-                                        sampling_fn = K.sampling.sample_euler
-                                    if sampler == 'euler_ancestral':
-                                        sampling_fn = K.sampling.sample_euler_ancestral
-
-                                    sigmas = self.model_k_wrapped.get_sigmas(steps)
-                                    x0 = init_latent
-                                    noise = torch.randn_like(x0) * sigmas[steps - t_enc - 1]
-                                    xi = x0 + noise
-                                    sigma_sched = sigmas[steps - t_enc - 1:]
-                                    extra_args = {
-                                        'cond': c,
-                                        'uncond': uc,
-                                        'cond_scale': opt.scale,
-                                    }
-                                    samples = sampling_fn(
-                                        self.model_k_config,
-                                        xi,
-                                        sigma_sched,
-                                        extra_args=extra_args,
-                                    )
-
-                                x_samples = self.model.decode_first_stage(samples)
-                                x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
-
-                                for x_sample in x_samples:
-                                    x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
-                                    img = Image.fromarray(x_sample.astype(np.uint8))
-                                    buffered = BytesIO()
-                                    img.save(buffered, format='PNG')
-                                    _d = Document(
-                                        blob=buffered.getvalue(),
-                                        mime_type='image/png',
-                                        tags={
-                                            'text': prompt,
-                                            'generator': 'stable-diffusion',
-                                            'request_time': request_time,
-                                            'created_time': time.time(),
-                                        },
-                                    ).convert_blob_to_datauri()
-                                    _d.text = prompt
-                                    d.matches.append(_d)
-
-                            shutil.rmtree(input_path, ignore_errors=True)
+                torch.cuda.empty_cache()
 
     @requests(on='/stableinterpolate')
     def stableinterpolate(self, docs: DocumentArray, parameters: Dict, **kwargs):
@@ -502,145 +281,150 @@ class StableDiffusionGenerator(Executor):
         '''
         request_time = time.time()
 
+        # Default options for inherence engine.
+        opt = self.stable_diffusion_module.opt
+
         num_images = max(1, min(16, int(parameters.get('num_images', 1))))
         resample_prior = parameters.get('resample_prior', True)
         sampler = parameters.get('sampler', 'k_lms')
-        scale = parameters.get('scale', 7.5)
+        scale = parameters.get('scale', opt.scale)
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         strength = parameters.get('strength', 0.75)
 
-        if sampler not in VALID_SAMPLERS:
-            raise ValueError(f'sampler must be in {VALID_SAMPLERS}, got {sampler}')
+        if sampler not in K_DIFF_SAMPLERS:
+            raise ValueError(f'sampler must be in {K_DIFF_SAMPLERS}, got {sampler}')
 
-        opt = self.opt
-        opt.scale = scale
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
         height, width = self._h_and_w_from_parameters(parameters, opt)
-        self._height_and_width_check(height, width)
-
-        seed_everything(seed)
 
         assert 0.5 <= strength <= 1., 'can only work with strength in [0.5, 1.0]'
-        t_enc = int(strength * steps)
 
-        precision_scope = autocast if opt.precision == "autocast" else nullcontext
-        with torch.no_grad():
-            with precision_scope("cuda"):
-                with self.model.ema_scope():
-                    self.sampler.make_schedule(
-                        ddim_num_steps=steps, ddim_eta=self.opt.ddim_eta,
-                            verbose=False)
+        for d in docs:
+            batch_size = 1
+            prompt = d.text
+            assert prompt is not None
 
-                    for d in docs:
-                        batch_size = 1
-                        prompt = d.text
-                        assert prompt is not None
+            prompts = prompt.split('|')
 
-                        prompts = prompt.split('|')
-                        assert len(prompts) == 2, 'can only interpolate between two prompts'
+            (
+                conditioning_start,
+                unconditioning, # Reuse this as it's the same for both
+                weighted_subprompts_start,
+                _, # Don't need the individual embedding managers
+            ) = self.stable_diffusion_module.compute_conditioning_and_weights(
+                prompts[0].strip(),
+                batch_size)
 
-                        self.logger.info(f'stable diffusion interpolate start {num_images} images, prompt "{prompt}"...')
+            (
+                conditioning_end,
+                _,
+                weighted_subprompts_end,
+                _, # Don't need the individual embedding managers
+            ) = self.stable_diffusion_module.compute_conditioning_and_weights(
+                prompts[1].strip(),
+                batch_size)
 
-                        prompt_embedding_start = self.model.get_learned_conditioning(prompts[0].strip())
-                        prompt_embedding_end = self.model.get_learned_conditioning(prompts[1].strip())
+            assert len(weighted_subprompts_start) == len(weighted_subprompts_end), \
+                'Weighted subprompts for interpolation must be equal in number'
 
-                        to_iterate = list(enumerate(np.linspace(0, 1, num_images)))
+            to_iterate = list(enumerate(np.linspace(0, 1, num_images)))
 
-                        # Interate over interpolation percentages.
-                        last_image = None
-                        x_samples = None
+            # Interate over interpolation percentages.
+            samples_last = None
+            for i, percent in to_iterate:
+                c = None
+                if i < 1:
+                    c = conditioning_start
+                elif i == len(to_iterate) - 1:
+                    c = conditioning_end
+                else:
+                    c = conditioning_start.clone().detach()
+                    for embedding_i, _ in enumerate(conditioning_start):
+                        c[embedding_i] = slerp(
+                            percent,
+                            conditioning_start[embedding_i],
+                            conditioning_end[embedding_i],
+                        )
+                weighted_subprompts = combine_weighted_subprompts(percent,
+                    weighted_subprompts_start,
+                    weighted_subprompts_end)
 
-                        for i, percent in to_iterate:
-                            init_image = None
-                            init_latent = None
+                image = None
+                if i == 0 or not resample_prior:
+                    samples_last, extra_data = self.stable_diffusion_module.sample(
+                        prompt,
+                        batch_size,
+                        sampler,
+                        seed + i,
+                        steps,
+                        conditioning=c,
+                        height=height,
+                        prompt_concept_injection_required=False,
+                        scale=scale,
+                        weighted_subprompts=weighted_subprompts,
+                        width=width,
+                        unconditioning=unconditioning,
+                    )
 
-                            c = None
-                            if i < 1:
-                                c = prompt_embedding_start
-                            elif i == len(to_iterate) - 1:
-                                c = prompt_embedding_end
-                            else:
-                                c = slerp(percent, prompt_embedding_start,
-                                    prompt_embedding_end)
+                    (
+                        image,
+                    ) = itemgetter('images')(extra_data)
+                else:
+                    samples_last, extra_data = self.stable_diffusion_module.sample(
+                        prompt,
+                        batch_size,
+                        sampler,
+                        seed + i,
+                        steps,
+                        conditioning=c,
+                        height=height,
+                        init_latent=samples_last,
+                        prompt_concept_injection_required=False,
+                        scale=scale,
+                        strength=strength,
+                        weighted_subprompts=weighted_subprompts,
+                        width=width,
+                        unconditioning=unconditioning,
+                    )
 
-                            if i == 0 or not resample_prior:
-                                start_code = None
-                                if opt.fixed_code:
-                                    start_code = torch.randn([1, opt.C, height // opt.f,
-                                        width // opt.f], device=self.device)
-                                x_samples = self._sample_text(None, 1,
-                                    batch_size, opt, sampler, steps,
-                                    start_code, c=c,
-                                    height=height, width=width)
-                            else:
-                                init_image = load_img('', img=last_image).to(self.device)
-                                init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
-                                init_latent = self.model.get_first_stage_encoding(
-                                    self.model.encode_first_stage(init_image))
+                    (
+                        image,
+                    ) = itemgetter('images')(extra_data)
 
-                                uc = None
-                                if opt.scale != 1.0:
-                                    uc = self.model.get_learned_conditioning(batch_size * [""])
+                torch.cuda.empty_cache()
 
-                                samples = None
-                                if sampler == 'ddim':
-                                    # encode (scaled latent)
-                                    z_enc = self.sampler.stochastic_encode(
-                                        init_latent, torch.tensor([t_enc]*batch_size).to(self.device))
-                                    # decode it
-                                    samples = self.sampler.decode(z_enc, c, t_enc,
-                                        unconditional_guidance_scale=opt.scale,
-                                        unconditional_conditioning=uc)
-                                if sampler in K_DIFF_SAMPLERS:
-                                    # k_lms is the fallthrough
-                                    sampling_fn = K.sampling.sample_lms
-                                    if sampler == 'dpm2':
-                                        sampling_fn = K.sampling.sample_dpm_2
-                                    if sampler == 'dpm2_ancestral':
-                                        sampling_fn = K.sampling.sample_dpm_2_ancestral
-                                    if sampler == 'heun':
-                                        sampling_fn = K.sampling.sample_heun
-                                    if sampler == 'euler':
-                                        sampling_fn = K.sampling.sample_euler
-                                    if sampler == 'euler_ancestral':
-                                        sampling_fn = K.sampling.sample_euler_ancestral
+                buffered = BytesIO()
+                image.save(buffered, format='PNG')
 
-                                    sigmas = self.model_k_wrapped.get_sigmas(steps)
-                                    x0 = init_latent
-                                    noise = torch.randn_like(x0) * sigmas[steps - t_enc - 1]
-                                    xi = x0 + noise
-                                    sigma_sched = sigmas[steps - t_enc - 1:]
-                                    extra_args = {
-                                        'cond': c,
-                                        'uncond': uc,
-                                        'cond_scale': opt.scale,
-                                    }
-                                    samples = sampling_fn(
-                                        self.model_k_config,
-                                        xi,
-                                        sigma_sched,
-                                        extra_args=extra_args,
-                                    )
+                samples_buffer = BytesIO()
+                torch.save(samples_last, samples_buffer)
+                samples_buffer.seek(0)
 
-                                x_samples = self.model.decode_first_stage(samples)
-                                x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
-
-                            x_sample = 255. * rearrange(x_samples[0].cpu().numpy(), 'c h w -> h w c')
-                            img = Image.fromarray(x_sample.astype(np.uint8))
-
-                            buffered = BytesIO()
-                            img.save(buffered, format='PNG')
-                            last_image = img
-                            _d = Document(
-                                blob=buffered.getvalue(),
-                                mime_type='image/png',
-                                tags={
-                                    'text': prompt,
-                                    'percent': percent,
-                                    'generator': 'stable-diffusion',
-                                    'request_time': request_time,
-                                    'created_time': time.time(),
-                                },
-                            ).convert_blob_to_datauri()
-                            _d.text = prompt
-                            d.matches.append(_d)
+                _d = Document(
+                    embedding=c,
+                    blob=buffered.getvalue(),
+                    mime_type='image/png',
+                    tags={
+                        'latent_repr': base64.b64encode(
+                            samples_buffer.getvalue()).decode(),
+                        'request': {
+                            'api': 'stableinterpolate',
+                            'height': height,
+                            'num_images': num_images,
+                            'resample_prior': resample_prior,
+                            'sampler': sampler,
+                            'scale': scale,
+                            'seed': seed,
+                            'steps': steps,
+                            'strength': strength,
+                            'width': width,
+                        },
+                        'text': prompt,
+                        'percent': percent,
+                        'generator': 'stable-diffusion',
+                        'request_time': request_time,
+                        'created_time': time.time(),
+                    },
+                ).convert_blob_to_datauri()
+                _d.text = prompt
+                d.matches.append(_d)
