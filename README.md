@@ -163,7 +163,7 @@ You can host your own server by following the instruction below.
 DALL·E Flow needs one GPU with 21GB VRAM at its peak. All services are squeezed into this one GPU, this includes (roughly)
 - DALLE ~9GB
 - GLID Diffusion ~6GB
-- Stable Diffusion ~7GB (n_samples=1 images, 512x512, slower) or ~14GB (n_samples=4 images, 512x512, slightly faster)
+- Stable Diffusion ~7GB (batch_size=1 in `config.yml`, 512x512, slower) or ~14GB (batch_size=4 in `config.yml`, 512x512, slightly faster)
 - SwinIR ~3GB
 - CLIP ViT-L/14-336px ~3GB
 
