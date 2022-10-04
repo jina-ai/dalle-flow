@@ -355,7 +355,7 @@ class StableDiffusionGenerator(Executor):
                         prompt,
                         batch_size,
                         sampler,
-                        seed + i,
+                        seed,
                         steps,
                         conditioning=c,
                         height=height,
