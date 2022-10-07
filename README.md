@@ -303,7 +303,7 @@ Running natively requires some manual steps, but it is often easier to debug.
 mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/jina-ai/SwinIR.git
-git clone --branch v0.0.10 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git
+git clone --branch v0.0.12 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git
 git clone https://github.com/CompVis/latent-diffusion.git
 git clone https://github.com/jina-ai/glid-3-xl.git
 ```
