@@ -10,6 +10,7 @@ DISABLE_DALLE_MEGA
 DISABLE_GLID3XL
 DISABLE_SWINIR
 ENABLE_STABLE_DIFFUSION
+ENABLE_CLIPSEG
 
 TODO Support jcloud and k8s configurations?
 '''
@@ -24,6 +25,7 @@ ENV_DISABLE_CLIP = 'DISABLE_CLIP'
 ENV_DISABLE_DALLE_MEGA = 'DISABLE_DALLE_MEGA'
 ENV_DISABLE_GLID3XL = 'DISABLE_GLID3XL'
 ENV_DISABLE_SWINIR = 'DISABLE_SWINIR'
+ENV_ENABLE_CLIPSEG = 'ENABLE_CLIPSEG'
 ENV_ENABLE_STABLE_DIFFUSION = 'ENABLE_STABLE_DIFFUSION'
 
 ENV_GPUS_DALLE_MEGA = 'GPUS_DALLE_MEGA'
@@ -35,6 +37,7 @@ FLOW_KEY_ENV = 'env'
 FLOW_KEY_ENV_CUDA_DEV = 'CUDA_VISIBLE_DEVICES'
 
 CAS_FLOW_NAME = 'clip_encoder'
+CLIPSEG_FLOW_NAME = 'clipseg'
 DALLE_MEGA_FLOW_NAME = 'dalle'
 GLID3XL_FLOW_NAME = 'diffusion'
 RERANK_FLOW_NAME = 'rerank'
@@ -90,6 +93,11 @@ parser.add_argument('--disable-swinir',
     action='store_true',
     help="Disable SWINIR upscaler executor (default false)",
     required=False)
+parser.add_argument('--enable-clipseg',
+    dest='yes_clipseg',
+    action='store_true',
+    help="Enable CLIP segmentation executor (default false)",
+    required=False)
 parser.add_argument('--enable-stable-diffusion',
     dest='yes_stable_diffusion',
     action='store_true',
@@ -132,6 +140,8 @@ no_dalle_mega = args.get('no_dalle_mega') or \
     os.environ.get(ENV_DISABLE_DALLE_MEGA, False)
 no_glid3xl = args.get('no_glid3xl') or os.environ.get(ENV_DISABLE_GLID3XL, False)
 no_swinir = args.get('no_swinir') or os.environ.get(ENV_DISABLE_SWINIR, False)
+yes_clipseg = args.get('yes_clipseg') or \
+    os.environ.get(ENV_ENABLE_CLIPSEG, False)
 yes_stable_diffusion = args.get('yes_stable_diffusion') or \
     os.environ.get(ENV_ENABLE_STABLE_DIFFUSION, False)
 gpus_dalle_mega = os.environ.get(ENV_GPUS_DALLE_MEGA, False) or \
@@ -143,6 +153,16 @@ gpus_stable_diffusion = os.environ.get(ENV_GPUS_STABLE_DIFFUSION, False) or \
 gpus_swinir = os.environ.get(ENV_GPUS_SWINIR, False) or \
     args.get('gpus_swinir')
 
+CLIPSEG_DICT = OrderedDict({
+    'env': {
+        'CUDA_VISIBLE_DEVICES': 0,
+        'XLA_PYTHON_CLIENT_ALLOCATOR': 'platform',
+    },
+    'name': CLIPSEG_FLOW_NAME,
+    'replicas': 1,
+    'timeout_ready': -1,
+    'uses': f'executors/{CLIPSEG_FLOW_NAME}/config.yml',
+})
 STABLE_YAML_DICT = OrderedDict({
     'env': {
         'CUDA_VISIBLE_DEVICES': gpus_stable_diffusion,
@@ -168,9 +188,11 @@ with open(flow_to_use, 'r') as f_in:
     # For backwards compatibility, we inject the stable diffusion configuration
     # into the flow yml and then remove it if needed.
     #
-    # Find the index of latent diffusion and inject stable diffusion after it.
+    # Find the index of latent diffusion and inject stable diffusion and
+    # clipseg after it.
     glid3xl_idx = next(i for i, exc in enumerate(flow_as_dict['executors'])
         if exc['name'] == GLID3XL_FLOW_NAME)
+    flow_as_dict['executors'].insert(glid3xl_idx + 1, CLIPSEG_DICT)
     flow_as_dict['executors'].insert(glid3xl_idx + 1, STABLE_YAML_DICT)
 
     # Find the rerank executor, jam stable into its needs.
@@ -211,6 +233,9 @@ with open(flow_to_use, 'r') as f_in:
             if exc['name'] == SWINIR_FLOW_NAME)
         flow_as_dict['executors'][swinir_idx][FLOW_KEY_ENV][FLOW_KEY_ENV_CUDA_DEV] = gpus_swinir
 
+    if not yes_clipseg:
+        flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
+            CLIPSEG_FLOW_NAME)
     if not yes_stable_diffusion:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
             STABLE_DIFFUSION_FLOW_NAME)
@@ -228,6 +253,10 @@ with open(flow_to_use, 'r') as f_in:
             if no_swinir:
                 exc['needs'] = list(filter(
                     lambda _n: _n != SWINIR_FLOW_NAME,
+                    exc['needs']))
+            if not yes_clipseg:
+                exc['needs'] = list(filter(
+                    lambda _n: _n != CLIPSEG_FLOW_NAME,
                     exc['needs']))
             if not yes_stable_diffusion:
                 exc['needs'] = list(filter(

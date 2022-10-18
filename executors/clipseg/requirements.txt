@@ -1,0 +1,7 @@
+jina
+docarray
+numpy
+scipy
+matplotlib
+opencv-python
+CLIP @ git+https://github.com/openai/CLIP.git

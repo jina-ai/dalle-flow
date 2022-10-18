@@ -29,6 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
+- 🌟 **2022/9/25** Automated [CLIP-based segmentation](https://github.com/timojl/clipseg) from a prompt has been added.
 - 🌟 **2022/8/17** Text to image for [Stable Diffusion](https://github.com/CompVis/stable-diffusion) has been added. In order to use it you will need to agree to their ToS, download the weights, then enable the flag in docker or `flow_parser.py`.
 - ⚠️ **2022/8/8** Started using CLIP-as-service as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors). Now you can easily [deploy your own CLIP executor](#run-your-own-clip) if you want. There is [a small breaking change](https://github.com/jina-ai/dalle-flow/pull/74/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5R103) as a result of this improvement, so [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
 - ⚠️ **2022/7/6** Demo server migration to AWS EKS for better availability and robustness, **server URL is now changing to `grpcs://dalle-flow.dev.jina.ai`**. All connections are now with TLS encryption, [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
@@ -249,6 +250,7 @@ DISABLE_DALLE_MEGA
 DISABLE_GLID3XL
 DISABLE_SWINIR
 ENABLE_STABLE_DIFFUSION
+ENABLE_CLIPSEG
 ```
 
 For example, if you would like to disable GLID3XL workflows, run:
@@ -266,6 +268,7 @@ docker run -e DISABLE_GLID3XL='1' \
 - `-v $HOME/.cache:/root/.cache` avoids repeated model downloading on every docker run.
 - The first part of `-p 51005:51005` is your host public port. Make sure people can access this port if you are serving publicly. The second par of it is [the port defined in flow.yml](https://github.com/jina-ai/dalle-flow/blob/e7e313522608668daeec1b7cd84afe56e5b19f1e/flow.yml#L4).
 - If you want to use Stable Diffusion, it must be enabled manually with the `ENABLE_STABLE_DIFFUSION`.
+- If you want to use clipseg, it must be enabled manually with the `ENABLE_CLIPSEG`.
 
 #### Special instructions for Stable Diffusion and Docker
 
@@ -306,6 +309,7 @@ git clone https://github.com/jina-ai/SwinIR.git
 git clone --branch v0.0.12 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git
 git clone https://github.com/CompVis/latent-diffusion.git
 git clone https://github.com/jina-ai/glid-3-xl.git
+git clone https://github.com/timojl/clipseg.git
 ```
 
 You should have the following folder structure:
@@ -314,6 +318,7 @@ You should have the following folder structure:
 dalle/
  |
  |-- SwinIR/
+ |-- clipseg/
  |-- dalle-flow/
  |-- glid-3-xl/
  |-- latent-diffusion/
@@ -334,6 +339,7 @@ cd latent-diffusion && pip install -e . && cd -
 cd stable-diffusion && pip install -e . && cd -
 cd SwinIR && pip install -e . && cd -
 cd glid-3-xl && pip install -e . && cd -
+cd clipseg && pip install -e . && cd -
 ```
 
 There are couple models we need to download for GLID-3-XL if you are using that:
