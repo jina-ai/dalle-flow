@@ -198,9 +198,9 @@ jina export flowchart flow.yml flow.svg
 
 If you want to use Stable Diffusion, you will first need to register an account on the website [Huggingface](https://huggingface.co/) and agree to the terms and conditions for the model. After logging in, you can find the version of the model required by going here:
 
-[CompVis / stable-diffusion-v-1-4-original](https://huggingface.co/CompVis/stable-diffusion-v-1-4-original)
+[CompVis / sd-v1-5-inpainting.ckpt](https://huggingface.co/runwayml/stable-diffusion-inpainting/blob/main/sd-v1-5-inpainting.ckpt)
 
-Under the **Download the Weights** section, click the link for `sd-v1-x.ckpt`. The latest weights at the time of writing are `sd-v1-4.ckpt`.
+Under the **Download the Weights** section, click the link for `sd-v1-x.ckpt`. The latest weights at the time of writing are `sd-v1-5.ckpt`.
 
 **DOCKER USERS**:  Put this file into a folder named `ldm/stable-diffusion-v1` and rename it `model.ckpt`. Follow the instructions below carefully because SD is not enabled by default.
 
@@ -306,7 +306,7 @@ Running natively requires some manual steps, but it is often easier to debug.
 mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/jina-ai/SwinIR.git
-git clone --branch v0.0.12 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git
+git clone --branch v0.0.13 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git
 git clone https://github.com/CompVis/latent-diffusion.git
 git clone https://github.com/jina-ai/glid-3-xl.git
 git clone https://github.com/timojl/clipseg.git
@@ -334,7 +334,7 @@ source env/bin/activate && cd -
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
 pip install numpy tqdm pytorch_lightning einops numpy omegaconf
 pip install https://github.com/crowsonkb/k-diffusion/archive/master.zip
-pip install git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.11
+pip install git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.13
 cd latent-diffusion && pip install -e . && cd -
 cd stable-diffusion && pip install -e . && cd -
 cd SwinIR && pip install -e . && cd -

@@ -35,7 +35,7 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     git clone --depth=1 https://github.com/jina-ai/SwinIR.git  && \
     git clone --depth=1 https://github.com/CompVis/latent-diffusion.git && \
     git clone --depth=1 https://github.com/jina-ai/glid-3-xl.git && \
-    git clone --depth=1 --branch v0.0.12 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git && \
+    git clone --depth=1 --branch v0.0.13 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git && \
     cd dalle-flow && python3 -m virtualenv --python=/usr/bin/python3.10 env && . env/bin/activate && cd - && \
     pip install --upgrade cython && \
     pip install --upgrade pyyaml && \
