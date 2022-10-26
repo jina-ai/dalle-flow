@@ -29,7 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
-- ⚠️ **2022/10/26** To use CLIP-as-service `grpcs://api.clip.jina.ai:2096`, you need first get an access token from [here](https://console.clip.jina.ai/get_started). See [Use the CLIP-as-service](#use-the-clip-as-service) for more details.
+- ⚠️ **2022/10/26** To use CLIP-as-service available at `grpcs://api.clip.jina.ai:2096` (requires `jina >= v3.11.0`), you need first get an access token from [here](https://console.clip.jina.ai/get_started). See [Use the CLIP-as-service](#use-the-clip-as-service) for more details.
 - 🌟 **2022/9/25** Automated [CLIP-based segmentation](https://github.com/timojl/clipseg) from a prompt has been added.
 - 🌟 **2022/8/17** Text to image for [Stable Diffusion](https://github.com/CompVis/stable-diffusion) has been added. In order to use it you will need to agree to their ToS, download the weights, then enable the flag in docker or `flow_parser.py`.
 - ⚠️ **2022/8/8** Started using CLIP-as-service as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors). Now you can easily [deploy your own CLIP executor](#run-your-own-clip) if you want. There is [a small breaking change](https://github.com/jina-ai/dalle-flow/pull/74/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5R103) as a result of this improvement, so [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
@@ -436,6 +436,9 @@ Then, you need to change the executor related configs (`external`, `tls` and `gr
       authorization: "<your access token>"
     needs: [dalle, diffusion]
 ```
+
+> ⚠️ `grpc_metadata` is only available after Jina `v3.11.0`. If you are using an older version, please upgrade to the latest version.
+
 
 Now, you can use the free `CLIP-as-service` in your flow.
 

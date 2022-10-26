@@ -32,10 +32,7 @@ executors:
     replicas: 1
     host: 'api.clip.jina.ai'
     port: 2096
-    tls: false
     external: false
-    grpc_metadata:
-      authorization: "<your access token>"
     needs: [gateway]
     gpus: all
     jcloud:
@@ -62,10 +59,7 @@ executors:
     replicas: 1
     host: 'api.clip.jina.ai'
     port: 2096
-    tls: false
     external: false
-    grpc_metadata:
-      authorization: "<your access token>"
     needs: [dalle, diffusion]
     gpus: all
     jcloud:

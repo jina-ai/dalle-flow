@@ -17,10 +17,7 @@ executors:
     uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
     host: 'api.clip.jina.ai'
     port: 2096
-    tls: false
     external: false
-    grpc_metadata:
-      authorization: "<your access token>"
     needs: [gateway]
   - name: diffusion
     uses: executors/glid3/config.yml
@@ -37,8 +34,6 @@ executors:
     uses_requests:
       '/': rank
     external: false
-    grpc_metadata:
-      authorization: "<your access token>"
     needs: [dalle, diffusion]
   - name: upscaler
     uses: executors/swinir/config.yml
