@@ -437,8 +437,14 @@ Then, you need to change the executor related configs (`external`, `tls` and `gr
     needs: [dalle, diffusion]
 ```
 
-> ⚠️ `grpc_metadata` is only available after Jina `v3.11.0`. If you are using an older version, please upgrade to the latest version.
+You can also use the `flow_parser.py` to automatically generate and run the flow with using the `CLIP-as-service` as external executor:
 
+```bash
+python flow_parser.py --cas-token "<your access token>'
+jina flow --uses flow.tmp.yml
+```
+
+> ⚠️ `grpc_metadata` is only available after Jina `v3.11.0`. If you are using an older version, please upgrade to the latest version.
 
 Now, you can use the free `CLIP-as-service` in your flow.
 
