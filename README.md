@@ -426,7 +426,7 @@ Then, you need to change the executor related configs (`external`, `tls` and `gr
 ...
   - name: rerank
     uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
-    host: 'demo-cas.jina.ai'
+    host: 'api.clip.jina.ai'
     port: 2096
     uses_requests:
       '/': rank
