@@ -403,8 +403,8 @@ You can modify and extend the server flow as you like, e.g. changing the model, 
 
 ### Use the CLIP-as-service
 
-To reduce the usage of vRAM, you can use the `CLIP-as-service` as external executor freely hosted by `grpcs://api.clip.jina.ai:2096`.  
-First, make sure you have created access token from [console website](https://console.clip.jina.ai/get_started), or CLI as described
+To reduce the usage of vRAM, you can use the `CLIP-as-service` as an external executor freely available at `grpcs://api.clip.jina.ai:2096`.  
+First, make sure you have created an access token from [console website](https://console.clip.jina.ai/get_started), or CLI as following
 
 ```bash
 jina auth token create <name of PAT> -e <expiration days>
