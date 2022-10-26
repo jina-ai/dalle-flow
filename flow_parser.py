@@ -32,6 +32,7 @@ ENV_GPUS_DALLE_MEGA = 'GPUS_DALLE_MEGA'
 ENV_GPUS_GLID3XL = 'GPUS_GLID3XL'
 ENV_GPUS_SWINIR = 'GPUS_SWINIR'
 ENV_GPUS_STABLE_DIFFUSION = 'GPUS_STABLE_DIFFUSION'
+ENV_CAS_TOKEN = ''
 
 FLOW_KEY_ENV = 'env'
 FLOW_KEY_ENV_CUDA_DEV = 'CUDA_VISIBLE_DEVICES'
@@ -103,6 +104,11 @@ parser.add_argument('--enable-stable-diffusion',
     action='store_true',
     help="Enable Stable Diffusion executor (default false)",
     required=False)
+parser.add_argument('--cas-token',
+    dest='cas_token',
+    help="Token to authenticate with the CAS service (default ''). If not set, the CAS service will not be used.",
+    default='',
+    required=False)
 parser.add_argument('--gpus-dalle-mega',
     dest='gpus_dalle_mega',
     help="GPU device ID(s) for DALLE-MEGA (default 0)",
@@ -152,6 +158,7 @@ gpus_stable_diffusion = os.environ.get(ENV_GPUS_STABLE_DIFFUSION, False) or \
     args.get('gpus_stable_diffusion')
 gpus_swinir = os.environ.get(ENV_GPUS_SWINIR, False) or \
     args.get('gpus_swinir')
+cas_token = os.environ.get(ENV_CAS_TOKEN, '') or args.get('cas_token')
 
 CLIPSEG_DICT = OrderedDict({
     'env': {
@@ -174,6 +181,7 @@ STABLE_YAML_DICT = OrderedDict({
     'uses': f'executors/{STABLE_DIFFUSION_FLOW_NAME}/config.yml',
 })
 
+
 def _filter_out(flow_exec_list, name):
     return list(filter(lambda exc: exc['name'] != name, flow_exec_list))
 
@@ -184,6 +192,15 @@ with open(flow_to_use, 'r') as f_in:
     except yaml.YAMLError as exc:
         print(exc)
         sys.exit(1)
+
+    # If the cas_token is not empty, we will use the clip-as-a-service as external executor
+    if cas_token:
+        for ext in flow_as_dict['executors']:
+            if ext['name'] in [CAS_FLOW_NAME, RERANK_FLOW_NAME]:
+                ext['external'] = True
+                ext['tls'] = True
+                ext['grpc_metadata'] = {'authorization': cas_token}
+
 
     # For backwards compatibility, we inject the stable diffusion configuration
     # into the flow yml and then remove it if needed.
