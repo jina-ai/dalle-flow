@@ -30,10 +30,12 @@ executors:
     uses_with:
       name: ViT-L-14-336::openai
     replicas: 1
-    host: 'demo-cas.jina.ai'
+    host: 'api.clip.jina.ai'
     port: 2096
-    tls: true
-    external: true
+    tls: false
+    external: false
+    grpc_metadata:
+      authorization: "<your access token>"
     needs: [gateway]
     gpus: all
     jcloud:
@@ -58,10 +60,12 @@ executors:
     uses_requests:
       '/': rank
     replicas: 1
-    host: 'demo-cas.jina.ai'
+    host: 'api.clip.jina.ai'
     port: 2096
-    tls: true
-    external: true
+    tls: false
+    external: false
+    grpc_metadata:
+      authorization: "<your access token>"
     needs: [dalle, diffusion]
     gpus: all
     jcloud:

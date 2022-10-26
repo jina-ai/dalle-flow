@@ -170,7 +170,7 @@ DALL·E Flow needs one GPU with 21GB VRAM at its peak. All services are squeezed
 
 The following reasonable tricks can be used for further reducing VRAM:
 - SwinIR can be moved to CPU (-3GB)
-- CLIP can be delegated to [CLIP-as-service demo server](https://github.com/jina-ai/clip-as-service#text--image-embedding) (-3GB)
+- CLIP can be delegated to [CLIP-as-service free server](https://console.clip.jina.ai/get_started) (-3GB)
 
 
 It requires at least 50GB free space on the hard drive, mostly for downloading pretrained models.
@@ -399,10 +399,44 @@ Congrats! Now you should be able to [run the client](#client).
 
 You can modify and extend the server flow as you like, e.g. changing the model, adding persistence, or even auto-posting to Instagram/OpenSea. With Jina and DocArray, you can easily make DALL·E Flow [cloud-native and ready for production](https://github.com/jina-ai/jina). 
 
-### Run your own CLIP
 
-By default [`CLIPTorchEncoder`](https://hub.jina.ai/executor/gzpbl8jh) runs as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors).
-If you want to run your own CLIP, you can do that by removing external executor related configs (`host, port, tls and external`) from [`flow.yml`](./flow.yml).
+### Use the CLIP-as-service
+
+To reduce the usage of vRAM, you can use the `CLIP-as-service` as external executor freely hosted by `grpcs://api.clip.jina.ai:2096`.  
+First, make sure you have created access token from [console website](https://console.clip.jina.ai/get_started), or CLI as described
+
+```bash
+jina auth token create <name of PAT> -e <expiration days>
+```
+
+Then, you need to change the executor related configs (`external`, `tls` and `grpc_metadata`) from [`flow.yml`](./flow.yml).
+
+```yaml
+...
+  - name: clip_encoder
+    uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
+    host: 'api.clip.jina.ai'
+    port: 2096
+    tls: true
+    external: true
+    grpc_metadata:
+      authorization: "<your access token>"
+    needs: [gateway]
+...
+  - name: rerank
+    uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
+    host: 'demo-cas.jina.ai'
+    port: 2096
+    uses_requests:
+      '/': rank
+    tls: true
+    external: true
+    grpc_metadata:
+      authorization: "<your access token>"
+    needs: [dalle, diffusion]
+```
+
+Now, you can use the free `CLIP-as-service` in your flow.
 
 <!-- start support-pitch -->
 ## Support
