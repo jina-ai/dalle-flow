@@ -15,10 +15,6 @@ executors:
     replicas: 1  # change this if you have larger VRAM
   - name: clip_encoder
     uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
-    host: 'demo-cas.jina.ai'
-    port: 2096
-    tls: true
-    external: true
     needs: [gateway]
   - name: diffusion
     uses: executors/glid3/config.yml
@@ -30,12 +26,8 @@ executors:
     needs: [clip_encoder]
   - name: rerank
     uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
-    host: 'demo-cas.jina.ai'
-    port: 2096
     uses_requests:
       '/': rank
-    tls: true
-    external: true
     needs: [dalle, diffusion]
   - name: upscaler
     uses: executors/swinir/config.yml

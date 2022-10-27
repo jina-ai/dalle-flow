@@ -29,6 +29,7 @@ DALL·E Flow is in client-server architecture.
 
 ## Updates
 
+- ⚠️ **2022/10/26** To use CLIP-as-service available at `grpcs://api.clip.jina.ai:2096` (requires `jina >= v3.11.0`), you need first get an access token from [here](https://console.clip.jina.ai/get_started). See [Use the CLIP-as-service](#use-the-clip-as-service) for more details.
 - 🌟 **2022/9/25** Automated [CLIP-based segmentation](https://github.com/timojl/clipseg) from a prompt has been added.
 - 🌟 **2022/8/17** Text to image for [Stable Diffusion](https://github.com/CompVis/stable-diffusion) has been added. In order to use it you will need to agree to their ToS, download the weights, then enable the flag in docker or `flow_parser.py`.
 - ⚠️ **2022/8/8** Started using CLIP-as-service as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors). Now you can easily [deploy your own CLIP executor](#run-your-own-clip) if you want. There is [a small breaking change](https://github.com/jina-ai/dalle-flow/pull/74/files#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5R103) as a result of this improvement, so [please _reopen_ the notebook in Google Colab](https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb).
@@ -170,7 +171,7 @@ DALL·E Flow needs one GPU with 21GB VRAM at its peak. All services are squeezed
 
 The following reasonable tricks can be used for further reducing VRAM:
 - SwinIR can be moved to CPU (-3GB)
-- CLIP can be delegated to [CLIP-as-service demo server](https://github.com/jina-ai/clip-as-service#text--image-embedding) (-3GB)
+- CLIP can be delegated to [CLIP-as-service free server](https://console.clip.jina.ai/get_started) (-3GB)
 
 
 It requires at least 50GB free space on the hard drive, mostly for downloading pretrained models.
@@ -399,10 +400,53 @@ Congrats! Now you should be able to [run the client](#client).
 
 You can modify and extend the server flow as you like, e.g. changing the model, adding persistence, or even auto-posting to Instagram/OpenSea. With Jina and DocArray, you can easily make DALL·E Flow [cloud-native and ready for production](https://github.com/jina-ai/jina). 
 
-### Run your own CLIP
 
-By default [`CLIPTorchEncoder`](https://hub.jina.ai/executor/gzpbl8jh) runs as an [external executor](https://docs.jina.ai/fundamentals/flow/add-executors/#external-executors).
-If you want to run your own CLIP, you can do that by removing external executor related configs (`host, port, tls and external`) from [`flow.yml`](./flow.yml).
+### Use the CLIP-as-service
+
+To reduce the usage of vRAM, you can use the `CLIP-as-service` as an external executor freely available at `grpcs://api.clip.jina.ai:2096`.  
+First, make sure you have created an access token from [console website](https://console.clip.jina.ai/get_started), or CLI as following
+
+```bash
+jina auth token create <name of PAT> -e <expiration days>
+```
+
+Then, you need to change the executor related configs (`host`, `port`, `external`, `tls` and `grpc_metadata`) from [`flow.yml`](./flow.yml).
+
+```yaml
+...
+  - name: clip_encoder
+    uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
+    host: 'api.clip.jina.ai'
+    port: 2096
+    tls: true
+    external: true
+    grpc_metadata:
+      authorization: "<your access token>"
+    needs: [gateway]
+...
+  - name: rerank
+    uses: jinahub+docker://CLIPTorchEncoder/latest-gpu
+    host: 'api.clip.jina.ai'
+    port: 2096
+    uses_requests:
+      '/': rank
+    tls: true
+    external: true
+    grpc_metadata:
+      authorization: "<your access token>"
+    needs: [dalle, diffusion]
+```
+
+You can also use the `flow_parser.py` to automatically generate and run the flow with using the `CLIP-as-service` as external executor:
+
+```bash
+python flow_parser.py --cas-token "<your access token>'
+jina flow --uses flow.tmp.yml
+```
+
+> ⚠️ `grpc_metadata` is only available after Jina `v3.11.0`. If you are using an older version, please upgrade to the latest version.
+
+Now, you can use the free `CLIP-as-service` in your flow.
 
 <!-- start support-pitch -->
 ## Support
