@@ -26,21 +26,31 @@ ENV_DISABLE_DALLE_MEGA = 'DISABLE_DALLE_MEGA'
 ENV_DISABLE_GLID3XL = 'DISABLE_GLID3XL'
 ENV_DISABLE_SWINIR = 'DISABLE_SWINIR'
 ENV_ENABLE_CLIPSEG = 'ENABLE_CLIPSEG'
+ENV_ENABLE_REALESRGAN = 'ENABLE_REALESRGAN'
 ENV_ENABLE_STABLE_DIFFUSION = 'ENABLE_STABLE_DIFFUSION'
 
 ENV_GPUS_DALLE_MEGA = 'GPUS_DALLE_MEGA'
 ENV_GPUS_GLID3XL = 'GPUS_GLID3XL'
+ENV_GPUS_REALESRGAN = 'GPUS_REALESRGAN'
 ENV_GPUS_SWINIR = 'GPUS_SWINIR'
 ENV_GPUS_STABLE_DIFFUSION = 'GPUS_STABLE_DIFFUSION'
 ENV_CAS_TOKEN = 'CAS_TOKEN'
 
+ENV_REPLICAS_DALLE_MEGA = 'REPLICAS_DALLE_MEGA'
+ENV_REPLICAS_GLID3XL = 'REPLICAS_GLID3XL'
+ENV_REPLICAS_REALESRGAN = 'REPLICAS_REALESRGAN'
+ENV_REPLICAS_SWINIR = 'REPLICAS_SWINIR'
+ENV_REPLICAS_STABLE_DIFFUSION = 'REPLICAS_STABLE_DIFFUSION'
+
 FLOW_KEY_ENV = 'env'
 FLOW_KEY_ENV_CUDA_DEV = 'CUDA_VISIBLE_DEVICES'
+FLOW_KEY_REPLICAS = 'replicas'
 
 CAS_FLOW_NAME = 'clip_encoder'
 CLIPSEG_FLOW_NAME = 'clipseg'
 DALLE_MEGA_FLOW_NAME = 'dalle'
 GLID3XL_FLOW_NAME = 'diffusion'
+REALESRGAN_FLOW_NAME = 'realesrgan'
 RERANK_FLOW_NAME = 'rerank'
 SWINIR_FLOW_NAME = 'upscaler'
 STABLE_DIFFUSION_FLOW_NAME = 'stable'
@@ -102,6 +112,11 @@ parser.add_argument('--enable-clipseg',
     action='store_true',
     help="Enable CLIP segmentation executor (default false)",
     required=False)
+parser.add_argument('--enable-realesrgan',
+    dest='yes_realesrgan',
+    action='store_true',
+    help="Enable RealESRGAN upscaler (default false)",
+    required=False)
 parser.add_argument('--enable-stable-diffusion',
     dest='yes_stable_diffusion',
     action='store_true',
@@ -122,6 +137,11 @@ parser.add_argument('--gpus-glid3xl',
     help="GPU device ID(s) for GLID3XL (default 0)",
     default=0,
     required=False)
+parser.add_argument('--gpus-realesrgan',
+    dest='gpus_realesrgan',
+    help="GPU device ID(s) for RealESRGAN (default 0)",
+    default=0,
+    required=False)
 parser.add_argument('--gpus-stable-diffusion',
     dest='gpus_stable_diffusion',
     help="GPU device ID(s) for Stable Diffusion (default 0)",
@@ -131,6 +151,32 @@ parser.add_argument('--gpus-swinir',
     dest='gpus_swinir',
     help="GPU device ID(s) for SWINIR (default 0)",
     default=0,
+    required=False)
+
+parser.add_argument('--replicas-dalle-mega',
+    dest='replicas_dalle_mega',
+    help="Replica number for DALLE-MEGA (default 1)",
+    default=1,
+    required=False)
+parser.add_argument('--replicas-glid3xl',
+    dest='replicas_glid3xl',
+    help="Replica number for GLID3XL (default 1)",
+    default=1,
+    required=False)
+parser.add_argument('--replicas-realesrgan',
+    dest='replicas_realesrgan',
+    help="Replica number for RealESRGAN (default 1)",
+    default=1,
+    required=False)
+parser.add_argument('--replicas-stable-diffusion',
+    dest='replicas_stable_diffusion',
+    help="Replica number for Stable Diffusion (default 1)",
+    default=1,
+    required=False)
+parser.add_argument('--replicas-swinir',
+    dest='replicas_swinir',
+    help="Replica number for SWINIR (default 1)",
+    default=1,
     required=False)
 
 args = vars(parser.parse_args())
@@ -151,17 +197,38 @@ no_glid3xl = args.get('no_glid3xl') or os.environ.get(ENV_DISABLE_GLID3XL, False
 no_swinir = args.get('no_swinir') or os.environ.get(ENV_DISABLE_SWINIR, False)
 yes_clipseg = args.get('yes_clipseg') or \
     os.environ.get(ENV_ENABLE_CLIPSEG, False)
+yes_realesrgan = args.get('yes_realesrgan') or \
+    os.environ.get(ENV_ENABLE_REALESRGAN, False)
 yes_stable_diffusion = args.get('yes_stable_diffusion') or \
     os.environ.get(ENV_ENABLE_STABLE_DIFFUSION, False)
+
 gpus_dalle_mega = os.environ.get(ENV_GPUS_DALLE_MEGA, False) or \
     args.get('gpus_dalle_mega')
 gpus_glid3xl = os.environ.get(ENV_GPUS_GLID3XL, False) or \
     args.get('gpus_glid3xl')
+gpus_realesrgan = os.environ.get(ENV_GPUS_REALESRGAN, False) or \
+    args.get('gpus_realesrgan')
 gpus_stable_diffusion = os.environ.get(ENV_GPUS_STABLE_DIFFUSION, False) or \
     args.get('gpus_stable_diffusion')
 gpus_swinir = os.environ.get(ENV_GPUS_SWINIR, False) or \
     args.get('gpus_swinir')
+
+replicas_dalle_mega = os.environ.get(ENV_REPLICAS_DALLE_MEGA, False) or \
+    args.get('replicas_dalle_mega')
+replicas_glid3xl = os.environ.get(ENV_REPLICAS_GLID3XL, False) or \
+    args.get('replicas_glid3xl')
+replicas_realesrgan = os.environ.get(ENV_REPLICAS_REALESRGAN, False) or \
+    args.get('replicas_realesrgan')
+replicas_stable_diffusion = os.environ.get(ENV_REPLICAS_STABLE_DIFFUSION, False) or \
+    args.get('replicas_stable_diffusion')
+replicas_swinir = os.environ.get(ENV_REPLICAS_SWINIR, False) or \
+    args.get('replicas_swinir')
+
 cas_token = os.environ.get(ENV_CAS_TOKEN, '') or args.get('cas_token')
+
+if no_clip and not no_glid3xl:
+    raise ValueError('GLID3XL requires a CLIP encoder executor to work')
+
 
 CLIPSEG_DICT = OrderedDict({
     'env': {
@@ -173,13 +240,23 @@ CLIPSEG_DICT = OrderedDict({
     'timeout_ready': -1,
     'uses': f'executors/{CLIPSEG_FLOW_NAME}/config.yml',
 })
+REALESRGAN_DICT = OrderedDict({
+    'env': {
+        'CUDA_VISIBLE_DEVICES': gpus_realesrgan,
+        'XLA_PYTHON_CLIENT_ALLOCATOR': 'platform',
+    },
+    'name': REALESRGAN_FLOW_NAME,
+    'replicas': int(replicas_realesrgan),
+    'timeout_ready': -1,
+    'uses': f'executors/{REALESRGAN_FLOW_NAME}/config.yml',
+})
 STABLE_YAML_DICT = OrderedDict({
     'env': {
         'CUDA_VISIBLE_DEVICES': gpus_stable_diffusion,
         'XLA_PYTHON_CLIENT_ALLOCATOR': 'platform',
     },
     'name': STABLE_DIFFUSION_FLOW_NAME,
-    'replicas': 1,
+    'replicas': int(replicas_stable_diffusion),
     'timeout_ready': -1,
     'uses': f'executors/{STABLE_DIFFUSION_FLOW_NAME}/config.yml',
 })
@@ -215,6 +292,7 @@ with open(flow_to_use, 'r') as f_in:
     glid3xl_idx = next(i for i, exc in enumerate(flow_as_dict['executors'])
         if exc['name'] == GLID3XL_FLOW_NAME)
     flow_as_dict['executors'].insert(glid3xl_idx + 1, CLIPSEG_DICT)
+    flow_as_dict['executors'].insert(glid3xl_idx + 1, REALESRGAN_DICT)
     flow_as_dict['executors'].insert(glid3xl_idx + 1, STABLE_YAML_DICT)
 
     # Find the rerank executor, jam stable into its needs.
@@ -238,6 +316,7 @@ with open(flow_to_use, 'r') as f_in:
         dalle_mega_idx = next(i for i, exc in enumerate(flow_as_dict['executors'])
             if exc['name'] == DALLE_MEGA_FLOW_NAME)
         flow_as_dict['executors'][dalle_mega_idx][FLOW_KEY_ENV][FLOW_KEY_ENV_CUDA_DEV] = gpus_dalle_mega
+        flow_as_dict['executors'][dalle_mega_idx][FLOW_KEY_REPLICAS] = int(replicas_dalle_mega)
 
     if no_glid3xl:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
@@ -246,6 +325,7 @@ with open(flow_to_use, 'r') as f_in:
         glid3xl_idx = next(i for i, exc in enumerate(flow_as_dict['executors'])
             if exc['name'] == GLID3XL_FLOW_NAME)
         flow_as_dict['executors'][glid3xl_idx][FLOW_KEY_ENV][FLOW_KEY_ENV_CUDA_DEV] = gpus_glid3xl
+        flow_as_dict['executors'][glid3xl_idx][FLOW_KEY_REPLICAS] = int(replicas_glid3xl)
 
     if no_swinir:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
@@ -254,10 +334,14 @@ with open(flow_to_use, 'r') as f_in:
         swinir_idx = next(i for i, exc in enumerate(flow_as_dict['executors'])
             if exc['name'] == SWINIR_FLOW_NAME)
         flow_as_dict['executors'][swinir_idx][FLOW_KEY_ENV][FLOW_KEY_ENV_CUDA_DEV] = gpus_swinir
+        flow_as_dict['executors'][swinir_idx][FLOW_KEY_REPLICAS] = int(replicas_swinir)
 
     if not yes_clipseg:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
             CLIPSEG_FLOW_NAME)
+    if not yes_realesrgan:
+        flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
+            REALESRGAN_FLOW_NAME)
     if not yes_stable_diffusion:
         flow_as_dict['executors'] = _filter_out(flow_as_dict['executors'],
             STABLE_DIFFUSION_FLOW_NAME)
@@ -279,6 +363,10 @@ with open(flow_to_use, 'r') as f_in:
             if not yes_clipseg:
                 exc['needs'] = list(filter(
                     lambda _n: _n != CLIPSEG_FLOW_NAME,
+                    exc['needs']))
+            if not yes_realesrgan:
+                exc['needs'] = list(filter(
+                    lambda _n: _n != REALESRGAN_FLOW_NAME,
                     exc['needs']))
             if not yes_stable_diffusion:
                 exc['needs'] = list(filter(
