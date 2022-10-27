@@ -45,6 +45,9 @@ RERANK_FLOW_NAME = 'rerank'
 SWINIR_FLOW_NAME = 'upscaler'
 STABLE_DIFFUSION_FLOW_NAME = 'stable'
 
+CLIP_AS_SERVICE_HOST = os.environ.get('CLIP_AS_SERVICE_HOST', 'api.clip.jina.ai')
+CLIP_AS_SERVICE_PORT = os.environ.get('CLIP_AS_SERVICE_PORT', '2096')
+
 
 def represent_ordereddict(dumper, data):
     '''
@@ -197,6 +200,8 @@ with open(flow_to_use, 'r') as f_in:
     if cas_token:
         for ext in flow_as_dict['executors']:
             if ext['name'] in [CAS_FLOW_NAME, RERANK_FLOW_NAME]:
+                ext['host'] = CLIP_AS_SERVICE_HOST
+                ext['port'] = int(CLIP_AS_SERVICE_PORT)
                 ext['external'] = True
                 ext['tls'] = True
                 ext['grpc_metadata'] = {'authorization': cas_token}

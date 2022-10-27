@@ -410,7 +410,7 @@ First, make sure you have created an access token from [console website](https:/
 jina auth token create <name of PAT> -e <expiration days>
 ```
 
-Then, you need to change the executor related configs (`external`, `tls` and `grpc_metadata`) from [`flow.yml`](./flow.yml).
+Then, you need to change the executor related configs (`host`, `port`, `external`, `tls` and `grpc_metadata`) from [`flow.yml`](./flow.yml).
 
 ```yaml
 ...
