@@ -1,0 +1,14 @@
+jtype: RealESRGANUpscaler
+with:
+  cache_path: ~/.cache
+  models_to_load:
+    - RealESRGAN_x4plus
+    - RealESRGAN_x4plus_anime_6B
+  pre_pad: 10
+  tile: 0
+  tile_pad: 10
+  use_half: True
+
+metas:
+  py_modules:
+    - executor.py

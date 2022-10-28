@@ -39,11 +39,14 @@ class ClipSegmentation(Executor):
     transformation = None
 
     def __init__(self,
-        cache_path: str,
+        cache_path: str|Path,
         weights_url: str=WEIGHT_URL_DEFAULT,
         **kwargs,
     ):
         super().__init__(**kwargs)
+
+        if '~' in str(Path(cache_path)):
+            cache_path = Path(cache_path).expanduser()
 
         weights_path = Path('/')
         if Path(cache_path).is_dir():
