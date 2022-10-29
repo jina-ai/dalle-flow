@@ -260,7 +260,7 @@ class RealESRGANUpscaler(Executor):
                 "model_face_fix": model_face_fix,
             }
 
-    def document_to_pil(doc):
+    def document_to_pil(self, doc):
         uri_data = urlopen(doc.uri)
         return Image.open(BytesIO(uri_data.read()))
 
