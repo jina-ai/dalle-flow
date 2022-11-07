@@ -1,7 +1,9 @@
 jina==3.8.3
 docarray==0.16.2
 
+jax~=0.3.24
 flax
+
 git+https://github.com/openai/CLIP.git
 git+https://github.com/huggingface/transformers.git
 git+https://github.com/patil-suraj/vqgan-jax.git
