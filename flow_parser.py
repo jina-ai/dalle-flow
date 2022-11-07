@@ -252,6 +252,7 @@ REALESRGAN_DICT = OrderedDict({
 })
 STABLE_YAML_DICT = OrderedDict({
     'env': {
+        'MEMORY_EFFICIENT_CROSS_ATTENTION': 1,
         'CUDA_VISIBLE_DEVICES': gpus_stable_diffusion,
         'XLA_PYTHON_CLIENT_ALLOCATOR': 'platform',
     },

@@ -1,6 +1,6 @@
 jtype: StableDiffusionGenerator
 with:
-  batch_size: 1
+  batch_size: 4
   height: 512
   max_n_subprompts: 8
   max_resolution: 589824 # 768x768

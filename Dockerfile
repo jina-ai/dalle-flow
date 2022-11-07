@@ -47,6 +47,7 @@ RUN if [ -n "${APT_PACKAGES}" ]; then apt-get update && apt-get install --no-ins
     pip install https://github.com/crowsonkb/k-diffusion/archive/master.zip && \
     pip install basicsr facexlib gfpgan && \
     pip install realesrgan && \
+    pip install https://github.com/AmericanPresidentJimmyCarter/xformers-builds/raw/master/cu116/xformers-0.0.14.dev0-cp310-cp310-linux_x86_64.whl && \
     cd latent-diffusion && pip install --timeout=1000 -e . && cd - && \
     cd glid-3-xl && pip install --timeout=1000 -e . && cd - && \
     cd dalle-flow && pip install --timeout=1000 --compile -r requirements.txt && cd - && \

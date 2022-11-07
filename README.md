@@ -166,7 +166,7 @@ You can host your own server by following the instruction below.
 DALL·E Flow needs one GPU with 21GB VRAM at its peak. All services are squeezed into this one GPU, this includes (roughly)
 - DALLE ~9GB
 - GLID Diffusion ~6GB
-- Stable Diffusion ~7GB (batch_size=1 in `config.yml`, 512x512, slower) or ~14GB (batch_size=4 in `config.yml`, 512x512, slightly faster)
+- Stable Diffusion ~8GB (batch_size=4 in `config.yml`, 512x512)
 - SwinIR ~3GB
 - CLIP ViT-L/14-336px ~3GB
 
@@ -342,6 +342,7 @@ pip install https://github.com/crowsonkb/k-diffusion/archive/master.zip
 pip install git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.15
 pip install basicsr facexlib gfpgan
 pip install realesrgan
+pip install https://github.com/AmericanPresidentJimmyCarter/xformers-builds/raw/master/cu116/xformers-0.0.14.dev0-cp310-cp310-linux_x86_64.whl && \
 cd latent-diffusion && pip install -e . && cd -
 cd stable-diffusion && pip install -e . && cd -
 cd SwinIR && pip install -e . && cd -
