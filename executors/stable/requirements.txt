@@ -9,5 +9,5 @@ pytorch_lightning==1.7.7
 omegaconf==2.2.3
 protobuf==3.20.0
 k-diffusion @ git+https://github.com/crowsonkb/k-diffusion.git
-stable-inference @ git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.13
+stable-inference @ git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.15
 CLIP @ git+https://github.com/openai/CLIP

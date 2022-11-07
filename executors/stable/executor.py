@@ -24,7 +24,8 @@ from jina import Executor, DocumentArray, Document, requests
 
 INPAINTING_CONFIG_NAME = 'v1-inpainting.yaml'
 K_DIFF_SAMPLERS = {'k_lms', 'dpm2', 'dpm2_ancestral', 'heun',
-    'euler', 'euler_ancestral'}
+    'euler', 'euler_ancestral', 'dpm_fast', 'dpm_adaptive',
+    'dpmpp_2s_ancestral', 'dpmpp_2m'}
 
 
 MAX_STEPS = 250
@@ -110,6 +111,7 @@ class StableDiffusionGenerator(Executor):
         if sampler not in K_DIFF_SAMPLERS:
             raise ValueError(f'sampler must be in {K_DIFF_SAMPLERS}, got {sampler}')
         scale = parameters.get('scale', opt.scale)
+        noiser = parameters.get('noiser', None)
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
         seed = int(parameters.get('seed', randint(0, 2 ** 32 - 1)))
         steps = min(int(parameters.get('steps', opt.ddim_steps)), MAX_STEPS)
@@ -138,6 +140,7 @@ class StableDiffusionGenerator(Executor):
                     seed + i,
                     steps,
                     height=height,
+                    noiser=noiser,
                     scale=scale,
                     width=width,
                 )
@@ -178,6 +181,7 @@ class StableDiffusionGenerator(Executor):
                             'request': {
                                 'api': 'txt2img',
                                 'height': height,
+                                'noiser': noiser,
                                 'num_images': num_images,
                                 'sampler': sampler,
                                 'scale': scale,
@@ -207,6 +211,7 @@ class StableDiffusionGenerator(Executor):
         opt = self.stable_diffusion_module.opt
 
         latentless = parameters.get('latentless', False)
+        noiser = parameters.get('noiser', None)
         num_images = max(1, min(8, int(parameters.get('num_images', 1))))
         prompt_override = parameters.get('prompt', None)
         sampler = parameters.get('sampler', 'k_lms')
@@ -246,6 +251,7 @@ class StableDiffusionGenerator(Executor):
                     steps,
                     init_pil_image=document_to_pil(d),
                     init_pil_image_as_random_latent=latentless,
+                    noiser=noiser,
                     scale=scale,
                     strength=strength,
                 )
@@ -286,6 +292,7 @@ class StableDiffusionGenerator(Executor):
                             'request': {
                                 'api': 'stablediffuse',
                                 'latentless': latentless,
+                                'noiser': noiser,
                                 'num_images': num_images,
                                 'sampler': sampler,
                                 'scale': scale,
@@ -314,6 +321,7 @@ class StableDiffusionGenerator(Executor):
         # Default options for inherence engine.
         opt = self.stable_diffusion_module.opt
 
+        noiser = parameters.get('noiser', None)
         num_images = max(1, min(16, int(parameters.get('num_images', 1))))
         resample_prior = parameters.get('resample_prior', True)
         sampler = parameters.get('sampler', 'k_lms')
@@ -389,6 +397,7 @@ class StableDiffusionGenerator(Executor):
                         steps,
                         conditioning=c,
                         height=height,
+                        noiser=noiser,
                         prompt_concept_injection_required=False,
                         scale=scale,
                         weighted_subprompts=weighted_subprompts,
@@ -409,6 +418,7 @@ class StableDiffusionGenerator(Executor):
                         conditioning=c,
                         height=height,
                         init_latent=samples_last,
+                        noiser=noiser,
                         prompt_concept_injection_required=False,
                         scale=scale,
                         strength=strength,
@@ -453,6 +463,7 @@ class StableDiffusionGenerator(Executor):
                         'request': {
                             'api': 'stableinterpolate',
                             'height': height,
+                            'noiser': noiser,
                             'num_images': num_images,
                             'resample_prior': resample_prior,
                             'sampler': sampler,

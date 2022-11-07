@@ -310,7 +310,7 @@ Running natively requires some manual steps, but it is often easier to debug.
 mkdir dalle && cd dalle
 git clone https://github.com/jina-ai/dalle-flow.git
 git clone https://github.com/jina-ai/SwinIR.git
-git clone --branch v0.0.13 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git
+git clone --branch v0.0.15 https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git
 git clone https://github.com/CompVis/latent-diffusion.git
 git clone https://github.com/jina-ai/glid-3-xl.git
 git clone https://github.com/timojl/clipseg.git
@@ -339,7 +339,7 @@ source env/bin/activate && cd -
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
 pip install numpy tqdm pytorch_lightning einops numpy omegaconf
 pip install https://github.com/crowsonkb/k-diffusion/archive/master.zip
-pip install git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.13
+pip install git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.15
 pip install basicsr facexlib gfpgan
 pip install realesrgan
 cd latent-diffusion && pip install -e . && cd -
