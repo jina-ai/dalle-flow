@@ -10,4 +10,5 @@ omegaconf==2.2.3
 protobuf==3.20.0
 k-diffusion @ git+https://github.com/crowsonkb/k-diffusion.git
 stable-inference @ git+https://github.com/AmericanPresidentJimmyCarter/stable-diffusion.git@v0.0.15
+https://github.com/AmericanPresidentJimmyCarter/xformers-builds/raw/master/cu116/xformers-0.0.14.dev0-cp310-cp310-linux_x86_64.whl
 CLIP @ git+https://github.com/openai/CLIP
