@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 import torch
 
-from clipseg.clipseg import CLIPDensePredT
+from models.clipseg import CLIPDensePredT
 from jina import Executor, DocumentArray, Document, requests
 from torchvision import transforms
 
