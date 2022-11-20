@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 from urllib.request import urlopen
 
 import numpy as np
+import torch
 
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from basicsr.utils.download_util import load_file_from_url
@@ -43,19 +44,14 @@ class RealESRGANUpscaler(Executor):
 
     All models that are included in the config.yml file will be available for
     upscaling.
-
-    In the class, "resrgan_models" is organized as:
-    {
-      model_name: {
-        'name': str,
-        'netscale': int, (scaling strength eg 4=4x)
-        'model': initialized RealESRGAN model,
-        'model_face_fix': initialized GFPGAN model, [optional, non-anime only]
-      }
-    }
     """
-
-    resrgan_models: Dict[str, Any] = {}
+    cache_path: str | Path = ''
+    gfpgan_weights_path: str | Path = ''
+    models_to_load: List[str] = []
+    pre_pad = 10
+    tile = 0
+    tile_pad = 10
+    use_half = True
 
     def __init__(
         self,
@@ -106,25 +102,44 @@ class RealESRGANUpscaler(Executor):
                 file_name=None,
             )
 
+        self.cache_path = cache_path
+        self.gfpgan_weights_path = gfpgan_weights_path
+        self.models_to_load = models_to_load
+        self.pre_pad = pre_pad
+        self.tile = tile
+        self.tile_pad = tile_pad
+        self.use_half = use_half
+
+    def load_model(self) -> Dict[str, Any]:
+        '''
+        return a dictionary organized as:
+        {
+        model_name: {
+            'name': str,
+            'netscale': int, (scaling strength eg 4=4x)
+            'model': initialized RealESRGAN model,
+            'model_face_fix': initialized GFPGAN model, [optional, non-anime only]
+        }
+        '''
         def gfpgan_wrapper(model_upscaler: Any, outscale: int):
-            nonlocal gfpgan_weights_path
             return GFPGANer(
-                model_path=str(gfpgan_weights_path.absolute())
-                if isinstance(gfpgan_weights_path, Path)
-                else gfpgan_weights_path,
+                model_path=str(self.gfpgan_weights_path.absolute())
+                if isinstance(self.gfpgan_weights_path, Path)
+                else self.gfpgan_weights_path,
                 upscale=outscale,
                 arch="clean",
                 channel_multiplier=2,
                 bg_upsampler=model_upscaler,
             )
 
-        for model_name in models_to_load:
+        resrgan_models: Dict[str, Any] = {}
+        for model_name in self.models_to_load:
             model_type = None
             try:
                 model_type = RESRGAN_MODELS(model_name)
             except ValueError:
                 raise ValueError(
-                    f"Unknown model name '{model_name}\, "
+                    f"Unknown model name '{model_name}', "
                     + "please ensure all models in models_to_load configuration "
                     + "option are valid"
                 )
@@ -220,8 +235,8 @@ class RealESRGANUpscaler(Executor):
 
             # determine model paths
             weights_path = Path.home() / str(model_name + ".pth")
-            if Path(cache_path).is_dir():
-                weights_path = Path(cache_path) / str(model_name + ".pth")
+            if Path(self.cache_path).is_dir():
+                weights_path = Path(self.cache_path) / str(model_name + ".pth")
 
             if not weights_path.is_file():
                 # Assume we're working locally, use local home.
@@ -243,22 +258,24 @@ class RealESRGANUpscaler(Executor):
                 if isinstance(weights_path, Path)
                 else weights_path,
                 model=model,
-                tile=tile,
-                tile_pad=tile_pad,
-                pre_pad=pre_pad,
-                half=use_half,
+                tile=self.tile,
+                tile_pad=self.tile_pad,
+                pre_pad=self.pre_pad,
+                half=self.use_half,
             )
 
             model_face_fix = None
             if model_type != RESRGAN_MODELS.RealESRGAN_x4plus_anime_6B:
                 model_face_fix = gfpgan_wrapper(upsampler, netscale)
 
-            self.resrgan_models[model_name] = {
+            resrgan_models[model_name] = {
                 "name": model_name,
                 "netscale": netscale,
                 "model": upsampler,
                 "model_face_fix": model_face_fix,
             }
+
+        return resrgan_models
 
     def document_to_pil(self, doc):
         uri_data = urlopen(doc.uri)
@@ -275,17 +292,18 @@ class RealESRGANUpscaler(Executor):
           str.
         """
         request_time = time.time()
+        resrgan_models = self.load_model()
 
         face_enhance = parameters.get("face_enhance", False)
         model_name = parameters.get(
-            "model_name", list(self.resrgan_models.values())[0]["name"]
+            "model_name", list(resrgan_models.values())[0]["name"]
         )
 
         for doc in docs:
             img = self.document_to_pil(doc)
             img_arr = np.asarray(img)
 
-            model_dict = self.resrgan_models.get(model_name, None)
+            model_dict = resrgan_models.get(model_name, None)
             if model_dict is None:
                 raise ValueError(f"Unknown RealESRGAN upscaler specified: {model_name}")
             upsampler = model_dict.get("model", None)
@@ -320,3 +338,5 @@ class RealESRGANUpscaler(Executor):
             ).convert_blob_to_datauri()
             _d.text = doc.text
             doc.matches.append(_d)
+
+        torch.cuda.empty_cache()
