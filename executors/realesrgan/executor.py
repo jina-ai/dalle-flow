@@ -4,7 +4,7 @@ import time
 from PIL import Image
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 from urllib.request import urlopen
 
 import numpy as np
@@ -45,8 +45,8 @@ class RealESRGANUpscaler(Executor):
     All models that are included in the config.yml file will be available for
     upscaling.
     """
-    cache_path: str | Path = ''
-    gfpgan_weights_path: str | Path = ''
+    cache_path: Union[str, Path] = ''
+    gfpgan_weights_path: Union[str, Path] = ''
     models_to_load: List[str] = []
     pre_pad = 10
     tile = 0
@@ -55,7 +55,7 @@ class RealESRGANUpscaler(Executor):
 
     def __init__(
         self,
-        cache_path: str | Path,
+        cache_path: Union[str, Path],
         models_to_load: List[str],
         pre_pad: int = 10,
         tile: int = 0,
