@@ -1,5 +1,5 @@
-jina==3.8.3
-docarray==0.16.2
+jina==3.12.0
+docarray==0.19.1
 
 jax~=0.3.24
 flax
