@@ -9,6 +9,7 @@ from urllib.request import urlopen
 
 import numpy as np
 import torch
+import cv2
 
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from basicsr.utils.download_util import load_file_from_url
@@ -302,6 +303,7 @@ class RealESRGANUpscaler(Executor):
         for doc in docs:
             img = self.document_to_pil(doc)
             img_arr = np.asarray(img)
+            img_arr = cv2.cvtColor(img_arr, cv2.COLOR_RGB2BGR)
 
             model_dict = resrgan_models.get(model_name, None)
             if model_dict is None:
@@ -317,6 +319,7 @@ class RealESRGANUpscaler(Executor):
                 )
             else:
                 output, _ = upsampler.enhance(img_arr, model_dict["netscale"])
+            output = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
             image_big = Image.fromarray(output)
 
             buffered = BytesIO()
