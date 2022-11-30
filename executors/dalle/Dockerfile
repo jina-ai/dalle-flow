@@ -14,7 +14,7 @@ WORKDIR /workdir
 
 COPY . /workdir/executor
 RUN pip install --no-cache-dir -r ./executor/requirements.txt
-RUN pip install jax[cuda11_cudnn82]==0.3.13 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN pip install jax[cuda11_cudnn82]==0.3.25 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 # https://jax.readthedocs.io/en/latest/gpu_memory_allocation.html
 ENV XLA_PYTHON_CLIENT_ALLOCATOR=platform
