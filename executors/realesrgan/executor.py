@@ -19,9 +19,9 @@ from realesrgan import RealESRGANer
 from realesrgan.archs.srvgg_arch import SRVGGNetCompact
 
 
-GFPGAN_MODEL_NAME = "GFPGANv1.3.pth"
+GFPGAN_MODEL_NAME = "GFPGANv1.4.pth"
 GFPGAN_MODEL_URL = (
-    "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.3.pth"
+    "https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth"
 )
 
 
