@@ -1,6 +1,6 @@
 <p align="center">
 <!--startmsg-->
-<a href="#server"><img src="./.github/banner.svg?raw=true"></a>
+<a href="#server"><img src="./.github/deprecation-banner.svg?raw=true"></a>
 <!--endmsg--><p align="center">
 
 <img src="https://github.com/jina-ai/dalle-flow/blob/main/.github/banner.svg?raw=true" alt="DALL·E Flow: A Human-in-the-loop workflow for creating HD images from text" width="60%">
