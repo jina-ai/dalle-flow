@@ -9,7 +9,7 @@
 </p>
 
 <p align=center>
-<a href="https://slack.jina.ai"><img src="https://img.shields.io/badge/Slack-3.1k-blueviolet?logo=slack&amp;logoColor=white&style=flat-square"></a>
+<a href="https://discord.jina.ai"><img src="https://img.shields.io/discord/1106542220112302130?logo=discord&logoColor=white&style=flat-square"></a>
 <a href="https://colab.research.google.com/github/jina-ai/dalle-flow/blob/main/client.ipynb"><img src="https://img.shields.io/badge/Open-in%20Colab-brightgreen?logo=google-colab&style=flat-square" alt="Open in Google Colab"/></a>
 <a href="https://hub.docker.com/r/jinaai/dalle-flow"><img alt="Docker Image Size (latest by date)" src="https://img.shields.io/docker/image-size/jinaai/dalle-flow?logo=docker&logoColor=white&style=flat-square"></a>
 
@@ -466,7 +466,7 @@ Now, you can use the free `CLIP-as-service` in your flow.
 ## Support
 
 - To extend DALL·E Flow you will need to get familiar with  [Jina](https://github.com/jina-ai/jina) and [DocArray](https://github.com/jina-ai/docarray).
-- Join our [Slack community](https://slack.jina.ai) and chat with other community members about ideas.
+- Join our [Discord community](https://discord.jina.ai) and chat with other community members about ideas.
 - Join our [Engineering All Hands](https://youtube.com/playlist?list=PL3UBBWOUVhFYRUa_gpYYKBqEAkO4sxmne) meet-up to discuss your use case and learn Jina's new features.
     - **When?** The second Tuesday of every month
     - **Where?**
