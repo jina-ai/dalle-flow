@@ -28,7 +28,7 @@ class GLID3Diffusion(Executor):
         request_time = time.time()
 
         with tempfile.NamedTemporaryFile(
-                suffix='.png',
+                suffix='.png',delete=False
         ) as f_in:
             self.logger.info(f'diffusion [{text}] ...')
             from dalle_flow_glid3.cli_parser import parser
